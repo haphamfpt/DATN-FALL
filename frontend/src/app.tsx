@@ -1,6 +1,6 @@
-import Index from "./routes";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import Index from "./routes";
 function App() {
   return (
     <>

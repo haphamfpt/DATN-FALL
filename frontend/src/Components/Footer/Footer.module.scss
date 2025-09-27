@@ -1,0 +1,41 @@
+@import "../../Styles//variables.scss";
+footer {
+    background-color: #303036;
+    color: #f1f1f1;
+    padding: 40px 0;
+}
+.logoFooter {
+    background-color: rgb(249 250 251);
+}
+.footer__title {
+    font-weight: 600;
+}
+.footer__top ul li {
+    font-size: 14px;
+    margin-top: 10px;
+    cursor: pointer;
+    .footer__storeBtn {
+        background-color: #303036;
+        color: #f1f1f1;
+    }
+    .footer__submitBtn {
+        background-color: #303036;
+        color: #f1f1f1;
+    }
+}
+.footer__top {
+    @media (max-width: 1300px) {
+        padding: 0 10px;
+    }
+}
+.footer__middle {
+    margin: 10px 0;
+    padding: 10px 0;
+    border-top: 1px solid #525459;
+    border-bottom: 1px solid #525459;
+}
+.footer__bottom {
+    @media (max-width: 1024px) {
+        padding: 0 10px;
+    }
+}
