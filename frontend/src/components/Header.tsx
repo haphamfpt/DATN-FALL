@@ -33,7 +33,7 @@ export default function Header() {
                         className="hidden sm:block border rounded-md px-3 py-1 text-sm bg-gray-50"
                     />
                     <Link
-                        to="/user"
+                        to="auth/login"
                         className="px-3 py-1 text-sm hover:bg-gray-100 rounded"
                     >
                         Login
