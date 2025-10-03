@@ -1,22 +1,50 @@
-import { FC } from "react";
-import { useParams } from "react-router-dom";
+import { FC, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { CartContext } from "../context/CartContext";
 
 /**
  * ShopDetail Page
  * - Trang chi tiết sản phẩm
- * - Hiển thị ảnh, tên, giá, mô tả, nút thêm giỏ hàng
+ * - Hiển thị ảnh, tên, giá, mô tả
+ * - Có nút thêm giỏ hàng & mua ngay
  */
 const ShopDetail: FC = () => {
   const { id } = useParams(); // lấy id từ URL, giả sử /shop/:id
+  const { addToCart, clearCart } = useContext(CartContext);
+  const navigate = useNavigate();
 
-  // Fake dữ liệu sản phẩm
+  // Fake dữ liệu sản phẩm (sau này thay bằng API)
   const product = {
-    id,
+    id: Number(id),
     title: "Áo khoác da cao cấp",
     price: 1200000,
     image: "/assets/product-3.jpg",
     description:
       "Áo khoác da nam cao cấp, thiết kế hiện đại, phong cách trẻ trung. Chất liệu mềm mại, thoải mái khi mặc.",
+  };
+
+  // Xử lý thêm giỏ
+  const handleAddToCart = () => {
+    addToCart({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      image: product.image,
+      quantity: 1,
+    });
+  };
+
+  // Xử lý mua ngay
+  const handleBuyNow = () => {
+    clearCart();
+    addToCart({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      image: product.image,
+      quantity: 1,
+    });
+    navigate("/checkout"); // chuyển sang thanh toán
   };
 
   return (
@@ -26,24 +54,24 @@ const ShopDetail: FC = () => {
         <img
           src={product.image}
           alt={product.title}
-          className="rounded-lg shadow-lg w-full object-cover"
+          className="rounded-lg shadow-lg w-full object-contain bg-gray-100"
         />
-        {/* Thumbnails (có thể thêm slider sau) */}
+        {/* Thumbnails */}
         <div className="flex space-x-4 mt-4">
           <img
             src={product.image}
             alt="thumb1"
-            className="w-20 h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+            className="w-20 h-20 object-contain bg-gray-100 rounded border cursor-pointer hover:opacity-80"
           />
           <img
             src="/assets/product-2.jpg"
             alt="thumb2"
-            className="w-20 h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+            className="w-20 h-20 object-contain bg-gray-100 rounded border cursor-pointer hover:opacity-80"
           />
           <img
             src="/assets/product-4.jpg"
             alt="thumb3"
-            className="w-20 h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+            className="w-20 h-20 object-contain bg-gray-100 rounded border cursor-pointer hover:opacity-80"
           />
         </div>
       </div>
@@ -57,9 +85,20 @@ const ShopDetail: FC = () => {
         <p className="text-gray-700 mb-6">{product.description}</p>
 
         {/* Nút mua */}
-        <button className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800">
-          Thêm vào giỏ
-        </button>
+        <div className="space-x-4">
+          <button
+            onClick={handleAddToCart}
+            className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800"
+          >
+            Thêm vào giỏ
+          </button>
+          <button
+            onClick={handleBuyNow}
+            className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700"
+          >
+            Mua ngay
+          </button>
+        </div>
 
         {/* Thông tin thêm */}
         <div className="mt-8">
