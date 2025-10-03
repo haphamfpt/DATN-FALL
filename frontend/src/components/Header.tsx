@@ -8,28 +8,6 @@ const Header: FC = () => {
   const { user, logout } = useContext(AuthContext);
   const { cart } = useContext(CartContext);
 
-<<<<<<< HEAD
-                {/* Search + user/cart actions */}
-                <div className="flex items-center gap-4">
-                    <input
-                        type="text"
-                        placeholder="Search..."
-                        className="hidden sm:block border rounded-md px-3 py-1 text-sm bg-gray-50"
-                    />
-                    <Link
-                        to="auth/login"
-                        className="px-3 py-1 text-sm hover:bg-gray-100 rounded"
-                    >
-                        Login
-                    </Link>
-                    <Link
-                        to="/cart"
-                        className="px-3 py-1 bg-black text-white rounded text-sm"
-                    >
-                        Cart (0)
-                    </Link>
-                </div>
-=======
   return (
     <header className="bg-white shadow-md fixed w-full top-0 left-0 z-50">
       <div className="container mx-auto flex justify-between items-center py-4 px-6">
@@ -56,6 +34,13 @@ const Header: FC = () => {
 
         {/* Right section */}
         <div className="flex items-center space-x-4">
+          {/* Search */}
+          <input
+            type="text"
+            placeholder="Search..."
+            className="hidden sm:block border rounded-md px-3 py-1 text-sm bg-gray-50"
+          />
+
           {/* Cart */}
           <Link to="/cart" className="relative">
             🛒
@@ -69,11 +54,11 @@ const Header: FC = () => {
           {/* Auth */}
           {!user ? (
             <>
-              <Link to="/login" className="hover:text-black">
+              <Link to="/auth/login" className="hover:text-black">
                 Đăng nhập
               </Link>
               <Link
-                to="/register"
+                to="/auth/register"
                 className="bg-black text-white px-3 py-1 rounded hover:bg-gray-800"
               >
                 Đăng ký
@@ -85,7 +70,6 @@ const Header: FC = () => {
               <button onClick={logout} className="text-red-600 hover:underline">
                 Logout
               </button>
->>>>>>> 694bd7caf5b0245dbfa315571f43906ddf909e1b
             </div>
           )}
         </div>
