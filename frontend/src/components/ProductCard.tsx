@@ -26,7 +26,7 @@ const ProductCard: FC<Props> = ({ id, title, price, image }) => {
         }
         className="mt-3 bg-black text-white px-4 py-1 rounded hover:bg-gray-800"
       >
-        Thêm vào giỏ
+        Thêm vào giỏ hàng
       </button>
     </div>
   );
