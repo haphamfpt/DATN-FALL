@@ -2,7 +2,145 @@
 @section("style")
 @include('backend.components.head')
 @include('backend.components.chartCss')
+<style>
+        .stat-box {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            text-align: center;
 
+        }
+
+        .stat-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 10px;
+
+        }
+
+        .stat-title span {
+            font-size: 16px;
+            font-weight: bold;
+            justify-content: space-between; /* Khoảng cách đều giữa các khối */
+            width: 100%; /* Kéo rộng toàn bộ chiều ngang */
+        }
+
+        .stat-title button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .stat-title button:hover {
+            background-color: #0056b3;
+        }
+
+        .stat-box h3 {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+
+        .stat-box p {
+            margin-bottom: 0;
+            color: #888;
+        }
+
+        .chart-container {
+            margin-bottom: 20px;
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            /* Kích thước biểu tượng */
+            margin-right: 2px;
+            /* Khoảng cách giữa biểu tượng và tiêu đề */
+        }
+
+        .total-revenue {
+            color: #27ae60;
+            /* Màu xanh lá cho doanh thu */
+        }
+
+        .new-orders {
+            color: #2980b9;
+            /* Màu xanh dương cho đơn hàng mới */
+        }
+
+        .date-range-box {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .date-range-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            justify-content: center;
+        }
+
+        .date-range-item label {
+            margin-right: 10px;
+            font-weight: bold;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+
+        .date-range-item label i {
+            color: #2980b9;
+            margin-right: 5px;
+        }
+
+        input[type="date"] {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            width: 200px;
+        }
+
+        button#filterBtn {
+            background-color: #2980b9;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        button#filterBtn i {
+            margin-right: 5px;
+        }
+
+        button#filterBtn:hover {
+            background-color: #1a598d;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .statistics-container {
+            display: flex;
+            justify-content: space-between; /* Khoảng cách đều giữa các khối */
+    gap: 20px; /* Khoảng cách giữa các khối */
+    width: 100%; /* Kéo rộng toàn bộ chiều ngang */
+        }
 
         .stat-box2 {
             background-color: white;
