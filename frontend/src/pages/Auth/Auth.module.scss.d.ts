@@ -1,0 +1,14 @@
+export declare const boxImage: string;
+export declare const buttonSubmit: string;
+export declare const container: string;
+export declare const content: string;
+export declare const contentLogin: string;
+export declare const form: string;
+export declare const images: string;
+export declare const imageUser: string;
+export declare const inTop: string;
+export declare const logo: string;
+export declare const logoTitle: string;
+export declare const outTop: string;
+export declare const rotate: string;
+export declare const title: string;
