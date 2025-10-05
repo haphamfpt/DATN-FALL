@@ -1,40 +1,74 @@
 import { FC } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination, Navigation } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
 import CategoryCard from "../components/CategoryCard";
 import ProductCard from "../components/ProductCard";
 import BlogCard from "../components/BlogCard";
-// Make sure the file paths below match your actual file structure and naming
 
 /**
- * Home Page
- * - Banner
+ * Home Page - Sportwear Theme
+ * - Banner slideshow
  * - Categories
  * - Featured Products
  * - Blog Section
  */
 const Home: FC = () => {
+  const banners = [
+    "/assets/sport-banner1.jpg",
+    "/assets/sport-banner2.jpg",
+    "/assets/sport-banner3.jpg",
+  ];
+
   return (
     <div>
-      {/* 🔹 Banner */}
-      <section className="bg-gray-100 py-20 text-center">
-        <h1 className="text-4xl font-bold mb-4">
-          Thời trang nam <span className="text-red-600">2025</span>
-        </h1>
-        <p className="text-gray-600 mb-6">
-          Bộ sưu tập mới nhất dành cho phái mạnh
-        </p>
-        <button className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800">
-          Khám phá ngay
-        </button>
+      {/* 🔹 Banner slideshow */}
+      <section className="w-full h-[500px]">
+        <Swiper
+          modules={[Autoplay, Pagination, Navigation]}
+          autoplay={{ delay: 4000, disableOnInteraction: false }}
+          pagination={{ clickable: true }}
+          navigation
+          loop
+          className="h-full"
+        >
+          {banners.map((img, index) => (
+            <SwiperSlide key={index}>
+              <div className="relative w-full h-full">
+                <img
+                  src={img}
+                  alt={`banner-${index}`}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center text-white text-center">
+                  <h1 className="text-4xl font-bold mb-3 drop-shadow-lg">
+                    Thời trang thể thao{" "}
+                    <span className="text-yellow-400">2025</span>
+                  </h1>
+                  <p className="text-gray-200 mb-6">
+                    Năng động – Bứt phá – Tự tin cùng phong cách thể thao mới
+                  </p>
+                  <button className="bg-yellow-500 px-6 py-2 rounded hover:bg-yellow-600 transition">
+                    Mua ngay
+                  </button>
+                </div>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </section>
 
       {/* 🔹 Categories */}
       <section className="container mx-auto py-12 px-6">
-        <h2 className="text-2xl font-bold mb-6">Danh mục</h2>
+        <h2 className="text-2xl font-bold mb-6">Danh mục thể thao</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <CategoryCard title="Áo sơ mi" image="/assets/cat-1.jpg" />
-          <CategoryCard title="Áo khoác" image="/assets/cat-2.jpg" />
-          <CategoryCard title="Quần jeans" image="/assets/cat-3.jpg" />
-          <CategoryCard title="Phụ kiện" image="/assets/cat-4.jpg" />
+          <CategoryCard title="Áo thể thao" image="/assets/sport-cat-1.jpg" />
+          <CategoryCard title="Quần thể thao" image="/assets/sport-cat-2.jpg" />
+          <CategoryCard title="Giày chạy bộ" image="/assets/sport-cat-3.jpg" />
+          <CategoryCard title="Phụ kiện gym" image="/assets/sport-cat-4.jpg" />
         </div>
       </section>
 
@@ -44,27 +78,27 @@ const Home: FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <ProductCard
             id={1}
-            title="Áo sơ mi trắng"
-            price="500.000đ"
-            image="/assets/product-1.jpg"
+            title="Áo thun thể thao Nike Dri-FIT"
+            price="650.000đ"
+            image="/assets/sport-product-1.jpg"
           />
           <ProductCard
             id={2}
-            title="Quần jeans xanh"
-            price="700.000đ"
-            image="/assets/product-2.jpg"
+            title="Quần jogger Adidas"
+            price="850.000đ"
+            image="/assets/sport-product-2.jpg"
           />
           <ProductCard
             id={3}
-            title="Áo khoác da"
-            price="1.200.000đ"
-            image="/assets/product-3.jpg"
+            title="Giày chạy bộ Asics Gel"
+            price="1.900.000đ"
+            image="/assets/sport-product-3.jpg"
           />
           <ProductCard
             id={4}
-            title="Giày sneaker"
-            price="1.500.000đ"
-            image="/assets/product-4.jpg"
+            title="Áo khoác thể thao Puma"
+            price="1.200.000đ"
+            image="/assets/sport-product-4.jpg"
           />
         </div>
       </section>
@@ -72,22 +106,22 @@ const Home: FC = () => {
       {/* 🔹 Blog Section */}
       <section className="bg-gray-50 py-12">
         <div className="container mx-auto px-6">
-          <h2 className="text-2xl font-bold mb-6">Bài viết mới</h2>
+          <h2 className="text-2xl font-bold mb-6">Tin tức & mẹo tập luyện</h2>
           <div className="grid md:grid-cols-3 gap-6">
             <BlogCard
-              title="Phong cách tối giản cho nam"
+              title="Bí quyết chọn giày chạy bộ phù hợp"
               date="12/09/2025"
-              image="/assets/blog-1.jpg"
+              image="/assets/sport-blog-1.jpg"
             />
             <BlogCard
-              title="Tips mix đồ đi làm"
-              date="05/09/2025"
-              image="/assets/blog-2.jpg"
+              title="Top outfit gym năng động 2025"
+              date="07/09/2025"
+              image="/assets/sport-blog-2.jpg"
             />
             <BlogCard
-              title="BST Thu Đông 2025"
+              title="Xu hướng thời trang thể thao mới"
               date="01/09/2025"
-              image="/assets/blog-3.jpg"
+              image="/assets/sport-blog-3.jpg"
             />
           </div>
         </div>
