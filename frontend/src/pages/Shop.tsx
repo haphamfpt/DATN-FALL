@@ -1,57 +1,11 @@
 import { FC, useState } from "react";
 import ProductCard from "../components/ProductCard";
+import { allProducts } from "../data/products";
 
 /**
  * Shop Page - Sportwear Theme
  */
 const Shop: FC = () => {
-  // 🔹 Fake dữ liệu sản phẩm thể thao
-  const allProducts = [
-    {
-      id: 1,
-      title: "Áo thun thể thao Nike Dri-FIT",
-      price: 650000,
-      image: "/assets/images/product/Dri-Fit.avif",
-      category: "Áo",
-    },
-    {
-      id: 2,
-      title: "Quần jogger Adidas nam",
-      price: 850000,
-      image: "/assets/images/product/Z.N.E._Pants_Black.avif",
-      category: "Quần",
-    },
-    {
-      id: 3,
-      title: "Giày chạy bộ Asics Gel",
-      price: 1900000,
-      image: "/assets/images/product/Samba_OG_Shoes_White.avif",
-      category: "Giày",
-    },
-    {
-      id: 4,
-      title: "Áo khoác thể thao Puma",
-      price: 1200000,
-      image: "/assets/images/product/Áo-khoác-dệt-Prime-Retro-T7-Puma.avif",
-      category: "Áo",
-    },
-    {
-      id: 5,
-      title: "Túi gym chống nước Reebok",
-      price: 450000,
-      image:
-        "/assets/images/product/tui-deo-cheo-reebok-classics-foundation-waist.webp",
-      category: "Phụ kiện",
-    },
-    {
-      id: 6,
-      title: "Găng tay tập gym Under Armour",
-      price: 350000,
-      image: "/assets/images/product/gym.webp",
-      category: "Phụ kiện",
-    },
-  ];
-
   const [category, setCategory] = useState<string>("Tất cả");
   const [maxPrice, setMaxPrice] = useState<number>(2000000);
 

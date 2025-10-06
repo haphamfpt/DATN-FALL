@@ -1,0 +1,58 @@
+// src/data/products.ts
+export const allProducts = [
+  {
+    id: 1,
+    title: "Áo thun thể thao Nike Dri-FIT",
+    price: 650000,
+    image: "/assets/images/product/Dri-Fit.avif",
+    colors: ["Đen", "Xanh navy", "Trắng"],
+    sizes: ["S", "M", "L", "XL"],
+    category: "Áo",
+  },
+  {
+    id: 2,
+    title: "Quần jogger Adidas nam",
+    price: 850000,
+    image: "/assets/images/product/Z.N.E._Pants_Black.avif",
+    colors: ["Xám", "Đen"],
+    sizes: ["M", "L", "XL"],
+    category: "Quần",
+  },
+  {
+    id: 3,
+    title: "Giày chạy bộ Asics Gel",
+    price: 1900000,
+    image: "/assets/images/product/Samba_OG_Shoes_White.avif",
+    colors: ["Trắng", "Xanh dương"],
+    sizes: ["39", "40", "41", "42"],
+    category: "Giày",
+  },
+  {
+    id: 4,
+    title: "Áo khoác thể thao Puma",
+    price: 1200000,
+    image: "/assets/images/product/Áo-khoác-dệt-Prime-Retro-T7-Puma.avif",
+    colors: ["Đen", "Xanh lá"],
+    sizes: ["S", "M", "L"],
+    category: "Áo",
+  },
+  {
+    id: 5,
+    title: "Túi gym chống nước Reebok",
+    price: 450000,
+    image:
+      "/assets/images/product/tui-deo-cheo-reebok-classics-foundation-waist.webp",
+    colors: ["Đen", "Xanh đậm"],
+    sizes: ["One size"],
+    category: "Phụ kiện",
+  },
+  {
+    id: 6,
+    title: "Găng tay tập gym Under Armour",
+    price: 350000,
+    image: "/assets/images/product/gym.webp",
+    colors: ["Đen", "Xám"],
+    sizes: ["S", "M", "L"],
+    category: "Phụ kiện",
+  },
+];
