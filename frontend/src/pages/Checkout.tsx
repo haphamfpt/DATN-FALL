@@ -1,6 +1,6 @@
 import { FC, useContext, useState } from "react";
 import { CartContext } from "../context/CartContext";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Checkout: FC = () => {
   const { cart, clearCart } = useContext(CartContext);
@@ -15,12 +15,9 @@ const Checkout: FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (cart.length === 0) {
-      alert("Giỏ hàng trống!");
-      return;
-    }
-    const order = { name, address, phone, payment, cart, total };
-    console.log("Order:", order);
+    if (cart.length === 0) return alert("Giỏ hàng trống!");
+
+    console.log("Order:", { name, address, phone, payment, cart });
     alert("✅ Đặt hàng thành công!");
     clearCart();
     navigate("/");
@@ -32,25 +29,28 @@ const Checkout: FC = () => {
       <div className="grid md:grid-cols-2 gap-10">
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
+            type="text"
             placeholder="Họ và tên"
+            required
+            className="w-full border px-4 py-2 rounded"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            required
-            className="w-full border px-4 py-2 rounded"
           />
           <input
+            type="text"
             placeholder="Địa chỉ"
+            required
+            className="w-full border px-4 py-2 rounded"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            required
-            className="w-full border px-4 py-2 rounded"
           />
           <input
+            type="tel"
             placeholder="Số điện thoại"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
             required
             className="w-full border px-4 py-2 rounded"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
           />
           <select
             value={payment}
@@ -60,49 +60,34 @@ const Checkout: FC = () => {
             <option value="cod">Thanh toán khi nhận hàng (COD)</option>
             <option value="online">Thanh toán online</option>
           </select>
-
           <button
             type="submit"
             className="w-full bg-black text-white py-2 rounded hover:bg-gray-800"
           >
             Đặt hàng
           </button>
-          <Link
-            to="/cart"
-            className="block text-center text-yellow-600 mt-3 hover:underline"
-          >
-            ← Quay lại giỏ hàng
-          </Link>
         </form>
 
-        {/* Tóm tắt đơn hàng */}
         <div>
           <h2 className="text-xl font-bold mb-4">Đơn hàng của bạn</h2>
           {cart.length === 0 ? (
             <p className="text-gray-500">Chưa có sản phẩm nào.</p>
           ) : (
-            <div className="space-y-4">
-              {cart.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex justify-between items-center border-b pb-2"
-                >
-                  <div>
-                    <p className="font-semibold">{item.title}</p>
-                    <p className="text-sm text-gray-600">
-                      {item.quantity} x {item.price.toLocaleString("vi-VN")}đ
-                    </p>
-                  </div>
-                  <p className="font-semibold text-red-600">
-                    {(item.price * item.quantity).toLocaleString("vi-VN")}đ
-                  </p>
-                </div>
-              ))}
-              <p className="text-right font-bold text-lg mt-4">
-                Tổng cộng: {total.toLocaleString("vi-VN")}đ
-              </p>
-            </div>
+            cart.map((item) => (
+              <div
+                key={item.title}
+                className="flex justify-between mb-2 border-b pb-2"
+              >
+                <span>{item.title}</span>
+                <span>
+                  {(item.price * item.quantity).toLocaleString("vi-VN")}đ
+                </span>
+              </div>
+            ))
           )}
+          <p className="text-right font-bold mt-4 text-lg">
+            Tổng cộng: {total.toLocaleString("vi-VN")}đ
+          </p>
         </div>
       </div>
     </div>
