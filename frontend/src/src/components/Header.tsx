@@ -13,34 +13,27 @@ const Header: FC = () => {
       <div className="container mx-auto flex justify-between items-center py-4 px-6">
         {/* Logo */}
         <Link to="/" className="text-2xl font-bold text-gray-800">
-          Aveline Shop
+          MaleFashion
         </Link>
 
         {/* Navigation */}
         <nav className="space-x-6">
           <Link to="/" className="hover:text-black">
-            Trang chủ
+            Home
           </Link>
           <Link to="/shop" className="hover:text-black">
-            Sản Phẩm
+            Shop
           </Link>
           <Link to="/blog" className="hover:text-black">
-            Bài viết
+            Blog
           </Link>
           <Link to="/contact" className="hover:text-black">
-            Liên hệ
+            Contact
           </Link>
         </nav>
 
         {/* Right section */}
         <div className="flex items-center space-x-4">
-          {/* Search */}
-          <input
-            type="text"
-            placeholder="Search..."
-            className="hidden sm:block border rounded-md px-3 py-1 text-sm bg-gray-50"
-          />
-
           {/* Cart */}
           <Link to="/cart" className="relative">
             🛒
@@ -54,11 +47,11 @@ const Header: FC = () => {
           {/* Auth */}
           {!user ? (
             <>
-              <Link to="/auth/login" className="hover:text-black">
+              <Link to="/login" className="hover:text-black">
                 Đăng nhập
               </Link>
               <Link
-                to="/auth/register"
+                to="/register"
                 className="bg-black text-white px-3 py-1 rounded hover:bg-gray-800"
               >
                 Đăng ký
@@ -66,7 +59,7 @@ const Header: FC = () => {
             </>
           ) : (
             <div className="flex items-center space-x-2">
-              <span>Xin chào, {user}</span>
+              <Link to="/account">Xin chào, {user}</Link>
               <button onClick={logout} className="text-red-600 hover:underline">
                 Logout
               </button>
