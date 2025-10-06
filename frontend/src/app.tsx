@@ -13,9 +13,11 @@ import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import ShopDetail from "./pages/ShopDetail";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout"; // ✅ thêm dòng này
 
 import ProfileUser from "./pages/ProfileUser/Page";
 import UserAccount from "./pages/ProfileUser/profile/UserAccount";
+
 function App() {
   const isLoggedIn = () => {
     return !!localStorage.getItem("token");
@@ -26,12 +28,21 @@ function App() {
       <Header />
       <main className="flex-1 pt-20">
         <Routes>
+          {/* Trang chính */}
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/shop/:id" element={<ShopDetail />} />
+
+          {/* ✅ Thêm các route giỏ hàng và thanh toán */}
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+
+          {/* Blog, liên hệ */}
           <Route path="/blog/:id" element={<Blog />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/contact" element={<Contact />} />
+
+          {/* Người dùng */}
           <Route path="/user" element={<UserPage />} />
 
           {/* Auth routes */}
@@ -57,6 +68,7 @@ function App() {
               }
             />
           </Route>
+
           {/* ProfileUser */}
           <Route path="/account" element={<ProfileUser />}>
             <Route index element={<Navigate to="profile" replace />} />
