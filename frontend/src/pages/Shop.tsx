@@ -3,52 +3,51 @@ import ProductCard from "../components/ProductCard";
 
 /**
  * Shop Page - Sportwear Theme
- * - Sidebar filter (category + price)
- * - Product grid (áo, quần, giày, phụ kiện thể thao)
  */
 const Shop: FC = () => {
-  // Fake dữ liệu sản phẩm thể thao
+  // 🔹 Fake dữ liệu sản phẩm thể thao
   const allProducts = [
     {
       id: 1,
       title: "Áo thun thể thao Nike Dri-FIT",
       price: 650000,
-      image: "/assets/sport-product-1.jpg",
+      image: "/assets/images/product/Dri-Fit.avif",
       category: "Áo",
     },
     {
       id: 2,
       title: "Quần jogger Adidas nam",
       price: 850000,
-      image: "/assets/sport-product-2.jpg",
+      image: "/assets/images/product/Z.N.E._Pants_Black.avif",
       category: "Quần",
     },
     {
       id: 3,
       title: "Giày chạy bộ Asics Gel",
       price: 1900000,
-      image: "/assets/sport-product-3.jpg",
+      image: "/assets/images/product/Samba_OG_Shoes_White.avif",
       category: "Giày",
     },
     {
       id: 4,
       title: "Áo khoác thể thao Puma",
       price: 1200000,
-      image: "/assets/sport-product-4.jpg",
+      image: "/assets/images/product/Áo-khoác-dệt-Prime-Retro-T7-Puma.avif",
       category: "Áo",
     },
     {
       id: 5,
       title: "Túi gym chống nước Reebok",
       price: 450000,
-      image: "/assets/sport-product-5.jpg",
+      image:
+        "/assets/images/product/tui-deo-cheo-reebok-classics-foundation-waist.webp",
       category: "Phụ kiện",
     },
     {
       id: 6,
       title: "Găng tay tập gym Under Armour",
       price: 350000,
-      image: "/assets/sport-product-6.jpg",
+      image: "/assets/images/product/gym.webp",
       category: "Phụ kiện",
     },
   ];
@@ -56,7 +55,6 @@ const Shop: FC = () => {
   const [category, setCategory] = useState<string>("Tất cả");
   const [maxPrice, setMaxPrice] = useState<number>(2000000);
 
-  // Lọc sản phẩm theo danh mục & giá
   const filteredProducts = allProducts.filter((p) => {
     const byCategory = category === "Tất cả" || p.category === category;
     const byPrice = p.price <= maxPrice;
@@ -65,7 +63,7 @@ const Shop: FC = () => {
 
   return (
     <div className="container mx-auto py-12 px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
-      {/* 🔹 Sidebar Filter */}
+      {/* Sidebar */}
       <aside className="md:col-span-1 space-y-6">
         <div>
           <h3 className="font-bold text-lg mb-2 text-gray-800">Danh mục</h3>
@@ -104,7 +102,7 @@ const Shop: FC = () => {
         </div>
       </aside>
 
-      {/* 🔹 Product Grid */}
+      {/* Product Grid */}
       <section className="md:col-span-3">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">
           Bộ sưu tập thể thao 2025

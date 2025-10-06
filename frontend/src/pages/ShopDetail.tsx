@@ -4,26 +4,74 @@ import { CartContext } from "../context/CartContext";
 
 /**
  * ShopDetail Page - Sportwear Theme
- * - Trang chi tiết sản phẩm thể thao
- * - Hiển thị ảnh, tên, giá, mô tả
- * - Có nút thêm giỏ hàng & mua ngay
  */
 const ShopDetail: FC = () => {
   const { id } = useParams();
   const { addToCart, clearCart } = useContext(CartContext);
   const navigate = useNavigate();
 
-  // 🔹 Fake dữ liệu sản phẩm (sau này thay bằng API)
-  const product = {
-    id: Number(id),
-    title: "Áo thun thể thao Nike Dri-FIT",
-    price: 650000,
-    image: "/assets/sport-product-1.jpg",
-    description:
-      "Áo thun thể thao Nike Dri-FIT giúp thấm hút mồ hôi nhanh, mang lại cảm giác khô thoáng và thoải mái khi luyện tập. Chất liệu co giãn 4 chiều, nhẹ và thoáng khí.",
-  };
+  // Dữ liệu sản phẩm (tạm thời)
+  const allProducts = [
+    {
+      id: 1,
+      title: "Áo thun thể thao Nike Dri-FIT",
+      price: 650000,
+      image: "/assets/images/product/Dri-Fit.avif",
+      description:
+        "Áo thun thể thao Nike Dri-FIT giúp thấm hút mồ hôi nhanh, mang lại cảm giác khô thoáng và thoải mái khi luyện tập.",
+    },
+    {
+      id: 2,
+      title: "Quần jogger Adidas nam",
+      price: 850000,
+      image: "/assets/images/product/Z.N.E._Pants_Black.avif",
+      description:
+        "Quần jogger Adidas co giãn tốt, dễ chịu, phù hợp cả khi tập luyện và mặc thường ngày.",
+    },
+    {
+      id: 3,
+      title: "Giày chạy bộ Asics Gel",
+      price: 1900000,
+      image: "/assets/images/product/Samba_OG_Shoes_White.avif",
+      description:
+        "Giày chạy bộ Asics Gel êm ái, nhẹ và bám đường tốt, thiết kế thể thao hiện đại.",
+    },
+    {
+      id: 4,
+      title: "Áo khoác thể thao Puma",
+      price: 1200000,
+      image: "/assets/images/product/Áo-khoác-dệt-Prime-Retro-T7-Puma.avif",
+      description:
+        "Áo khoác thể thao Puma chống gió nhẹ, thoáng khí, lý tưởng cho việc tập luyện ngoài trời.",
+    },
+    {
+      id: 5,
+      title: "Túi gym chống nước Reebok",
+      price: 450000,
+      image:
+        "/assets/images/product/tui-deo-cheo-reebok-classics-foundation-waist.webp",
+      description:
+        "Túi Reebok chống nước, thiết kế nhỏ gọn và bền bỉ, giúp bạn mang theo phụ kiện tập luyện tiện lợi.",
+    },
+    {
+      id: 6,
+      title: "Găng tay tập gym Under Armour",
+      price: 350000,
+      image: "/assets/images/product/gym.webp",
+      description:
+        "Găng tay tập gym Under Armour chống trơn trượt, thoáng khí, bảo vệ tay hiệu quả khi nâng tạ.",
+    },
+  ];
 
-  // 🔹 Xử lý thêm vào giỏ
+  const product = allProducts.find((p) => p.id === Number(id));
+
+  if (!product)
+    return (
+      <div className="container mx-auto text-center py-20 text-gray-700 text-lg">
+        Không tìm thấy sản phẩm.
+      </div>
+    );
+
   const handleAddToCart = () => {
     addToCart({
       id: product.id,
@@ -34,7 +82,6 @@ const ShopDetail: FC = () => {
     });
   };
 
-  // 🔹 Xử lý mua ngay
   const handleBuyNow = () => {
     clearCart();
     addToCart({
@@ -49,35 +96,16 @@ const ShopDetail: FC = () => {
 
   return (
     <div className="container mx-auto py-12 px-6 grid grid-cols-1 md:grid-cols-2 gap-12">
-      {/* 🔹 Ảnh sản phẩm */}
+      {/* Ảnh sản phẩm */}
       <div>
         <img
           src={product.image}
           alt={product.title}
           className="rounded-lg shadow-lg w-full h-[450px] object-contain bg-gray-100"
         />
-
-        {/* Thumbnail nhỏ */}
-        <div className="flex space-x-4 mt-4">
-          <img
-            src="/assets/sport-product-1.jpg"
-            alt="thumb1"
-            className="w-20 h-20 object-contain bg-gray-100 rounded border cursor-pointer hover:opacity-80"
-          />
-          <img
-            src="/assets/sport-product-2.jpg"
-            alt="thumb2"
-            className="w-20 h-20 object-contain bg-gray-100 rounded border cursor-pointer hover:opacity-80"
-          />
-          <img
-            src="/assets/sport-product-3.jpg"
-            alt="thumb3"
-            className="w-20 h-20 object-contain bg-gray-100 rounded border cursor-pointer hover:opacity-80"
-          />
-        </div>
       </div>
 
-      {/* 🔹 Thông tin sản phẩm */}
+      {/* Thông tin sản phẩm */}
       <div>
         <h1 className="text-3xl font-bold mb-4 text-gray-800">
           {product.title}
@@ -89,7 +117,6 @@ const ShopDetail: FC = () => {
           {product.description}
         </p>
 
-        {/* Nút mua */}
         <div className="space-x-4">
           <button
             onClick={handleAddToCart}
@@ -103,39 +130,6 @@ const ShopDetail: FC = () => {
           >
             Mua ngay
           </button>
-        </div>
-
-        {/* Thông tin thêm */}
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-2 text-gray-800">
-            Thông tin chi tiết
-          </h3>
-          <ul className="list-disc list-inside text-gray-600 space-y-1">
-            <li>Chất liệu: 92% Polyester, 8% Spandex</li>
-            <li>Công nghệ: Nike Dri-FIT hút ẩm nhanh</li>
-            <li>Màu sắc: Đen, Xanh navy, Trắng</li>
-            <li>Kích cỡ: S, M, L, XL</li>
-          </ul>
-        </div>
-
-        {/* Review */}
-        <div className="mt-10">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">Đánh giá</h3>
-          <div className="space-y-4">
-            <div className="border p-4 rounded bg-gray-50">
-              <p className="font-semibold">Nguyễn Hữu Long</p>
-              <p className="text-gray-600 text-sm">
-                Áo mặc rất thoáng, thấm mồ hôi cực tốt. Mình dùng khi đá bóng
-                thấy dễ chịu!
-              </p>
-            </div>
-            <div className="border p-4 rounded bg-gray-50">
-              <p className="font-semibold">Trần Minh Tuấn</p>
-              <p className="text-gray-600 text-sm">
-                Form chuẩn, chất co giãn tốt, giặt không bị bai màu. Quá ưng!
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
