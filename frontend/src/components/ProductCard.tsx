@@ -1,6 +1,5 @@
-import { FC, useContext } from "react";
+import { FC } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CartContext } from "../context/CartContext";
 
 interface ProductCardProps {
   id: number;
@@ -9,24 +8,21 @@ interface ProductCardProps {
   image: string;
 }
 
+/**
+ * ProductCard - Hiển thị sản phẩm thể thao
+ * ✅ Bắt người dùng xem chi tiết trước khi thêm vào giỏ
+ */
 const ProductCard: FC<ProductCardProps> = ({ id, title, price, image }) => {
-  const { addToCart, clearCart } = useContext(CartContext);
   const navigate = useNavigate();
-  const numericPrice = Number(price.replace(/[^\d]/g, ""));
 
-  const handleAddToCart = () => {
-    addToCart({ id, title, price: numericPrice, image, quantity: 1 });
-    alert("✅ Đã thêm sản phẩm vào giỏ hàng!");
-  };
-
-  const handleBuyNow = () => {
-    clearCart();
-    addToCart({ id, title, price: numericPrice, image, quantity: 1 });
-    navigate("/cart");
+  // Khi bấm thêm -> chuyển sang trang chi tiết
+  const handleViewDetail = () => {
+    navigate(`/shop/${id}`);
   };
 
   return (
     <div className="bg-white rounded-lg shadow hover:shadow-lg overflow-hidden transition-transform hover:-translate-y-1">
+      {/* Khi click vào ảnh hoặc tên -> sang trang chi tiết */}
       <Link to={`/shop/${id}`}>
         <img
           src={image}
@@ -43,15 +39,16 @@ const ProductCard: FC<ProductCardProps> = ({ id, title, price, image }) => {
           {title}
         </Link>
         <p className="text-yellow-600 mt-1 font-medium">{price}</p>
+
         <div className="flex justify-center gap-2 mt-3">
           <button
-            onClick={handleAddToCart}
+            onClick={handleViewDetail}
             className="bg-yellow-500 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"
           >
-            Thêm vào giỏ
+            Xem chi tiết
           </button>
           <button
-            onClick={handleBuyNow}
+            onClick={() => navigate(`/shop/${id}`)}
             className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-900 transition"
           >
             Mua ngay

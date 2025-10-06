@@ -1,9 +1,10 @@
 import { FC, useContext } from "react";
 import { CartContext } from "../context/CartContext";
+import { useNavigate } from "react-router-dom";
 
 const Cart: FC = () => {
-  const { cart, updateQuantity, removeFromCart, clearCart } =
-    useContext(CartContext);
+  const { cart, updateQuantity, removeFromCart } = useContext(CartContext);
+  const navigate = useNavigate();
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -94,7 +95,7 @@ const Cart: FC = () => {
               </span>
             </p>
             <button
-              onClick={clearCart}
+              onClick={() => navigate("/checkout")} // ✅ Chuyển sang trang thanh toán
               className="mt-3 bg-black text-white px-6 py-2 rounded hover:bg-gray-900"
             >
               Thanh toán
