@@ -102,19 +102,20 @@ const Shop: FC = () => {
   const categories = [
     {
       name: "Áo",
-      image: "/assets/images/category/shirt.webp",
+      image: "/assets/images/product/Dri-Fit.avif", // Ảnh áo thun, áo khoác thể thao
     },
     {
       name: "Quần",
-      image: "/assets/images/category/pants.webp",
+      image: "/assets/images/product/Z.N.E._Pants_Black.avif", // Ảnh quần jogger hoặc quần short thể thao
     },
     {
       name: "Giày",
-      image: "/assets/images/category/shoes.webp",
+      image: "/assets/images/product/Samba_OG_Shoes_White.avif", // Ảnh giày chạy bộ, sneaker
     },
     {
       name: "Phụ kiện",
-      image: "/assets/images/category/accessories.webp",
+      image:
+        "/assets/images/product/tui-deo-cheo-reebok-classics-foundation-waist.webp", // Ảnh túi gym, găng tay, dây kháng lực
     },
   ];
 
