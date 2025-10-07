@@ -18,6 +18,7 @@ import Checkout from "./pages/Checkout";
 
 import ProfileUser from "./pages/ProfileUser/Page";
 import UserAccount from "./pages/ProfileUser/profile/UserAccount";
+import BlogDetail from "./pages/BlogDetail";
 
 function App() {
   const isLoggedIn = () => !!localStorage.getItem("token");
@@ -39,8 +40,8 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
 
           {/* Blog, liên hệ */}
-          <Route path="/blog/:id" element={<Blog />} />
           <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:id" element={<BlogDetail />} />
           <Route path="/contact" element={<Contact />} />
 
           {/* Người dùng */}
