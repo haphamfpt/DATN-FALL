@@ -1,10 +1,11 @@
-import { FC, useState, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { FC, useState, useContext, useEffect } from "react";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 
 const Shop: FC = () => {
   const { addToCart, clearCart } = useContext(CartContext);
   const navigate = useNavigate();
+  const { category: routeCategory } = useParams();
 
   const allProducts = [
     {
@@ -58,8 +59,16 @@ const Shop: FC = () => {
     },
   ];
 
-  const [category, setCategory] = useState<string>("Tất cả");
   const [maxPrice, setMaxPrice] = useState<number>(2000000);
+  const [category, setCategory] = useState<string>("Tất cả");
+
+  useEffect(() => {
+    if (routeCategory) {
+      setCategory(routeCategory);
+    } else {
+      setCategory("Tất cả");
+    }
+  }, [routeCategory]);
 
   const filteredProducts = allProducts.filter((p) => {
     const byCategory = category === "Tất cả" || p.category === category;
@@ -90,120 +99,173 @@ const Shop: FC = () => {
     navigate("/checkout");
   };
 
+  const categories = [
+    {
+      name: "Áo",
+      image: "/assets/images/category/shirt.webp",
+    },
+    {
+      name: "Quần",
+      image: "/assets/images/category/pants.webp",
+    },
+    {
+      name: "Giày",
+      image: "/assets/images/category/shoes.webp",
+    },
+    {
+      name: "Phụ kiện",
+      image: "/assets/images/category/accessories.webp",
+    },
+  ];
+
   return (
-    <div className="container mx-auto py-12 px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
-      {/* Sidebar */}
-      <aside className="md:col-span-1 space-y-6">
-        <div>
-          <h3 className="font-bold text-lg mb-2 text-gray-800">Danh mục</h3>
-          <ul className="space-y-2 text-gray-700">
-            {["Tất cả", "Áo", "Quần", "Giày", "Phụ kiện"].map((cat) => (
-              <li
-                key={cat}
-                className={`cursor-pointer hover:text-yellow-600 ${
-                  category === cat ? "font-semibold text-yellow-600" : ""
-                }`}
-                onClick={() => setCategory(cat)}
-              >
-                {cat}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-          <h3 className="font-bold text-lg mb-2 text-gray-800">Khoảng giá</h3>
-          <input
-            type="range"
-            min={100000}
-            max={2000000}
-            step={100000}
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(Number(e.target.value))}
-            className="w-full accent-yellow-500"
-          />
-          <p className="mt-2 text-sm text-gray-600">
-            Tối đa:{" "}
-            <span className="font-semibold text-yellow-600">
-              {maxPrice.toLocaleString("vi-VN")}đ
-            </span>
-          </p>
-        </div>
-      </aside>
-
-      {/* Product Grid */}
-      <section className="md:col-span-3">
+    <div className="container mx-auto py-12 px-6">
+      {/* ✅ Category Section */}
+      <section className="mb-12">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">
-          Bộ sưu tập thể thao 2025
+          Danh mục thể thao
         </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {categories.map((cat) => (
+            <div
+              key={cat.name}
+              onClick={() => navigate(`/shop/category/${cat.name}`)}
+              className="cursor-pointer bg-white rounded-lg shadow hover:shadow-lg overflow-hidden transition-transform hover:-translate-y-1"
+            >
+              <img
+                src={cat.image}
+                alt={cat.name}
+                className="w-full h-40 object-cover bg-gray-100"
+              />
+              <div className="p-3 text-center font-semibold text-gray-800 hover:text-yellow-600">
+                {cat.name} thể thao
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-        {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-            {filteredProducts.map((product) => (
-              <div
-                key={product.id}
-                className="bg-white rounded-lg shadow hover:shadow-lg overflow-hidden transition-transform hover:-translate-y-1"
-              >
-                <Link to={`/shop/${product.id}`}>
-                  <img
-                    src={product.image}
-                    alt={product.title}
-                    className="w-full h-56 object-contain bg-gray-100"
-                  />
-                </Link>
+      {/* ✅ Product Section */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        {/* Sidebar */}
+        <aside className="md:col-span-1 space-y-6">
+          <div>
+            <h3 className="font-bold text-lg mb-2 text-gray-800">Danh mục</h3>
+            <ul className="space-y-2 text-gray-700">
+              {["Tất cả", "Áo", "Quần", "Giày", "Phụ kiện"].map((cat) => (
+                <li
+                  key={cat}
+                  className={`cursor-pointer hover:text-yellow-600 ${
+                    category === cat ? "font-semibold text-yellow-600" : ""
+                  }`}
+                  onClick={() =>
+                    cat === "Tất cả"
+                      ? navigate("/shop")
+                      : navigate(`/shop/category/${cat}`)
+                  }
+                >
+                  {cat}
+                </li>
+              ))}
+            </ul>
+          </div>
 
-                <div className="p-4 text-center">
-                  <Link
-                    to={`/shop/${product.id}`}
-                    className="block font-semibold text-gray-800 hover:text-yellow-600"
-                  >
-                    {product.title}
+          <div>
+            <h3 className="font-bold text-lg mb-2 text-gray-800">Khoảng giá</h3>
+            <input
+              type="range"
+              min={100000}
+              max={2000000}
+              step={100000}
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(Number(e.target.value))}
+              className="w-full accent-yellow-500"
+            />
+            <p className="mt-2 text-sm text-gray-600">
+              Tối đa:{" "}
+              <span className="font-semibold text-yellow-600">
+                {maxPrice.toLocaleString("vi-VN")}đ
+              </span>
+            </p>
+          </div>
+        </aside>
+
+        {/* Product Grid */}
+        <section className="md:col-span-3">
+          <h2 className="text-2xl font-bold mb-6 text-gray-800">
+            {category === "Tất cả"
+              ? "Bộ sưu tập thể thao 2025"
+              : `Danh mục ${category}`}
+          </h2>
+
+          {filteredProducts.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              {filteredProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="bg-white rounded-lg shadow hover:shadow-lg overflow-hidden transition-transform hover:-translate-y-1"
+                >
+                  <Link to={`/shop/${product.id}`}>
+                    <img
+                      src={product.image}
+                      alt={product.title}
+                      className="w-full h-56 object-contain bg-gray-100"
+                    />
                   </Link>
-                  <p className="text-yellow-600 mt-1 font-medium">
-                    {product.price.toLocaleString("vi-VN")}đ
-                  </p>
 
-                  <div className="flex justify-center gap-2 mt-3">
-                    {product.hasAttributes ? (
-                      <>
-                        <Link
-                          to={`/shop/${product.id}`}
-                          className="bg-yellow-500 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"
-                        >
-                          Xem chi tiết
-                        </Link>
-                        <Link
-                          to={`/shop/${product.id}`}
-                          className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-900 transition"
-                        >
-                          Mua ngay
-                        </Link>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => handleAddToCart(product)}
-                          className="bg-yellow-500 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"
-                        >
-                          Thêm vào giỏ
-                        </button>
-                        <button
-                          onClick={() => handleBuyNow(product)}
-                          className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-900 transition"
-                        >
-                          Mua ngay
-                        </button>
-                      </>
-                    )}
+                  <div className="p-4 text-center">
+                    <Link
+                      to={`/shop/${product.id}`}
+                      className="block font-semibold text-gray-800 hover:text-yellow-600"
+                    >
+                      {product.title}
+                    </Link>
+                    <p className="text-yellow-600 mt-1 font-medium">
+                      {product.price.toLocaleString("vi-VN")}đ
+                    </p>
+
+                    <div className="flex justify-center gap-2 mt-3">
+                      {product.hasAttributes ? (
+                        <>
+                          <Link
+                            to={`/shop/${product.id}`}
+                            className="bg-yellow-500 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"
+                          >
+                            Xem chi tiết
+                          </Link>
+                          <Link
+                            to={`/shop/${product.id}`}
+                            className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-900 transition"
+                          >
+                            Mua ngay
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleAddToCart(product)}
+                            className="bg-yellow-500 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"
+                          >
+                            Thêm vào giỏ
+                          </button>
+                          <button
+                            onClick={() => handleBuyNow(product)}
+                            className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-900 transition"
+                          >
+                            Mua ngay
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500">Không có sản phẩm nào phù hợp.</p>
-        )}
-      </section>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">Không có sản phẩm nào phù hợp.</p>
+          )}
+        </section>
+      </div>
     </div>
   );
 };

@@ -1,8 +1,10 @@
 import { FC } from "react";
+import { useNavigate } from "react-router-dom";
 
 /**
  * CategoryCard
  * - Hiển thị 1 ô danh mục sản phẩm
+ * - Khi click sẽ chuyển sang /shop/category/<Tên danh mục>
  */
 interface Props {
   title: string;
@@ -10,8 +12,22 @@ interface Props {
 }
 
 const CategoryCard: FC<Props> = ({ title, image }) => {
+  const navigate = useNavigate();
+
+  // ✅ Lấy tên danh mục từ title
+  const getCategoryPath = () => {
+    if (title.includes("Áo")) return "Áo";
+    if (title.includes("Quần")) return "Quần";
+    if (title.includes("Giày")) return "Giày";
+    if (title.includes("Phụ kiện")) return "Phụ kiện";
+    return "Tất cả";
+  };
+
   return (
-    <div className="relative group cursor-pointer">
+    <div
+      onClick={() => navigate(`/shop/category/${getCategoryPath()}`)} // ✅ chuyển trang khi click
+      className="relative group cursor-pointer"
+    >
       <img
         src={image}
         alt={title}
