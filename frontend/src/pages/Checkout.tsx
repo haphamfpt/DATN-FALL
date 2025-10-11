@@ -5,6 +5,9 @@ import { CartContext } from "../context/CartContext";
 const Checkout: FC = () => {
   const { cart } = useContext(CartContext);
   const [checkoutItems, setCheckoutItems] = useState<any[]>([]);
+  const [discountRate, setDiscountRate] = useState<number>(0);
+  const [voucher, setVoucher] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -16,35 +19,50 @@ const Checkout: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ✅ Lấy danh sách sản phẩm để thanh toán (chọn hoặc toàn bộ)
+  // ✅ Lấy danh sách sản phẩm và mã giảm giá
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const mode = queryParams.get("mode");
 
     if (mode === "selected") {
-      const selected = sessionStorage.getItem("selectedProducts");
-      if (selected) {
-        setCheckoutItems(JSON.parse(selected));
+      const selectedData = sessionStorage.getItem("selectedProducts");
+      if (selectedData) {
+        const parsed = JSON.parse(selectedData);
+        setCheckoutItems(parsed.products || []);
+        setDiscountRate(parsed.discountRate || 0);
+        setVoucher(parsed.voucher || null);
       }
     } else {
       setCheckoutItems(cart);
     }
   }, [location, cart]);
 
-  // ✅ Tính tổng tiền
-  const total = checkoutItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  // ✅ Lấy dữ liệu người dùng lưu trước đó
+  useEffect(() => {
+    const savedInfo = localStorage.getItem("checkoutInfo");
+    if (savedInfo) {
+      setFormData(JSON.parse(savedInfo));
+    }
+  }, []);
 
-  // ✅ Cập nhật dữ liệu form
+  // ✅ Lưu form mỗi khi người dùng nhập
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const updated = { ...formData, [e.target.name]: e.target.value };
+    setFormData(updated);
+    localStorage.setItem("checkoutInfo", JSON.stringify(updated)); // Tự động lưu
   };
 
-  // ✅ Xử lý xác nhận thanh toán
+  // ✅ Tính toán tiền
+  const totalBeforeDiscount = checkoutItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const discountAmount = totalBeforeDiscount * discountRate;
+  const totalAfterDiscount = totalBeforeDiscount - discountAmount;
+
+  // ✅ Xác nhận thanh toán
   const handleConfirmOrder = () => {
     if (!formData.name || !formData.phone || !formData.address) {
       alert("Vui lòng điền đầy đủ thông tin giao hàng!");
@@ -55,21 +73,22 @@ const Checkout: FC = () => {
       id: Date.now(),
       customer: formData,
       products: checkoutItems,
-      total,
+      total: totalAfterDiscount,
+      discountRate,
+      voucher,
       createdAt: new Date().toLocaleString(),
     };
 
-    // ✅ Lưu đơn hàng vào localStorage (mô phỏng backend)
+    // Lưu đơn hàng vào localStorage (giả lập backend)
     const existingOrders = JSON.parse(localStorage.getItem("orders") || "[]");
     existingOrders.push(order);
     localStorage.setItem("orders", JSON.stringify(existingOrders));
 
-    // ✅ Dọn session và chuyển sang trang thành công
+    // ✅ Dọn session và điều hướng
     sessionStorage.removeItem("selectedProducts");
     navigate("/order-success", { state: { order } });
   };
 
-  // ✅ Trường hợp không có sản phẩm
   if (checkoutItems.length === 0) {
     return (
       <p className="text-center py-20 text-gray-500">
@@ -84,7 +103,7 @@ const Checkout: FC = () => {
         💳 Thanh toán đơn hàng
       </h1>
 
-      {/* 🔹 DANH SÁCH SẢN PHẨM */}
+      {/* 🔹 SẢN PHẨM */}
       <section className="mb-10 bg-white p-6 rounded-lg shadow">
         <h2 className="text-2xl font-bold mb-4 text-gray-800">
           Sản phẩm trong đơn
@@ -123,17 +142,39 @@ const Checkout: FC = () => {
           </tbody>
         </table>
 
-        <div className="text-right mt-6">
-          <p className="text-xl font-bold text-gray-800">
-            Tổng cộng:{" "}
+        <div className="text-right mt-6 space-y-1">
+          <p className="text-gray-600">
+            Tổng trước giảm:{" "}
+            <span className="font-medium">
+              {totalBeforeDiscount.toLocaleString("vi-VN")}đ
+            </span>
+          </p>
+
+          {discountRate > 0 && (
+            <>
+              <p className="text-green-600">
+                Mã giảm giá <span className="font-semibold">{voucher}</span> áp
+                dụng: <span>-{(discountRate * 100).toFixed(0)}%</span>
+              </p>
+              <p className="text-gray-600">
+                Giảm:{" "}
+                <span className="font-medium">
+                  -{discountAmount.toLocaleString("vi-VN")}đ
+                </span>
+              </p>
+            </>
+          )}
+
+          <p className="text-xl font-bold text-gray-800 mt-3">
+            Tổng thanh toán:{" "}
             <span className="text-yellow-600">
-              {total.toLocaleString("vi-VN")}đ
+              {totalAfterDiscount.toLocaleString("vi-VN")}đ
             </span>
           </p>
         </div>
       </section>
 
-      {/* 🔹 FORM THÔNG TIN NGƯỜI MUA */}
+      {/* 🔹 THÔNG TIN NGƯỜI NHẬN */}
       <section className="mb-10 bg-gray-50 p-6 rounded-lg shadow">
         <h2 className="text-2xl font-bold mb-4 text-gray-800">
           Thông tin giao hàng
@@ -221,7 +262,6 @@ const Checkout: FC = () => {
         </div>
       </section>
 
-      {/* 🔹 NÚT XÁC NHẬN */}
       <div className="text-right">
         <button
           onClick={handleConfirmOrder}
