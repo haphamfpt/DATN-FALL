@@ -37,11 +37,19 @@ const Cart: FC = () => {
 
   // ✅ Thanh toán sản phẩm đã chọn
   const handleCheckoutSelected = () => {
-    if (selectedItems.length === 0) {
-      alert("Vui lòng chọn sản phẩm để thanh toán!");
+    // Lọc sản phẩm có id nằm trong danh sách được tick
+    const selected = cart.filter((item) => selectedItems.includes(item.id));
+
+    if (selected.length === 0) {
+      alert("Vui lòng chọn ít nhất một sản phẩm để thanh toán!");
       return;
     }
-    navigate("/checkout");
+
+    // ✅ Lưu danh sách đã chọn vào sessionStorage
+    sessionStorage.setItem("selectedProducts", JSON.stringify(selected));
+
+    // ✅ Điều hướng sang trang thanh toán
+    navigate("/checkout?mode=selected");
   };
 
   // ✅ Tổng tiền toàn bộ

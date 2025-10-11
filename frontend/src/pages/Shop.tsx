@@ -91,15 +91,20 @@ const Shop: FC = () => {
   };
 
   const handleBuyNow = (product: any) => {
-    clearCart();
-    addToCart({
-      id: product.id,
-      title: product.title,
-      price: product.price,
-      image: product.image,
-      quantity: 1,
-    });
-    navigate("/checkout");
+    // Lưu sản phẩm tạm vào sessionStorage
+    sessionStorage.setItem(
+      "buyNowProduct",
+      JSON.stringify({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        image: product.image,
+        quantity: 1,
+      })
+    );
+
+    // Điều hướng sang trang thanh toán
+    navigate("/checkout?mode=buy-now");
   };
 
   const categories = [
