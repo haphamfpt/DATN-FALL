@@ -6,10 +6,19 @@ const Cart: FC = () => {
   const { cart, updateQuantity, removeFromCart } = useContext(CartContext);
   const navigate = useNavigate();
 
-  // ✅ Danh sách ID sản phẩm được chọn
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [voucherCode, setVoucherCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [appliedVoucher, setAppliedVoucher] = useState<string | null>(null);
 
-  // ✅ Chọn / bỏ chọn 1 sản phẩm
+  // ✅ Danh sách voucher hợp lệ (có thể mở rộng sau)
+  const validVouchers: Record<string, number> = {
+    GIAM10: 0.1, // giảm 10%
+    VIP20: 0.2, // giảm 20%
+    FREESHIP: 0.05, // giảm 5%
+  };
+
+  // ✅ Toggle chọn 1 sản phẩm
   const toggleSelect = (id: number) => {
     setSelectedItems((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
@@ -35,33 +44,61 @@ const Cart: FC = () => {
     setSelectedItems([]);
   };
 
+  // ✅ Tính tổng tiền
+  const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const selectedTotal = cart
+    .filter((i) => selectedItems.includes(i.id))
+    .reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+  // ✅ Áp dụng voucher
+  const handleApplyVoucher = () => {
+    const code = voucherCode.trim().toUpperCase();
+    if (!code) {
+      alert("Vui lòng nhập mã giảm giá!");
+      return;
+    }
+
+    if (validVouchers[code]) {
+      const rate = validVouchers[code];
+      setDiscount(rate);
+      setAppliedVoucher(code);
+      alert(
+        `🎉 Áp dụng thành công mã ${code}! Giảm ${(rate * 100).toFixed(0)}%`
+      );
+    } else {
+      alert("❌ Mã giảm giá không hợp lệ!");
+      setDiscount(0);
+      setAppliedVoucher(null);
+    }
+  };
+
   // ✅ Thanh toán sản phẩm đã chọn
   const handleCheckoutSelected = () => {
-    // Lọc sản phẩm có id nằm trong danh sách được tick
-    const selected = cart.filter((item) => selectedItems.includes(item.id));
-
-    if (selected.length === 0) {
+    if (selectedItems.length === 0) {
       alert("Vui lòng chọn ít nhất một sản phẩm để thanh toán!");
       return;
     }
 
-    // ✅ Lưu danh sách đã chọn vào sessionStorage
-    sessionStorage.setItem("selectedProducts", JSON.stringify(selected));
+    const selectedProducts = cart.filter((item) =>
+      selectedItems.includes(item.id)
+    );
 
-    // ✅ Điều hướng sang trang thanh toán
+    // ✅ Lưu sản phẩm + mã giảm giá
+    const checkoutData = {
+      products: selectedProducts,
+      discountRate: discount,
+      voucher: appliedVoucher,
+    };
+
+    sessionStorage.setItem("selectedProducts", JSON.stringify(checkoutData));
     navigate("/checkout?mode=selected");
   };
 
-  // ✅ Tổng tiền toàn bộ
-  const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
-
-  // ✅ Tổng tiền của sản phẩm đã chọn
-  const selectedTotal = cart
-    .filter((item) => selectedItems.includes(item.id))
-    .reduce((sum, i) => sum + i.price * i.quantity, 0);
-
   if (cart.length === 0)
     return <p className="text-center py-20 text-gray-500">Giỏ hàng trống.</p>;
+
+  // ✅ Tổng tiền sau giảm
+  const discountedTotal = selectedTotal - selectedTotal * discount;
 
   return (
     <div className="container mx-auto py-12 px-6">
@@ -144,30 +181,47 @@ const Cart: FC = () => {
         </tbody>
       </table>
 
-      {/* ✅ Tổng tiền và hành động */}
+      {/* 🔹 Voucher + tổng tiền */}
       <div className="mt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <input
+            type="text"
+            placeholder="Nhập mã giảm giá..."
+            value={voucherCode}
+            onChange={(e) => setVoucherCode(e.target.value)}
+            className="border p-2 rounded w-60"
+          />
           <button
-            onClick={handleDeleteSelected}
-            className="bg-red-500 text-white px-5 py-2 rounded hover:bg-red-600 transition"
+            onClick={handleApplyVoucher}
+            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded transition"
           >
-            Xóa sản phẩm đã chọn
+            Áp dụng
           </button>
+          {appliedVoucher && (
+            <p className="text-green-600 font-medium text-sm">
+              ✅ Mã {appliedVoucher} được áp dụng!
+            </p>
+          )}
         </div>
 
         <div className="text-right">
-          <p className="text-lg font-semibold text-gray-800 mb-2">
+          <p className="text-lg font-semibold text-gray-800">
             Tổng tiền đã chọn:{" "}
             <span className="text-yellow-600 text-xl">
               {selectedTotal.toLocaleString("vi-VN")}đ
             </span>
           </p>
-          <p className="text-gray-600 text-sm mb-4">
-            (Tổng tất cả: {total.toLocaleString("vi-VN")}đ)
-          </p>
+          {discount > 0 && (
+            <p className="text-sm text-green-600">
+              Giảm {discount * 100}% → Còn{" "}
+              <span className="font-semibold">
+                {discountedTotal.toLocaleString("vi-VN")}đ
+              </span>
+            </p>
+          )}
           <button
             onClick={handleCheckoutSelected}
-            className="bg-black text-white px-6 py-2 rounded hover:bg-gray-900 transition"
+            className="mt-3 bg-black text-white px-6 py-2 rounded hover:bg-gray-900 transition"
           >
             Thanh toán sản phẩm đã chọn
           </button>
