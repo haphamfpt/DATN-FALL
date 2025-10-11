@@ -1,6 +1,7 @@
 import { FC, useState, useContext, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
+import { Star } from "lucide-react"; // ⭐ thêm icon sao
 
 const Shop: FC = () => {
   const { addToCart, clearCart } = useContext(CartContext);
@@ -15,6 +16,7 @@ const Shop: FC = () => {
       image: "/assets/images/product/Dri-Fit.avif",
       category: "Áo",
       hasAttributes: true,
+      rating: 4.5,
     },
     {
       id: 2,
@@ -23,6 +25,7 @@ const Shop: FC = () => {
       image: "/assets/images/product/Z.N.E._Pants_Black.avif",
       category: "Quần",
       hasAttributes: true,
+      rating: 4.0,
     },
     {
       id: 3,
@@ -31,6 +34,7 @@ const Shop: FC = () => {
       image: "/assets/images/product/Samba_OG_Shoes_White.avif",
       category: "Giày",
       hasAttributes: true,
+      rating: 5.0,
     },
     {
       id: 4,
@@ -39,6 +43,7 @@ const Shop: FC = () => {
       image: "/assets/images/product/Áo-khoác-dệt-Prime-Retro-T7-Puma.avif",
       category: "Áo",
       hasAttributes: true,
+      rating: 4.8,
     },
     {
       id: 5,
@@ -48,6 +53,7 @@ const Shop: FC = () => {
         "/assets/images/product/tui-deo-cheo-reebok-classics-foundation-waist.webp",
       category: "Phụ kiện",
       hasAttributes: false,
+      rating: 4.6,
     },
     {
       id: 6,
@@ -56,6 +62,7 @@ const Shop: FC = () => {
       image: "/assets/images/product/gym.webp",
       category: "Phụ kiện",
       hasAttributes: false,
+      rating: 4.2,
     },
   ];
 
@@ -63,11 +70,7 @@ const Shop: FC = () => {
   const [category, setCategory] = useState<string>("Tất cả");
 
   useEffect(() => {
-    if (routeCategory) {
-      setCategory(routeCategory);
-    } else {
-      setCategory("Tất cả");
-    }
+    setCategory(routeCategory || "Tất cả");
   }, [routeCategory]);
 
   const filteredProducts = allProducts.filter((p) => {
@@ -102,20 +105,20 @@ const Shop: FC = () => {
   const categories = [
     {
       name: "Áo",
-      image: "/assets/images/product/Dri-Fit.avif", // Ảnh áo thun, áo khoác thể thao
+      image: "/assets/images/product/Dri-Fit.avif",
     },
     {
       name: "Quần",
-      image: "/assets/images/product/Z.N.E._Pants_Black.avif", // Ảnh quần jogger hoặc quần short thể thao
+      image: "/assets/images/product/Z.N.E._Pants_Black.avif",
     },
     {
       name: "Giày",
-      image: "/assets/images/product/Samba_OG_Shoes_White.avif", // Ảnh giày chạy bộ, sneaker
+      image: "/assets/images/product/Samba_OG_Shoes_White.avif",
     },
     {
       name: "Phụ kiện",
       image:
-        "/assets/images/product/tui-deo-cheo-reebok-classics-foundation-waist.webp", // Ảnh túi gym, găng tay, dây kháng lực
+        "/assets/images/product/tui-deo-cheo-reebok-classics-foundation-waist.webp",
     },
   ];
 
@@ -201,66 +204,108 @@ const Shop: FC = () => {
 
           {filteredProducts.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="bg-white rounded-lg shadow hover:shadow-lg overflow-hidden transition-transform hover:-translate-y-1"
-                >
-                  <Link to={`/shop/${product.id}`}>
-                    <img
-                      src={product.image}
-                      alt={product.title}
-                      className="w-full h-56 object-contain bg-gray-100"
-                    />
-                  </Link>
+              {filteredProducts.map((product) => {
+                const fullStars = Math.floor(product.rating);
+                const hasHalfStar = product.rating % 1 !== 0;
 
-                  <div className="p-4 text-center">
-                    <Link
-                      to={`/shop/${product.id}`}
-                      className="block font-semibold text-gray-800 hover:text-yellow-600"
-                    >
-                      {product.title}
+                return (
+                  <div
+                    key={product.id}
+                    className="bg-white rounded-lg shadow hover:shadow-lg overflow-hidden transition-transform hover:-translate-y-1"
+                  >
+                    <Link to={`/shop/${product.id}`}>
+                      <img
+                        src={product.image}
+                        alt={product.title}
+                        className="w-full h-56 object-contain bg-gray-100"
+                      />
                     </Link>
-                    <p className="text-yellow-600 mt-1 font-medium">
-                      {product.price.toLocaleString("vi-VN")}đ
-                    </p>
 
-                    <div className="flex justify-center gap-2 mt-3">
-                      {product.hasAttributes ? (
-                        <>
-                          <Link
-                            to={`/shop/${product.id}`}
-                            className="bg-yellow-500 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"
-                          >
-                            Xem chi tiết
-                          </Link>
-                          <Link
-                            to={`/shop/${product.id}`}
-                            className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-900 transition"
-                          >
-                            Mua ngay
-                          </Link>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => handleAddToCart(product)}
-                            className="bg-yellow-500 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"
-                          >
-                            Thêm vào giỏ
-                          </button>
-                          <button
-                            onClick={() => handleBuyNow(product)}
-                            className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-900 transition"
-                          >
-                            Mua ngay
-                          </button>
-                        </>
-                      )}
+                    <div className="p-4 text-center">
+                      <Link
+                        to={`/shop/${product.id}`}
+                        className="block font-semibold text-gray-800 hover:text-yellow-600"
+                      >
+                        {product.title}
+                      </Link>
+
+                      {/* ⭐ Đánh giá sản phẩm */}
+                      <div className="flex flex-col items-center gap-1 my-2">
+                        <div className="flex justify-center items-center gap-1">
+                          {[...Array(5)].map((_, index) => {
+                            const isFull = index < fullStars;
+                            const isHalf = index === fullStars && hasHalfStar;
+                            return (
+                              <div key={index} className="relative w-5 h-5">
+                                <Star
+                                  className="text-gray-300 absolute inset-0"
+                                  size={18}
+                                />
+                                {isFull && (
+                                  <Star
+                                    className="text-yellow-500 fill-yellow-500 absolute inset-0"
+                                    size={18}
+                                  />
+                                )}
+                                {isHalf && (
+                                  <div className="absolute inset-0 overflow-hidden w-[50%]">
+                                    <Star
+                                      className="text-yellow-500 fill-yellow-500 absolute left-0"
+                                      size={18}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <span className="text-xs text-gray-600">
+                          {product.rating}/5 (
+                          {Math.floor(Math.random() * 120) + 30} đánh giá)
+                        </span>
+                      </div>
+
+                      <p className="text-yellow-600 mt-1 font-medium">
+                        {product.price.toLocaleString("vi-VN")}đ
+                      </p>
+
+                      <div className="flex justify-center gap-2 mt-3">
+                        {product.hasAttributes ? (
+                          <>
+                            <Link
+                              to={`/shop/${product.id}`}
+                              className="bg-yellow-500 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"
+                            >
+                              Xem chi tiết
+                            </Link>
+                            <Link
+                              to={`/shop/${product.id}`}
+                              className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-900 transition"
+                            >
+                              Mua ngay
+                            </Link>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleAddToCart(product)}
+                              className="bg-yellow-500 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"
+                            >
+                              Thêm vào giỏ
+                            </button>
+                            <button
+                              onClick={() => handleBuyNow(product)}
+                              className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-900 transition"
+                            >
+                              Mua ngay
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-gray-500">Không có sản phẩm nào phù hợp.</p>

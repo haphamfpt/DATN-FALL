@@ -43,8 +43,6 @@ const Home: FC = () => {
                   alt={`banner-${index}`}
                   className="w-full h-full object-cover"
                 />
-
-                {/* Overlay + text trung tâm */}
                 <div className="absolute inset-0 bg-black/40 flex flex-col justify-center items-center text-center text-white px-4 sm:px-8">
                   <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold mb-3 leading-tight drop-shadow-lg">
                     {banner.title}
@@ -98,24 +96,28 @@ const Home: FC = () => {
             title="Áo thun thể thao Nike Dri-FIT"
             price="650.000đ"
             image="/assets/images/product/Dri-Fit.avif"
+            rating={4.5}
           />
           <ProductCard
             id={2}
             title="Quần jogger Adidas nam"
             price="850.000đ"
             image="/assets/images/product/Z.N.E._Pants_Black.avif"
+            rating={4.0}
           />
           <ProductCard
             id={3}
             title="Giày chạy bộ Asics Gel"
             price="1.900.000đ"
             image="/assets/images/product/Samba_OG_Shoes_White.avif"
+            rating={5.0}
           />
           <ProductCard
             id={4}
             title="Áo khoác thể thao Puma"
             price="1.200.000đ"
             image="/assets/images/product/Áo-khoác-dệt-Prime-Retro-T7-Puma.avif"
+            rating={4.8}
           />
         </div>
       </section>
