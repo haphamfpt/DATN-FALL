@@ -9,20 +9,11 @@ import CategoryCard from "../components/CategoryCard";
 import ProductCard from "../components/ProductCard";
 import BlogCard from "../components/BlogCard";
 
-/**
- * Home Page - Sportwear Theme
- */
 const Home: FC = () => {
-  const banners = [
-    "/assets/images/banner/banner1.jpg",
-    "/assets/images/banner/banner2.webp",
-    "/assets/images/banner/banner.png",
-  ];
-
   return (
-    <div>
+    <div className="w-full overflow-hidden">
       {/* 🔹 Banner slideshow */}
-      <section className="w-full h-[550px] relative">
+      <section className="w-full h-[350px] sm:h-[450px] md:h-[550px] relative">
         <Swiper
           modules={[Autoplay, Pagination, Navigation]}
           autoplay={{ delay: 4000, disableOnInteraction: false }}
@@ -33,13 +24,13 @@ const Home: FC = () => {
         >
           {[
             {
-              img: "/assets/images/banner/banner1.jpg", // 🟡 Ảnh 1: người chạy bộ
+              img: "/assets/images/banner/banner1.jpg",
               title: "Bứt phá từng sải chân",
               subtitle: "Khám phá bộ sưu tập Running 2025",
               button: "Khám phá ngay",
             },
             {
-              img: "/assets/images/banner/banner2.webp", // 🟢 Ảnh 2: màu xanh – vận động mạnh
+              img: "/assets/images/banner/banner2.webp",
               title: "Thách thức giới hạn của bạn",
               subtitle: "Phong cách thể thao đỉnh cao từ Nike, Adidas, Puma",
               button: "Mua sắm ngay",
@@ -47,22 +38,21 @@ const Home: FC = () => {
           ].map((banner, index) => (
             <SwiperSlide key={index}>
               <div className="relative w-full h-full">
-                {/* Ảnh nền */}
                 <img
                   src={banner.img}
                   alt={`banner-${index}`}
-                  className="w-full h-full object-cover brightness-90"
+                  className="w-full h-full object-cover"
                 />
 
-                {/* Overlay + Text */}
-                <div className="absolute inset-0 bg-black/40 flex flex-col justify-center items-start md:items-center px-10 md:px-0 text-white text-left md:text-center">
-                  <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight drop-shadow-lg">
+                {/* Overlay + text trung tâm */}
+                <div className="absolute inset-0 bg-black/40 flex flex-col justify-center items-center text-center text-white px-4 sm:px-8">
+                  <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold mb-3 leading-tight drop-shadow-lg">
                     {banner.title}
                   </h1>
-                  <p className="text-lg md:text-xl text-gray-200 mb-6 drop-shadow-md">
+                  <p className="text-sm sm:text-lg md:text-xl text-gray-200 mb-5 drop-shadow-md max-w-2xl">
                     {banner.subtitle}
                   </p>
-                  <button className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-6 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+                  <button className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg text-sm sm:text-base">
                     {banner.button}
                   </button>
                 </div>
@@ -73,9 +63,11 @@ const Home: FC = () => {
       </section>
 
       {/* 🔹 Categories */}
-      <section className="container mx-auto py-12 px-6">
-        <h2 className="text-2xl font-bold mb-6">Danh mục thể thao</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <section className="max-w-screen-xl mx-auto py-12 px-4 sm:px-6 md:px-8">
+        <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center md:text-left">
+          Danh mục thể thao
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
           <CategoryCard
             title="Áo thể thao"
             image="/assets/images/product/Dri-Fit.avif"
@@ -96,9 +88,11 @@ const Home: FC = () => {
       </section>
 
       {/* 🔹 Featured Products */}
-      <section className="container mx-auto py-12 px-6">
-        <h2 className="text-2xl font-bold mb-6">Sản phẩm nổi bật</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <section className="max-w-screen-xl mx-auto py-12 px-4 sm:px-6 md:px-8">
+        <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center md:text-left">
+          Sản phẩm nổi bật
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
           <ProductCard
             id={1}
             title="Áo thun thể thao Nike Dri-FIT"
@@ -128,9 +122,11 @@ const Home: FC = () => {
 
       {/* 🔹 Blog Section */}
       <section className="bg-gray-50 py-12">
-        <div className="container mx-auto px-6">
-          <h2 className="text-2xl font-bold mb-6">Tin tức & mẹo tập luyện</h2>
-          <div className="grid md:grid-cols-3 gap-6">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 md:px-8">
+          <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center md:text-left">
+            Tin tức & mẹo tập luyện
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             <BlogCard
               title="Bí quyết chọn giày chạy bộ phù hợp"
               date="12/09/2025"
