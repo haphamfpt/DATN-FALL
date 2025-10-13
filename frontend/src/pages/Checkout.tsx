@@ -95,6 +95,9 @@ const Checkout: FC = () => {
       total: totalAfterDiscount,
       discountRate,
       voucher,
+      paymentMethod: formData.paymentMethod, // ✅ thêm
+      status:
+        formData.paymentMethod === "bank" ? "Chờ chuyển khoản" : "Đã đặt hàng", // ✅ thêm
       createdAt: new Date().toLocaleString(),
     };
 
@@ -104,12 +107,11 @@ const Checkout: FC = () => {
 
     clearCart();
     sessionStorage.removeItem("selectedProducts");
-
-    // ✅ Giữ lại thông tin người dùng cho lần sau
     localStorage.setItem("checkoutInfo", JSON.stringify(formData));
 
     navigate("/order-success", { state: { order } });
   };
+  // Nếu không có sản phẩm để thanh toán
 
   if (checkoutItems.length === 0) {
     return (
