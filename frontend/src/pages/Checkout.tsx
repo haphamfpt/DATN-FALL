@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 
 const Checkout: FC = () => {
-  const { cart } = useContext(CartContext);
+  const { cart, clearCart } = useContext(CartContext);
   const [checkoutItems, setCheckoutItems] = useState<any[]>([]);
   const [discountRate, setDiscountRate] = useState<number>(0);
   const [voucher, setVoucher] = useState<string | null>(null);
@@ -19,7 +19,7 @@ const Checkout: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ✅ Lấy danh sách sản phẩm và mã giảm giá
+  // ✅ Lấy sản phẩm (từ session hoặc giỏ hàng)
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const mode = queryParams.get("mode");
@@ -27,34 +27,53 @@ const Checkout: FC = () => {
     if (mode === "selected") {
       const selectedData = sessionStorage.getItem("selectedProducts");
       if (selectedData) {
-        const parsed = JSON.parse(selectedData);
-        setCheckoutItems(parsed.products || []);
-        setDiscountRate(parsed.discountRate || 0);
-        setVoucher(parsed.voucher || null);
+        try {
+          const parsed = JSON.parse(selectedData);
+          if (Array.isArray(parsed)) {
+            setCheckoutItems(parsed);
+          } else {
+            setCheckoutItems(parsed.products || []);
+            setDiscountRate(parsed.discountRate || 0);
+            setVoucher(parsed.voucher || null);
+          }
+        } catch (err) {
+          console.error("Lỗi đọc selectedProducts:", err);
+          setCheckoutItems([]);
+        }
       }
     } else {
       setCheckoutItems(cart);
     }
   }, [location, cart]);
 
-  // ✅ Lấy dữ liệu người dùng lưu trước đó
+  // ✅ Ưu tiên lấy thông tin người dùng đã lưu hoặc tài khoản
   useEffect(() => {
     const savedInfo = localStorage.getItem("checkoutInfo");
+    const userInfo = localStorage.getItem("userInfo"); // ví dụ lưu khi đăng nhập
+
     if (savedInfo) {
       setFormData(JSON.parse(savedInfo));
+    } else if (userInfo) {
+      const user = JSON.parse(userInfo);
+      setFormData((prev) => ({
+        ...prev,
+        name: user.name || "",
+        phone: user.phone || "",
+        address: user.address || "",
+      }));
     }
   }, []);
 
-  // ✅ Lưu form mỗi khi người dùng nhập
+  // ✅ Tự động lưu lại khi người dùng gõ
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const updated = { ...formData, [e.target.name]: e.target.value };
     setFormData(updated);
-    localStorage.setItem("checkoutInfo", JSON.stringify(updated)); // Tự động lưu
+    localStorage.setItem("checkoutInfo", JSON.stringify(updated));
   };
 
-  // ✅ Tính toán tiền
+  // ✅ Tính tổng tiền
   const totalBeforeDiscount = checkoutItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
@@ -62,7 +81,7 @@ const Checkout: FC = () => {
   const discountAmount = totalBeforeDiscount * discountRate;
   const totalAfterDiscount = totalBeforeDiscount - discountAmount;
 
-  // ✅ Xác nhận thanh toán
+  // ✅ Thanh toán
   const handleConfirmOrder = () => {
     if (!formData.name || !formData.phone || !formData.address) {
       alert("Vui lòng điền đầy đủ thông tin giao hàng!");
@@ -79,13 +98,16 @@ const Checkout: FC = () => {
       createdAt: new Date().toLocaleString(),
     };
 
-    // Lưu đơn hàng vào localStorage (giả lập backend)
     const existingOrders = JSON.parse(localStorage.getItem("orders") || "[]");
     existingOrders.push(order);
     localStorage.setItem("orders", JSON.stringify(existingOrders));
 
-    // ✅ Dọn session và điều hướng
+    clearCart();
     sessionStorage.removeItem("selectedProducts");
+
+    // ✅ Giữ lại thông tin người dùng cho lần sau
+    localStorage.setItem("checkoutInfo", JSON.stringify(formData));
+
     navigate("/order-success", { state: { order } });
   };
 
@@ -103,7 +125,7 @@ const Checkout: FC = () => {
         💳 Thanh toán đơn hàng
       </h1>
 
-      {/* 🔹 SẢN PHẨM */}
+      {/* 🔹 DANH SÁCH SẢN PHẨM */}
       <section className="mb-10 bg-white p-6 rounded-lg shadow">
         <h2 className="text-2xl font-bold mb-4 text-gray-800">
           Sản phẩm trong đơn
@@ -149,22 +171,17 @@ const Checkout: FC = () => {
               {totalBeforeDiscount.toLocaleString("vi-VN")}đ
             </span>
           </p>
-
           {discountRate > 0 && (
             <>
               <p className="text-green-600">
-                Mã giảm giá <span className="font-semibold">{voucher}</span> áp
-                dụng: <span>-{(discountRate * 100).toFixed(0)}%</span>
+                Mã giảm giá <b>{voucher || "Không có"}</b> áp dụng:{" "}
+                <span>-{(discountRate * 100).toFixed(0)}%</span>
               </p>
               <p className="text-gray-600">
-                Giảm:{" "}
-                <span className="font-medium">
-                  -{discountAmount.toLocaleString("vi-VN")}đ
-                </span>
+                Giảm: -{discountAmount.toLocaleString("vi-VN")}đ
               </p>
             </>
           )}
-
           <p className="text-xl font-bold text-gray-800 mt-3">
             Tổng thanh toán:{" "}
             <span className="text-yellow-600">
@@ -224,41 +241,28 @@ const Checkout: FC = () => {
           Phương thức thanh toán
         </h2>
         <div className="flex flex-col gap-3">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="paymentMethod"
-              value="cod"
-              checked={formData.paymentMethod === "cod"}
-              onChange={handleChange}
-              className="accent-yellow-500"
-            />
-            <span>Thanh toán khi nhận hàng (COD)</span>
-          </label>
-
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="paymentMethod"
-              value="bank"
-              checked={formData.paymentMethod === "bank"}
-              onChange={handleChange}
-              className="accent-yellow-500"
-            />
-            <span>Chuyển khoản ngân hàng</span>
-          </label>
-
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="paymentMethod"
-              value="momo"
-              checked={formData.paymentMethod === "momo"}
-              onChange={handleChange}
-              className="accent-yellow-500"
-            />
-            <span>Thanh toán qua ví MoMo</span>
-          </label>
+          {["cod", "bank", "momo"].map((method) => (
+            <label
+              key={method}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <input
+                type="radio"
+                name="paymentMethod"
+                value={method}
+                checked={formData.paymentMethod === method}
+                onChange={handleChange}
+                className="accent-yellow-500"
+              />
+              <span>
+                {method === "cod"
+                  ? "Thanh toán khi nhận hàng (COD)"
+                  : method === "bank"
+                    ? "Chuyển khoản ngân hàng"
+                    : "Thanh toán qua ví MoMo"}
+              </span>
+            </label>
+          ))}
         </div>
       </section>
 

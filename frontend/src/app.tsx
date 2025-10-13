@@ -1,7 +1,7 @@
 import { Navigate, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import ScrollToTop from "./components/ScrollToTop"; // ✅ Thêm dòng này
+import ScrollToTop from "./components/ScrollToTop";
 
 import UserPage from "./pages/UserPage";
 import Login from "./pages/Auth/Login/login";
@@ -15,6 +15,7 @@ import Contact from "./pages/Contact";
 import ShopDetail from "./pages/ShopDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import OrderSuccess from "./pages/OrderSuccess"; // ✅ Thêm dòng này
 
 import ProfileUser from "./pages/ProfileUser/Page";
 import UserAccount from "./pages/ProfileUser/profile/UserAccount";
@@ -26,7 +27,7 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <ScrollToTop /> {/* ✅ Đặt ở đây để mỗi lần đổi route đều cuộn về top */}
+      <ScrollToTop />
       <main className="flex-1 pt-20">
         <Routes>
           {/* Trang chính */}
@@ -34,19 +35,17 @@ function App() {
           <Route path="/shop" element={<Shop />} />
           <Route path="/shop/category/:category" element={<Shop />} />
           <Route path="/shop/:id" element={<ShopDetail />} />
-
-          {/* ✅ Route giỏ hàng & thanh toán */}
+          {/* 🛒 Giỏ hàng & Thanh toán */}
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
-
-          {/* Blog, liên hệ */}
+          <Route path="/order-success" element={<OrderSuccess />} />{" "}
+          {/* ✅ Thêm route này */}
+          {/* Blog & Liên hệ */}
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogDetail />} />
           <Route path="/contact" element={<Contact />} />
-
           {/* Người dùng */}
           <Route path="/user" element={<UserPage />} />
-
           {/* Auth routes */}
           <Route path="/auth" element={<Auth />}>
             <Route
@@ -70,7 +69,6 @@ function App() {
               }
             />
           </Route>
-
           {/* Hồ sơ người dùng */}
           <Route path="/account" element={<ProfileUser />}>
             <Route index element={<Navigate to="profile" replace />} />
