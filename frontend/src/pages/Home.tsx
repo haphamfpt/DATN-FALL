@@ -13,7 +13,7 @@ const Home: FC = () => {
   return (
     <div className="w-full overflow-hidden">
       {/* 🔹 Banner slideshow */}
-      <section className="w-full h-[350px] sm:h-[450px] md:h-[550px] relative">
+      <section className="relative w-full h-[300px] sm:h-[420px] md:h-[520px] lg:h-[600px]">
         <Swiper
           modules={[Autoplay, Pagination, Navigation]}
           autoplay={{ delay: 4000, disableOnInteraction: false }}
@@ -43,14 +43,14 @@ const Home: FC = () => {
                   alt={`banner-${index}`}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-black/40 flex flex-col justify-center items-center text-center text-white px-4 sm:px-8">
-                  <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold mb-3 leading-tight drop-shadow-lg">
+                <div className="absolute inset-0 bg-black/50 flex flex-col justify-center items-center text-center px-3 sm:px-6 md:px-8">
+                  <h1 className="text-white text-2xl sm:text-3xl md:text-5xl font-extrabold mb-3 leading-tight drop-shadow-lg">
                     {banner.title}
                   </h1>
-                  <p className="text-sm sm:text-lg md:text-xl text-gray-200 mb-5 drop-shadow-md max-w-2xl">
+                  <p className="text-gray-200 text-sm sm:text-base md:text-lg max-w-2xl mb-5 drop-shadow-md">
                     {banner.subtitle}
                   </p>
-                  <button className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg text-sm sm:text-base">
+                  <button className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-5 sm:px-7 py-2 sm:py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg text-sm sm:text-base whitespace-nowrap">
                     {banner.button}
                   </button>
                 </div>
@@ -61,8 +61,8 @@ const Home: FC = () => {
       </section>
 
       {/* 🔹 Categories */}
-      <section className="max-w-screen-xl mx-auto py-12 px-4 sm:px-6 md:px-8">
-        <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center md:text-left">
+      <section className="max-w-screen-xl mx-auto py-10 px-4 sm:px-6 md:px-8">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6 text-center md:text-left">
           Danh mục thể thao
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
@@ -86,8 +86,8 @@ const Home: FC = () => {
       </section>
 
       {/* 🔹 Featured Products */}
-      <section className="max-w-screen-xl mx-auto py-12 px-4 sm:px-6 md:px-8">
-        <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center md:text-left">
+      <section className="max-w-screen-xl mx-auto py-10 px-4 sm:px-6 md:px-8">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6 text-center md:text-left">
           Sản phẩm nổi bật
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
@@ -123,9 +123,9 @@ const Home: FC = () => {
       </section>
 
       {/* 🔹 Blog Section */}
-      <section className="bg-gray-50 py-12">
+      <section className="bg-gray-50 py-10">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 md:px-8">
-          <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center md:text-left">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6 text-center md:text-left">
             Tin tức & mẹo tập luyện
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
