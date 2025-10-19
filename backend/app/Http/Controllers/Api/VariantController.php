@@ -74,4 +74,32 @@ class VariantController extends Controller
         }
     }
 
+    /**
+     * Lấy chi tiết một biến thể.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show($id)
+    {
+        try {
+            $variant = Variant::findOrFail($id);
+            return response()->json([
+                'status' => 'success',
+                'data' => $variant,
+            ], SymfonyResponse::HTTP_OK);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Biến thể không tồn tại.',
+            ], SymfonyResponse::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết biến thể.',
+                'error' => $e->getMessage(),
+            ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }
