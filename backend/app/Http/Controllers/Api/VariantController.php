@@ -102,4 +102,53 @@ class VariantController extends Controller
         }
     }
 
+    /**
+     * Cập nhật một biến thể.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            $validatedData = $request->validate([
+                'product_id' => 'required|exists:products,product_id',
+                'attribute_color_id' => 'required|exists:attribute_color,attribute_color_id',
+                'attribute_size_id' => 'required|exists:attribute_size,attribute_size_id',
+                'variant_stock' => 'required|integer|min:0',
+                'variant_listed_price' => 'required|numeric|min:0',
+                'variant_sale_price' => 'nullable|numeric|min:0',
+                'variant_import_price' => 'required|numeric|min:0',
+                'is_show' => 'required|boolean',
+            ]);
+
+            $variant = Variant::findOrFail($id);
+            $variant->update($validatedData);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $variant,
+                'message' => 'Biến thể đã được cập nhật thành công.',
+            ], SymfonyResponse::HTTP_OK);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Dữ liệu không hợp lệ.',
+                'errors' => $e->errors(),
+            ], SymfonyResponse::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Biến thể không tồn tại.',
+            ], SymfonyResponse::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi cập nhật biến thể.',
+                'error' => $e->getMessage(),
+            ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }
