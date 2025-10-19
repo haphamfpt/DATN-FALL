@@ -18,9 +18,6 @@ Route::prefix('v1')->group(function () {
     // Quản lý kích thước sản phẩm
     Route::apiResource('attribute-sizes', AttributeSizeController::class);
 
-    // Quản lý sản phẩm
-    Route::apiResource('products', ProductController::class);
-
     // Quản lý biến thể sản phẩm
     Route::apiResource('variants', VariantController::class);
 
