@@ -151,4 +151,33 @@ class VariantController extends Controller
         }
     }
 
+    /**
+     * Xóa một biến thể.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function destroy($id)
+    {
+        try {
+            $variant = Variant::findOrFail($id);
+            $variant->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Biến thể đã được xóa thành công.',
+            ], SymfonyResponse::HTTP_NO_CONTENT);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Biến thể không tồn tại.',
+            ], SymfonyResponse::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi xóa biến thể.',
+                'error' => $e->getMessage(),
+            ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }
