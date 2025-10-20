@@ -1,102 +1,79 @@
-import { FC, useState } from "react";
+import { FC, useContext } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, ShoppingCart, User } from "lucide-react";
+
+import { CartContext } from "../context/CartContext";
+import { AuthContext } from "../context/AuthContext";
 
 const Header: FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const toggleMenu = () => setIsOpen(!isOpen);
+  const { user, logout } = useContext(AuthContext);
+  const { cart } = useContext(CartContext);
 
   return (
-    <header className="w-full bg-white shadow-md fixed top-0 left-0 z-50">
-      <div className="max-w-screen-xl mx-auto flex justify-between items-center px-4 sm:px-6 md:px-8 h-16">
-        {/* 🔹 Logo */}
-        <Link
-          to="/"
-          className="text-xl sm:text-2xl font-bold text-gray-800 tracking-wide"
-        >
-          Aveline<span className="text-yellow-500">Sport</span>
+    <header className="bg-white shadow-md fixed w-full top-0 left-0 z-50">
+      <div className="container mx-auto flex justify-between items-center py-4 px-6">
+        {/* Logo */}
+        <Link to="/" className="text-2xl font-bold text-gray-800">
+          Aveline Shop
         </Link>
 
-        {/* 🔹 Desktop Menu */}
-        <nav className="hidden md:flex gap-6">
-          <Link
-            to="/"
-            className="text-gray-700 hover:text-yellow-500 transition-all duration-200 font-medium"
-          >
+        {/* Navigation */}
+        <nav className="space-x-6">
+          <Link to="/" className="hover:text-black">
             Trang chủ
           </Link>
-          <Link
-            to="/shop"
-            className="text-gray-700 hover:text-yellow-500 transition-all duration-200 font-medium"
-          >
-            Sản phẩm
+          <Link to="/shop" className="hover:text-black">
+            Sản Phẩm
           </Link>
-          <Link
-            to="/blog"
-            className="text-gray-700 hover:text-yellow-500 transition-all duration-200 font-medium"
-          >
-            Tin tức
+          <Link to="/blog" className="hover:text-black">
+            Bài viết
           </Link>
-          <Link
-            to="/about"
-            className="text-gray-700 hover:text-yellow-500 transition-all duration-200 font-medium"
-          >
-            Giới thiệu
-          </Link>
-          <Link
-            to="/contact"
-            className="text-gray-700 hover:text-yellow-500 transition-all duration-200 font-medium"
-          >
+          <Link to="/contact" className="hover:text-black">
             Liên hệ
           </Link>
         </nav>
 
-        {/* 🔹 Icons */}
-        <div className="flex items-center gap-4">
-          <button className="relative text-gray-700 hover:text-yellow-500 transition">
-            <ShoppingCart size={22} />
-            <span className="absolute -top-1 -right-2 bg-yellow-500 text-xs text-black font-bold rounded-full w-4 h-4 flex items-center justify-center">
-              2
-            </span>
-          </button>
-          <button className="text-gray-700 hover:text-yellow-500 transition">
-            <User size={22} />
-          </button>
+        {/* Right section */}
+        <div className="flex items-center space-x-4">
+          {/* Search */}
+          <input
+            type="text"
+            placeholder="Search..."
+            className="hidden sm:block border rounded-md px-3 py-1 text-sm bg-gray-50"
+          />
 
-          {/* 🔹 Mobile Menu Button */}
-          <button
-            onClick={toggleMenu}
-            className="md:hidden text-gray-800 hover:text-yellow-500 transition"
-          >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Cart */}
+          <Link to="/cart" className="relative">
+            🛒
+            {cart.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs px-2 py-0.5 rounded-full">
+                {cart.reduce((total, item) => total + item.quantity, 0)}
+              </span>
+            )}
+          </Link>
+
+          {/* Auth */}
+          {!user ? (
+            <>
+              <Link to="/auth/login" className="hover:text-black">
+                Đăng nhập
+              </Link>
+              <Link
+                to="/auth/register"
+                className="bg-black text-white px-3 py-1 rounded hover:bg-gray-800"
+              >
+                Đăng ký
+              </Link>
+            </>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <span>Xin chào bn {user}</span>
+              <button onClick={logout} className="text-red-600 hover:underline">
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* 🔹 Mobile Menu Dropdown */}
-      {isOpen && (
-        <div className="md:hidden bg-white shadow-md border-t border-gray-100">
-          <nav className="flex flex-col text-center py-3">
-            {[
-              { label: "Trang chủ", path: "/" },
-              { label: "Sản phẩm", path: "/shop" },
-              { label: "Tin tức", path: "/blog" },
-              { label: "Giới thiệu", path: "/about" },
-              { label: "Liên hệ", path: "/contact" },
-            ].map((item, idx) => (
-              <Link
-                key={idx}
-                to={item.path}
-                onClick={() => setIsOpen(false)}
-                className="py-2 text-gray-700 hover:text-yellow-500 transition font-medium"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      )}
     </header>
   );
 };

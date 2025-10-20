@@ -44,7 +44,7 @@ const Footer: FC = () => {
           <h3 className="text-yellow-500 font-semibold mb-4">Liên hệ</h3>
           <p className="text-sm">Email: support@avelinesport.vn</p>
           <p className="text-sm">Hotline: 0123 456 789</p>
-          <p className="text-sm">Địa chỉ: 123 Nguyễn Văn Cừ, Hà Nội</p>
+          <p className="text-sm">Địa chỉ: 123 FPT, Hà Nội</p>
           <div className="flex space-x-4 mt-3">
             <a
               href="#"
