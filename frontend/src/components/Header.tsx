@@ -66,7 +66,7 @@ const Header: FC = () => {
             </>
           ) : (
             <div className="flex items-center space-x-2">
-              <span>Xin chào {user}</span>
+              <span>Xin chào, {user}</span>
               <button onClick={logout} className="text-red-600 hover:underline">
                 Logout
               </button>
