@@ -21,4 +21,18 @@ class Variant extends Model
         'is_show',
     ];
 
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id', 'product_id');
+    }
+
+    public function color()
+    {
+        return $this->belongsTo(AttributeColor::class, 'attribute_color_id', 'attribute_color_id');
+    }
+
+    public function size()
+    {
+        return $this->belongsTo(AttributeSize::class, 'attribute_size_id', 'attribute_size_id');
+    }
 }
