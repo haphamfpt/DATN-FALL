@@ -144,6 +144,25 @@ class CategoryController extends Controller
      */
     public function destroy($id)
     {
-        //
+        try {
+            $category = Category::findOrFail($id);
+            $category->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Danh mục đã được xóa thành công.',
+            ], SymfonyResponse::HTTP_NO_CONTENT);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Danh mục không tồn tại.',
+            ], SymfonyResponse::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi xóa danh mục.',
+                'error' => $e->getMessage(),
+            ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }
