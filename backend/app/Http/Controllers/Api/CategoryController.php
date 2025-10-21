@@ -74,7 +74,24 @@ class CategoryController extends Controller
      */
     public function show($id)
     {
-        //
+        try {
+            $category = Category::findOrFail($id);
+            return response()->json([
+                'status' => 'success',
+                'data' => $category,
+            ], SymfonyResponse::HTTP_OK);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Danh mục không tồn tại.',
+            ], SymfonyResponse::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết danh mục.',
+                'error' => $e->getMessage(),
+            ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
