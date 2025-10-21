@@ -103,7 +103,37 @@ class CategoryController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        try {
+            $validatedData = $request->validate([
+                'category_name' => 'required|string|max:255',
+            ]);
+
+            $category = Category::findOrFail($id);
+            $category->update($validatedData);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $category,
+                'message' => 'Danh mục đã được cập nhật thành công.',
+            ], SymfonyResponse::HTTP_OK);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Dữ liệu không hợp lệ.',
+                'errors' => $e->errors(),
+            ], SymfonyResponse::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Danh mục không tồn tại.',
+            ], SymfonyResponse::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi cập nhật danh mục.',
+                'error' => $e->getMessage(),
+            ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
