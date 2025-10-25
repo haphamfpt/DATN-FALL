@@ -12,9 +12,21 @@ class ProductController extends Controller
      */
     public function index()
     {
-        //
-    }
+        try {
+            $products = Product::with(['category', 'variants.color', 'variants.size'])->get();
 
+            return response()->json([
+                'status' => 'success',
+                'data' => $products,
+            ], SymfonyResponse::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy danh sách sản phẩm.',
+                'error' => $e->getMessage(),
+            ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
     /**
      * Show the form for creating a new resource.
      */
