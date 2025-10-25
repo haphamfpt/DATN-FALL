@@ -95,16 +95,31 @@ class ProductController extends Controller
     /**
      * Cập nhật thông tin một sản phẩm.
      */
-    public function update(Request $request, $id)
-    {
-       
-    }
-
+   
     /**
      * Xóa một sản phẩm.
      */
     public function destroy($id)
     {
-       
+        try {
+            $product = Product::findOrFail($id);
+            $product->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Sản phẩm đã được xóa thành công.',
+            ], SymfonyResponse::HTTP_OK);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Sản phẩm không tồn tại.',
+            ], SymfonyResponse::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi xóa sản phẩm.',
+                'error' => $e->getMessage(),
+            ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }
