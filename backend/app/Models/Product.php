@@ -16,16 +16,17 @@ class Product extends Model
     public $timestamps = true;
 
     protected $fillable = [
-       
+        'category_id',
+        'product_name',
+        'product_image_url',
+        'product_image2_url',
+        'product_image3_url',
     ];
 
     public function category()
     {
-        return $this->belongsTo(Category::class, '');
+        return $this->belongsTo(Category::class, 'category_id', 'product_category_id');
     }
 
-    public function variants()
-    {
-        return $this->hasMany(Variant::class, '');
-    }
+    
 }
