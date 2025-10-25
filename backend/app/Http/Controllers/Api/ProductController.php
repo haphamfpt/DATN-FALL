@@ -75,15 +75,70 @@ class ProductController extends Controller
             $product = Product::with(['category', 'variants.color', 'variants.size'])->findOrFail($id);
 
             return response()->json([
-                
+                'status' => 'success',
+                'data' => $product,
             ], SymfonyResponse::HTTP_OK);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
-                
+                'status' => 'error',
+                'message' => 'Sản phẩm không tồn tại.',
             ], SymfonyResponse::HTTP_NOT_FOUND);
         } catch (\Exception $e) {
             return response()->json([
-                
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi lấy chi tiết sản phẩm.',
+                'error' => $e->getMessage(),
+
             ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
