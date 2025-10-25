@@ -32,7 +32,15 @@ class ProductController extends Controller
      */
     public function create()
     {
-        //
+        try {
+            $validatedData = $request->validate([
+                'category_id' => 'required|exists:product_category,product_category_id',
+                'product_name' => 'required|string|max:255',
+                'product_image_url' => 'nullable|string|max:255',
+                'product_image2_url' => 'nullable|string|max:255',
+                'product_image3_url' => 'nullable|string|max:255',
+            ]);
+
     }
 
     /**
