@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse; 
 
 class ProductController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Lấy danh sách tất cả sản phẩm.
      */
     public function index()
     {
@@ -27,13 +29,9 @@ class ProductController extends Controller
             ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-    /**
-     * Show the form for creating a new resource.
-     */
-   
 
     /**
-     * Store a newly created resource in storage.
+     * Tạo mới một sản phẩm.
      */
     public function store(Request $request)
     {
@@ -68,36 +66,27 @@ class ProductController extends Controller
         }
     }
 
-
     /**
-     * Display the specified resource.
+     * Lấy chi tiết một sản phẩm.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+       
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Cập nhật thông tin một sản phẩm.
      */
-    public function edit(string $id)
+    public function update(Request $request, $id)
     {
-        //
+       
     }
 
     /**
-     * Update the specified resource in storage.
+     * Xóa một sản phẩm.
      */
-    public function update(Request $request, string $id)
+    public function destroy($id)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+       
     }
 }
