@@ -53,9 +53,21 @@ class ProductController extends Controller
                 'message' => 'Sản phẩm đã được tạo thành công.',
                 'data' => $product,
             ], SymfonyResponse::HTTP_CREATED);
-       
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Dữ liệu không hợp lệ.',
+                'errors' => $e->errors(),
+            ], SymfonyResponse::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi tạo sản phẩm.',
+                'error' => $e->getMessage(),
+            ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
 
     /**
      * Display the specified resource.
