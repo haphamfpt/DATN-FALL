@@ -95,7 +95,45 @@ class ProductController extends Controller
     /**
      * Cập nhật thông tin một sản phẩm.
      */
-   
+    public function update(Request $request, $id)
+    {
+        try {
+            $validatedData = $request->validate([
+                'category_id' => 'required|exists:product_category,product_category_id',
+                'product_name' => 'required|string|max:255',
+                'product_image_url' => 'nullable|string|max:255',
+                'product_image2_url' => 'nullable|string|max:255',
+                'product_image3_url' => 'nullable|string|max:255',
+            ]);
+
+            $product = Product::findOrFail($id);
+            $product->update($validatedData);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Sản phẩm đã được cập nhật thành công.',
+                'data' => $product,
+            ], SymfonyResponse::HTTP_OK);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Dữ liệu không hợp lệ.',
+                'errors' => $e->errors(),
+            ], SymfonyResponse::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Sản phẩm không tồn tại.',
+            ], SymfonyResponse::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi cập nhật sản phẩm.',
+                'error' => $e->getMessage(),
+            ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     /**
      * Xóa một sản phẩm.
      */
