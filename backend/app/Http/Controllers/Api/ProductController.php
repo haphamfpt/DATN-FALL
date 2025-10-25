@@ -30,7 +30,12 @@ class ProductController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+   
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
     {
         try {
             $validatedData = $request->validate([
@@ -41,14 +46,15 @@ class ProductController extends Controller
                 'product_image3_url' => 'nullable|string|max:255',
             ]);
 
-    }
+            $product = Product::create($validatedData);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Sản phẩm đã được tạo thành công.',
+                'data' => $product,
+            ], SymfonyResponse::HTTP_CREATED);
+       
+        }
     }
 
     /**
