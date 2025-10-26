@@ -113,7 +113,7 @@ const Register: FC = () => {
               to="/auth/login"
               className="text-gray-600 hover:text-[#342e79]"
             >
-              Đã có tài khoản?
+              Đã có tài khoản chưa?
             </Link>
           </div>
 
