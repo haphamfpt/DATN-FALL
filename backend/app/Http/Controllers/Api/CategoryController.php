@@ -41,7 +41,7 @@ class CategoryController extends Controller
     {
         try {
             $validatedData = $request->validate([
-                'category_name' => 'required|string|max:255',
+                'product_category_name' => 'required|string|max:255',
             ]);
 
             $category = Category::create($validatedData);
@@ -105,7 +105,7 @@ class CategoryController extends Controller
     {
         try {
             $validatedData = $request->validate([
-                'category_name' => 'required|string|max:255',
+                'product_category_name' => 'required|string|max:255',
             ]);
 
             $category = Category::findOrFail($id);
