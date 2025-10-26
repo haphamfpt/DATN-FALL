@@ -1,125 +1,101 @@
 import { FC, useState, useContext, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
-import { Star } from "lucide-react"; // ⭐ thêm icon sao
+import { Star } from "lucide-react";
+import axiosClient from "../api/axiosClient"; // ✅ Dùng API thật
 
 const Shop: FC = () => {
-  const { addToCart, clearCart } = useContext(CartContext);
+  const { addToCart } = useContext(CartContext);
   const navigate = useNavigate();
   const { category: routeCategory } = useParams();
 
-  const allProducts = [
-    {
-      id: 1,
-      title: "Áo thun thể thao Nike Dri-FIT",
-      price: 650000,
-      image: "/assets/images/product/Dri-Fit.avif",
-      category: "Áo",
-      hasAttributes: true,
-      rating: 4.5,
-    },
-    {
-      id: 2,
-      title: "Quần jogger Adidas nam",
-      price: 850000,
-      image: "/assets/images/product/Z.N.E._Pants_Black.avif",
-      category: "Quần",
-      hasAttributes: true,
-      rating: 4.0,
-    },
-    {
-      id: 3,
-      title: "Giày chạy bộ Asics Gel",
-      price: 1900000,
-      image: "/assets/images/product/Samba_OG_Shoes_White.avif",
-      category: "Giày",
-      hasAttributes: true,
-      rating: 5.0,
-    },
-    {
-      id: 4,
-      title: "Áo khoác thể thao Puma",
-      price: 1200000,
-      image: "/assets/images/product/Áo-khoác-dệt-Prime-Retro-T7-Puma.avif",
-      category: "Áo",
-      hasAttributes: true,
-      rating: 4.8,
-    },
-    {
-      id: 5,
-      title: "Túi gym chống nước Reebok",
-      price: 450000,
-      image:
-        "/assets/images/product/tui-deo-cheo-reebok-classics-foundation-waist.webp",
-      category: "Phụ kiện",
-      hasAttributes: false,
-      rating: 4.6,
-    },
-    {
-      id: 6,
-      title: "Găng tay tập gym Under Armour",
-      price: 350000,
-      image: "/assets/images/product/gym.webp",
-      category: "Phụ kiện",
-      hasAttributes: false,
-      rating: 4.2,
-    },
-  ];
-
+  // ✅ State
+  const [allProducts, setAllProducts] = useState<any[]>([]);
   const [maxPrice, setMaxPrice] = useState<number>(2000000);
   const [category, setCategory] = useState<string>("Tất cả");
+  const [loading, setLoading] = useState<boolean>(true);
 
+  // ✅ Gọi API lấy danh sách sản phẩm khi load trang
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await axiosClient.get("/products");
+        setAllProducts(res.data.data || []);
+      } catch (error) {
+        console.error("❌ Lỗi khi tải sản phẩm:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  // ✅ Lấy danh mục từ URL nếu có
   useEffect(() => {
     setCategory(routeCategory || "Tất cả");
   }, [routeCategory]);
 
+  // ✅ Lọc sản phẩm theo danh mục và giá
   const filteredProducts = allProducts.filter((p) => {
-    const byCategory = category === "Tất cả" || p.category === category;
-    const byPrice = p.price <= maxPrice;
+    const productCategory = p.category?.name || p.category_name || "Khác";
+    const productPrice =
+      p.variant_sale_price || p.variant_listed_price || p.price || 0;
+    const byCategory = category === "Tất cả" || productCategory === category;
+    const byPrice = productPrice <= maxPrice;
     return byCategory && byPrice;
   });
 
+  // ✅ Thêm vào giỏ
   const handleAddToCart = (product: any) => {
+    const price =
+      product.variant_sale_price ||
+      product.variant_listed_price ||
+      product.price ||
+      0;
+
     addToCart({
       id: product.id,
-      title: product.title,
-      price: product.price,
-      image: product.image,
+      title: product.product_name || product.title,
+      price,
+      image:
+        product.product_image_url ||
+        product.image ||
+        "/assets/images/product/default.webp",
       quantity: 1,
     });
     alert("✅ Đã thêm sản phẩm vào giỏ hàng!");
   };
 
+  // ✅ Mua ngay
   const handleBuyNow = (product: any) => {
-    // Lưu sản phẩm tạm vào sessionStorage
+    const price =
+      product.variant_sale_price ||
+      product.variant_listed_price ||
+      product.price ||
+      0;
+
     sessionStorage.setItem(
       "buyNowProduct",
       JSON.stringify({
         id: product.id,
-        title: product.title,
-        price: product.price,
-        image: product.image,
+        title: product.product_name || product.title,
+        price,
+        image:
+          product.product_image_url ||
+          product.image ||
+          "/assets/images/product/default.webp",
         quantity: 1,
       })
     );
-
-    // Điều hướng sang trang thanh toán
     navigate("/checkout?mode=buy-now");
   };
 
+  // ✅ Danh mục hiển thị trên đầu trang
   const categories = [
-    {
-      name: "Áo",
-      image: "/assets/images/product/Dri-Fit.avif",
-    },
-    {
-      name: "Quần",
-      image: "/assets/images/product/Z.N.E._Pants_Black.avif",
-    },
-    {
-      name: "Giày",
-      image: "/assets/images/product/Samba_OG_Shoes_White.avif",
-    },
+    { name: "Áo", image: "/assets/images/product/Dri-Fit.avif" },
+    { name: "Quần", image: "/assets/images/product/Z.N.E._Pants_Black.avif" },
+    { name: "Giày", image: "/assets/images/product/Samba_OG_Shoes_White.avif" },
     {
       name: "Phụ kiện",
       image:
@@ -127,9 +103,18 @@ const Shop: FC = () => {
     },
   ];
 
+  // ✅ Loading UI
+  if (loading) {
+    return (
+      <div className="w-full h-[60vh] flex justify-center items-center text-gray-500">
+        Đang tải sản phẩm...
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-12 px-6">
-      {/* ✅ Category Section */}
+      {/* ✅ Danh mục sản phẩm */}
       <section className="mb-12">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">
           Danh mục thể thao
@@ -154,7 +139,7 @@ const Shop: FC = () => {
         </div>
       </section>
 
-      {/* ✅ Product Section */}
+      {/* ✅ Sản phẩm + Sidebar */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Sidebar */}
         <aside className="md:col-span-1 space-y-6">
@@ -199,7 +184,7 @@ const Shop: FC = () => {
           </div>
         </aside>
 
-        {/* Product Grid */}
+        {/* Grid sản phẩm */}
         <section className="md:col-span-3">
           <h2 className="text-2xl font-bold mb-6 text-gray-800">
             {category === "Tất cả"
@@ -210,8 +195,15 @@ const Shop: FC = () => {
           {filteredProducts.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
               {filteredProducts.map((product) => {
-                const fullStars = Math.floor(product.rating);
-                const hasHalfStar = product.rating % 1 !== 0;
+                const price =
+                  product.variant_sale_price ||
+                  product.variant_listed_price ||
+                  product.price ||
+                  0;
+
+                const rating = product.rating || 4.5;
+                const fullStars = Math.floor(rating);
+                const hasHalfStar = rating % 1 !== 0;
 
                 return (
                   <div
@@ -220,8 +212,12 @@ const Shop: FC = () => {
                   >
                     <Link to={`/shop/${product.id}`}>
                       <img
-                        src={product.image}
-                        alt={product.title}
+                        src={
+                          product.product_image_url ||
+                          product.image ||
+                          "/assets/images/product/default.webp"
+                        }
+                        alt={product.product_name}
                         className="w-full h-56 object-contain bg-gray-100"
                       />
                     </Link>
@@ -231,10 +227,10 @@ const Shop: FC = () => {
                         to={`/shop/${product.id}`}
                         className="block font-semibold text-gray-800 hover:text-yellow-600"
                       >
-                        {product.title}
+                        {product.product_name}
                       </Link>
 
-                      {/* ⭐ Đánh giá sản phẩm */}
+                      {/* ⭐ Đánh giá */}
                       <div className="flex flex-col items-center gap-1 my-2">
                         <div className="flex justify-center items-center gap-1">
                           {[...Array(5)].map((_, index) => {
@@ -265,47 +261,28 @@ const Shop: FC = () => {
                           })}
                         </div>
                         <span className="text-xs text-gray-600">
-                          {product.rating}/5 (
-                          {Math.floor(Math.random() * 120) + 30} đánh giá)
+                          {rating}/5 ({Math.floor(Math.random() * 120) + 30}{" "}
+                          đánh giá)
                         </span>
                       </div>
 
                       <p className="text-yellow-600 mt-1 font-medium">
-                        {product.price.toLocaleString("vi-VN")}đ
+                        {price.toLocaleString("vi-VN")}đ
                       </p>
 
                       <div className="flex justify-center gap-2 mt-3">
-                        {product.hasAttributes ? (
-                          <>
-                            <Link
-                              to={`/shop/${product.id}`}
-                              className="bg-yellow-500 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"
-                            >
-                              Xem chi tiết
-                            </Link>
-                            <Link
-                              to={`/shop/${product.id}`}
-                              className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-900 transition"
-                            >
-                              Mua ngay
-                            </Link>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => handleAddToCart(product)}
-                              className="bg-yellow-500 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"
-                            >
-                              Thêm vào giỏ
-                            </button>
-                            <button
-                              onClick={() => handleBuyNow(product)}
-                              className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-900 transition"
-                            >
-                              Mua ngay
-                            </button>
-                          </>
-                        )}
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          className="bg-yellow-500 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"
+                        >
+                          Thêm vào giỏ
+                        </button>
+                        <button
+                          onClick={() => handleBuyNow(product)}
+                          className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-900 transition"
+                        >
+                          Mua ngay
+                        </button>
                       </div>
                     </div>
                   </div>
