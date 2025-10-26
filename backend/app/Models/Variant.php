@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Variant extends Model
 {
-    protected $table = 'variant';
+    // ✅ Bảng đúng là 'product_variants'
+    protected $table = 'product_variants';
     protected $primaryKey = 'variant_id';
     public $timestamps = true;
 
