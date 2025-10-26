@@ -2,7 +2,7 @@ import { FC, useState, useContext, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import { Star } from "lucide-react";
-import axiosClient from "../api/axiosClient"; // ✅ Dùng API thật
+import axiosClient from "../api/axiosClient";
 
 const Shop: FC = () => {
   const { addToCart } = useContext(CartContext);
@@ -11,11 +11,12 @@ const Shop: FC = () => {
 
   // ✅ State
   const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [maxPrice, setMaxPrice] = useState<number>(2000000);
   const [category, setCategory] = useState<string>("Tất cả");
   const [loading, setLoading] = useState<boolean>(true);
 
-  // ✅ Gọi API lấy danh sách sản phẩm khi load trang
+  // ✅ Lấy sản phẩm
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -27,18 +28,30 @@ const Shop: FC = () => {
         setLoading(false);
       }
     };
-
     fetchProducts();
   }, []);
 
-  // ✅ Lấy danh mục từ URL nếu có
+  // ✅ Lấy danh mục thật từ API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axiosClient.get("/categories");
+        setCategories(res.data.data || []);
+      } catch (error) {
+        console.error("❌ Lỗi khi tải danh mục:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // ✅ Lấy danh mục từ URL (ví dụ: /shop/category/Quần)
   useEffect(() => {
     setCategory(routeCategory || "Tất cả");
   }, [routeCategory]);
 
-  // ✅ Lọc sản phẩm theo danh mục và giá
+  // ✅ Lọc sản phẩm
   const filteredProducts = allProducts.filter((p) => {
-    const productCategory = p.category?.name || p.category_name || "Khác";
+    const productCategory = p.category?.name || "Khác";
     const productPrice =
       p.variant_sale_price || p.variant_listed_price || p.price || 0;
     const byCategory = category === "Tất cả" || productCategory === category;
@@ -53,15 +66,11 @@ const Shop: FC = () => {
       product.variant_listed_price ||
       product.price ||
       0;
-
     addToCart({
       id: product.id,
-      title: product.product_name || product.title,
+      title: product.product_name,
       price,
-      image:
-        product.product_image_url ||
-        product.image ||
-        "/assets/images/product/default.webp",
+      image: product.product_image_url || "/assets/images/product/default.webp",
       quantity: 1,
     });
     alert("✅ Đã thêm sản phẩm vào giỏ hàng!");
@@ -74,34 +83,19 @@ const Shop: FC = () => {
       product.variant_listed_price ||
       product.price ||
       0;
-
     sessionStorage.setItem(
       "buyNowProduct",
       JSON.stringify({
         id: product.id,
-        title: product.product_name || product.title,
+        title: product.product_name,
         price,
         image:
-          product.product_image_url ||
-          product.image ||
-          "/assets/images/product/default.webp",
+          product.product_image_url || "/assets/images/product/default.webp",
         quantity: 1,
       })
     );
     navigate("/checkout?mode=buy-now");
   };
-
-  // ✅ Danh mục hiển thị trên đầu trang
-  const categories = [
-    { name: "Áo", image: "/assets/images/product/Dri-Fit.avif" },
-    { name: "Quần", image: "/assets/images/product/Z.N.E._Pants_Black.avif" },
-    { name: "Giày", image: "/assets/images/product/Samba_OG_Shoes_White.avif" },
-    {
-      name: "Phụ kiện",
-      image:
-        "/assets/images/product/tui-deo-cheo-reebok-classics-foundation-waist.webp",
-    },
-  ];
 
   // ✅ Loading UI
   if (loading) {
@@ -114,28 +108,32 @@ const Shop: FC = () => {
 
   return (
     <div className="container mx-auto py-12 px-6">
-      {/* ✅ Danh mục sản phẩm */}
+      {/* ✅ Danh mục thể thao */}
       <section className="mb-12">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">
           Danh mục thể thao
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {categories.map((cat) => (
-            <div
-              key={cat.name}
-              onClick={() => navigate(`/shop/category/${cat.name}`)}
-              className="cursor-pointer bg-white rounded-lg shadow hover:shadow-lg overflow-hidden transition-transform hover:-translate-y-1"
-            >
-              <img
-                src={cat.image}
-                alt={cat.name}
-                className="w-full h-40 object-cover bg-gray-100"
-              />
-              <div className="p-3 text-center font-semibold text-gray-800 hover:text-yellow-600">
-                {cat.name} thể thao
+          {categories.length > 0 ? (
+            categories.map((cat) => (
+              <div
+                key={cat.id}
+                onClick={() => navigate(`/shop/category/${cat.name}`)}
+                className="cursor-pointer bg-white rounded-lg shadow hover:shadow-lg overflow-hidden transition-transform hover:-translate-y-1"
+              >
+                <img
+                  src={cat.image_url || "/assets/images/product/default.webp"}
+                  alt={cat.name}
+                  className="w-full h-40 object-cover bg-gray-100"
+                />
+                <div className="p-3 text-center font-semibold text-gray-800 hover:text-yellow-600">
+                  {cat.name}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-gray-500">Chưa có danh mục nào.</p>
+          )}
         </div>
       </section>
 
@@ -146,19 +144,23 @@ const Shop: FC = () => {
           <div>
             <h3 className="font-bold text-lg mb-2 text-gray-800">Danh mục</h3>
             <ul className="space-y-2 text-gray-700">
-              {["Tất cả", "Áo", "Quần", "Giày", "Phụ kiện"].map((cat) => (
+              <li
+                className={`cursor-pointer hover:text-yellow-600 ${
+                  category === "Tất cả" ? "font-semibold text-yellow-600" : ""
+                }`}
+                onClick={() => navigate("/shop")}
+              >
+                Tất cả
+              </li>
+              {categories.map((cat) => (
                 <li
-                  key={cat}
+                  key={cat.id}
                   className={`cursor-pointer hover:text-yellow-600 ${
-                    category === cat ? "font-semibold text-yellow-600" : ""
+                    category === cat.name ? "font-semibold text-yellow-600" : ""
                   }`}
-                  onClick={() =>
-                    cat === "Tất cả"
-                      ? navigate("/shop")
-                      : navigate(`/shop/category/${cat}`)
-                  }
+                  onClick={() => navigate(`/shop/category/${cat.name}`)}
                 >
-                  {cat}
+                  {cat.name}
                 </li>
               ))}
             </ul>
@@ -200,7 +202,6 @@ const Shop: FC = () => {
                   product.variant_listed_price ||
                   product.price ||
                   0;
-
                 const rating = product.rating || 4.5;
                 const fullStars = Math.floor(rating);
                 const hasHalfStar = rating % 1 !== 0;
