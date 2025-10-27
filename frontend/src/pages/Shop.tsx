@@ -24,6 +24,7 @@ const Shop: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
+  const [priceFilter, setPriceFilter] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const { addToCart } = useContext(CartContext);
   const navigate = useNavigate();
@@ -42,42 +43,61 @@ const Shop: React.FC = () => {
   }, []);
 
   // 🛍️ Gọi API sản phẩm
+  const fetchProducts = async (
+    categoryId?: number,
+    minPrice?: number,
+    maxPrice?: number
+  ) => {
+    try {
+      let url = "http://127.0.0.1:8000/api/v1/products";
+      const params: any = {};
+
+      if (categoryId) params.category_id = categoryId;
+      if (minPrice !== undefined) params.min_price = minPrice;
+      if (maxPrice !== undefined) params.max_price = maxPrice;
+
+      const res = await axios.get(url, { params });
+      const data = res.data.data || [];
+      setProducts(data);
+      setFilteredProducts(data);
+    } catch (error) {
+      console.error("❌ Lỗi khi tải sản phẩm:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await axios.get("http://127.0.0.1:8000/api/v1/products");
-        const data = res.data.data || [];
-        setProducts(data);
-        setFilteredProducts(data);
-      } catch (error) {
-        console.error("❌ Lỗi khi tải sản phẩm:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchProducts();
   }, []);
 
   // 🎯 Lọc theo danh mục
-  const handleFilter = (categoryId: number | null) => {
+  const handleFilterCategory = (categoryId: number | null) => {
     setActiveCategory(categoryId);
-    if (categoryId === null) setFilteredProducts(products);
-    else
-      setFilteredProducts(products.filter((p) => p.category_id === categoryId));
+    fetchProducts(categoryId || undefined);
+  };
+
+  // 🎯 Lọc theo giá tiền
+  const handleFilterPrice = (range: string) => {
+    setPriceFilter(range);
+    const ranges: Record<string, [number, number]> = {
+      "0-500": [0, 500000],
+      "500-1000": [500000, 1000000],
+      "1000-2000": [1000000, 2000000],
+      "2000+": [2000000, 10000000],
+    };
+    const [min, max] = ranges[range] || [0, 10000000];
+    fetchProducts(activeCategory || undefined, min, max);
   };
 
   // ⚙️ Kiểm tra loại sản phẩm
-  const isSimpleProduct = (product: Product) => {
-    // Giả định: category_id = 4 => túi/găng tay (1 size)
-    return [4].includes(product.category_id);
-  };
+  const isSimpleProduct = (product: Product) =>
+    [4].includes(product.category_id);
 
   // 🛒 Thêm giỏ
   const handleAddToCart = (product: Product) => {
     if (!isSimpleProduct(product)) {
-      toast("🧾 Vui lòng chọn size & màu ở trang chi tiết", {
-        icon: "ℹ️",
-      });
+      toast("🧾 Vui lòng chọn size & màu ở trang chi tiết", { icon: "ℹ️" });
       navigate(`/shop/${product.product_id}`);
       return;
     }
@@ -94,9 +114,7 @@ const Shop: React.FC = () => {
   // ⚡ Mua ngay
   const handleBuyNow = (product: Product) => {
     if (!isSimpleProduct(product)) {
-      toast("🧾 Vui lòng chọn size & màu ở trang chi tiết", {
-        icon: "ℹ️",
-      });
+      toast("🧾 Vui lòng chọn size & màu ở trang chi tiết", { icon: "ℹ️" });
       navigate(`/shop/${product.product_id}`);
       return;
     }
@@ -110,24 +128,31 @@ const Shop: React.FC = () => {
     navigate("/checkout");
   };
 
+  // 💰 Hàm format giá tiền chuẩn Việt Nam
+  const formatPrice = (price: number | string) => {
+    const num = Number(price); // ép kiểu chắc chắn về số
+    if (isNaN(num)) return "0đ";
+    return num.toLocaleString("vi-VN", { maximumFractionDigits: 0 }) + "đ";
+  };
+
   if (loading) return <p className="text-center py-10">Đang tải dữ liệu...</p>;
 
   return (
     <div className="w-full min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-6">
-        {/* 🔹 Sidebar danh mục */}
+        {/* 🔹 Sidebar danh mục & lọc giá */}
         <aside className="w-full md:w-1/4 bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
           <h2 className="text-lg font-semibold mb-4 text-gray-700">
             Danh mục sản phẩm
           </h2>
-          <ul className="space-y-2">
+          <ul className="space-y-2 mb-6">
             <li
               className={`cursor-pointer p-2 rounded-lg ${
                 activeCategory === null
                   ? "bg-blue-500 text-white"
                   : "hover:bg-gray-100"
               }`}
-              onClick={() => handleFilter(null)}
+              onClick={() => handleFilterCategory(null)}
             >
               Tất cả
             </li>
@@ -139,11 +164,57 @@ const Shop: React.FC = () => {
                     ? "bg-blue-500 text-white"
                     : "hover:bg-gray-100"
                 }`}
-                onClick={() => handleFilter(cat.category_id)}
+                onClick={() => handleFilterCategory(cat.category_id)}
               >
                 {cat.category_name}
               </li>
             ))}
+          </ul>
+
+          <h2 className="text-lg font-semibold mb-3 text-gray-700">
+            Lọc theo giá (VNĐ)
+          </h2>
+          <ul className="space-y-2">
+            <li
+              onClick={() => handleFilterPrice("0-500")}
+              className={`cursor-pointer p-2 rounded-lg ${
+                priceFilter === "0-500"
+                  ? "bg-yellow-500 text-black font-semibold"
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              Dưới 500.000đ
+            </li>
+            <li
+              onClick={() => handleFilterPrice("500-1000")}
+              className={`cursor-pointer p-2 rounded-lg ${
+                priceFilter === "500-1000"
+                  ? "bg-yellow-500 text-black font-semibold"
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              500.000đ - 1.000.000đ
+            </li>
+            <li
+              onClick={() => handleFilterPrice("1000-2000")}
+              className={`cursor-pointer p-2 rounded-lg ${
+                priceFilter === "1000-2000"
+                  ? "bg-yellow-500 text-black font-semibold"
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              1.000.000đ - 2.000.000đ
+            </li>
+            <li
+              onClick={() => handleFilterPrice("2000+")}
+              className={`cursor-pointer p-2 rounded-lg ${
+                priceFilter === "2000+"
+                  ? "bg-yellow-500 text-black font-semibold"
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              Trên 2.000.000đ
+            </li>
           </ul>
         </aside>
 
@@ -158,7 +229,7 @@ const Shop: React.FC = () => {
 
           {filteredProducts.length === 0 ? (
             <p className="text-gray-500 text-center py-8">
-              Không có sản phẩm nào trong danh mục này.
+              Không có sản phẩm nào phù hợp.
             </p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -167,7 +238,6 @@ const Shop: React.FC = () => {
                   key={product.product_id}
                   className="group bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col"
                 >
-                  {/* Ảnh sản phẩm */}
                   <Link
                     to={`/shop/${product.product_id}`}
                     className="relative block"
@@ -183,9 +253,7 @@ const Shop: React.FC = () => {
                     />
                   </Link>
 
-                  {/* Nội dung */}
                   <div className="p-4 flex flex-col flex-1">
-                    {/* Tên sản phẩm */}
                     <Link
                       to={`/shop/${product.product_id}`}
                       className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2 hover:text-blue-600 transition mb-2"
@@ -193,12 +261,11 @@ const Shop: React.FC = () => {
                       {product.product_name}
                     </Link>
 
-                    {/* Giá sản phẩm */}
+                    {/* 💰 Giá hiển thị chuẩn Việt Nam */}
                     <p className="text-red-600 font-bold text-lg mb-2">
-                      {product.price.toLocaleString("vi-VN")} ₫
+                      {formatPrice(product.price)}
                     </p>
 
-                    {/* Đánh giá sao */}
                     <div className="flex items-center text-yellow-500 text-sm mb-3">
                       {"★".repeat(Math.floor(product.rating || 4))}
                       {"☆".repeat(5 - Math.floor(product.rating || 4))}
@@ -207,7 +274,6 @@ const Shop: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* Hai nút hành động */}
                     <div className="flex gap-2 mt-auto">
                       <button
                         onClick={() => handleAddToCart(product)}
@@ -219,7 +285,6 @@ const Shop: React.FC = () => {
                       >
                         🛒 Thêm giỏ
                       </button>
-
                       <button
                         onClick={() => handleBuyNow(product)}
                         className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black py-2 rounded-lg text-sm font-semibold transition-all duration-300"
