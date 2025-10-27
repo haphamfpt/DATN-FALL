@@ -12,24 +12,17 @@ interface Review {
 }
 
 const ShopDetail: FC = () => {
-  const { id } = useParams();
+  const { id } = useParams(); // id = product_id
   const { addToCart, clearCart } = useContext(CartContext);
   const navigate = useNavigate();
 
-  // ✅ Dữ liệu sản phẩm từ API
   const [product, setProduct] = useState<any>(null);
   const [related, setRelated] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-
-  // ✅ State chọn size, màu, số lượng
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState<number>(1);
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
-
-  // ✅ Tab mô tả / bình luận
   const [activeTab, setActiveTab] = useState<"desc" | "reviews">("desc");
-
-  // ✅ Đánh giá (review) lưu localStorage
   const [reviews, setReviews] = useState<Review[]>([]);
   const [newReview, setNewReview] = useState({
     name: "",
@@ -45,15 +38,19 @@ const ShopDetail: FC = () => {
         const data = res.data.data;
         setProduct(data);
 
-        // ✅ Gọi thêm sản phẩm liên quan cùng danh mục
-        const relatedRes = await axiosClient.get(
-          `/products?category_id=${data.category_id}`
-        );
-        setRelated(
-          relatedRes.data.data.filter((p: any) => p.id !== data.id).slice(0, 3)
-        );
+        // Lấy sản phẩm liên quan
+        if (data?.category_id) {
+          const relatedRes = await axiosClient.get(
+            `/products?category_id=${data.category_id}`
+          );
+          setRelated(
+            relatedRes.data.data
+              ?.filter((p: any) => p.product_id !== data.product_id)
+              .slice(0, 3) || []
+          );
+        }
       } catch (err) {
-        console.error("Lỗi khi tải sản phẩm:", err);
+        console.error("❌ Lỗi khi tải sản phẩm:", err);
       } finally {
         setLoading(false);
       }
@@ -87,7 +84,7 @@ const ShopDetail: FC = () => {
       name: newReview.name,
       rating: newReview.rating,
       comment: newReview.comment,
-      createdAt: new Date().toLocaleString(),
+      createdAt: new Date().toLocaleString("vi-VN"),
     };
     const updated = [newItem, ...reviews];
     setReviews(updated);
@@ -95,7 +92,7 @@ const ShopDetail: FC = () => {
     setNewReview({ name: "", rating: 5, comment: "" });
   };
 
-  // ✅ Loading UI
+  // ✅ Loading
   if (loading) {
     return (
       <div className="text-center py-20 text-gray-600 text-lg">
@@ -139,7 +136,7 @@ const ShopDetail: FC = () => {
       0;
 
     addToCart({
-      id: product.id,
+      id: product.product_id,
       title:
         product.product_name +
         (selectedSize || selectedColor
@@ -157,15 +154,13 @@ const ShopDetail: FC = () => {
   // ✅ Mua ngay
   const handleBuyNow = () => {
     clearCart();
-
     const price =
       product.variant_sale_price ||
       product.variant_listed_price ||
       product.price ||
       0;
-
     addToCart({
-      id: product.id,
+      id: product.product_id,
       title: product.product_name,
       price,
       image: product.product_image_url || "/assets/images/product/default.webp",
@@ -179,11 +174,11 @@ const ShopDetail: FC = () => {
       {/* 🔹 Breadcrumb */}
       <div className="text-sm text-gray-500 container mx-auto mb-6 px-6">
         <Link to="/" className="hover:text-yellow-600">
-          Home
+          Trang chủ
         </Link>{" "}
         /{" "}
         <Link to="/shop" className="hover:text-yellow-600">
-          Shop
+          Cửa hàng
         </Link>{" "}
         / <span className="text-gray-800">{product.product_name}</span>
       </div>
@@ -227,7 +222,7 @@ const ShopDetail: FC = () => {
             đ
           </p>
 
-          {/* Chọn size */}
+          {/* Size */}
           {sizes.length > 0 && (
             <div className="mb-4">
               <h3 className="font-semibold mb-2">Chọn Size:</h3>
@@ -249,7 +244,7 @@ const ShopDetail: FC = () => {
             </div>
           )}
 
-          {/* Chọn màu */}
+          {/* Màu */}
           {colors.length > 0 && (
             <div className="mb-4">
               <h3 className="font-semibold mb-2">Chọn Màu:</h3>
@@ -271,7 +266,7 @@ const ShopDetail: FC = () => {
             </div>
           )}
 
-          {/* Số lượng + nút hành động */}
+          {/* Số lượng */}
           <div className="flex items-center gap-3 mt-4">
             <div className="flex items-center border rounded">
               <button
@@ -308,7 +303,7 @@ const ShopDetail: FC = () => {
         </div>
       </div>
 
-      {/* 🔹 Tabs: Mô tả / Bình luận */}
+      {/* 🔹 Tabs */}
       <div className="container mx-auto mt-16 px-6">
         <div className="flex border-b mb-6">
           <button
@@ -342,7 +337,6 @@ const ShopDetail: FC = () => {
 
         {activeTab === "reviews" && (
           <div className="bg-white p-6 rounded-lg shadow">
-            {/* Form đánh giá */}
             <h3 className="text-lg font-semibold mb-3 text-gray-800">
               Viết đánh giá của bạn
             </h3>
@@ -386,7 +380,6 @@ const ShopDetail: FC = () => {
               Gửi đánh giá
             </button>
 
-            {/* Danh sách bình luận */}
             <div className="mt-6">
               <h3 className="text-lg font-semibold mb-4 text-gray-800">
                 Đánh giá từ người mua ({reviews.length})
@@ -423,10 +416,10 @@ const ShopDetail: FC = () => {
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
           {related.map((item) => (
             <div
-              key={item.id}
+              key={item.product_id}
               className="bg-white rounded-lg shadow hover:shadow-lg overflow-hidden transition-transform hover:-translate-y-1"
             >
-              <Link to={`/shop/${item.id}`}>
+              <Link to={`/shop/${item.product_id}`}>
                 <img
                   src={
                     item.product_image_url ||
@@ -438,7 +431,7 @@ const ShopDetail: FC = () => {
               </Link>
               <div className="p-4 text-center">
                 <Link
-                  to={`/shop/${item.id}`}
+                  to={`/shop/${item.product_id}`}
                   className="block font-semibold text-gray-800 hover:text-yellow-600"
                 >
                   {item.product_name}
