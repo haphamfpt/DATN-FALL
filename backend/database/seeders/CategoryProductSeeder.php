@@ -16,25 +16,25 @@ class CategoryProductSeeder extends Seeder
         DB::table('categories')->insert([
             [
                 'category_name' => 'Áo thể thao',
-                'image_url' => 'https://static.nike.com/a/images/t_PDP_1728_v1/f8fa25b7-f0d7-47f3-a9b5-fcbb2da0e8b9/tee-Dri-FIT.png',
+                'image_url' => 'https://down-vn.img.susercontent.com/file/sg-11134201-7r98x-lp0mw0nh0rbh06',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'category_name' => 'Quần thể thao',
-                'image_url' => 'https://assets.adidas.com/images/w_600,f_auto,q_auto/3e734bfa4acb482d9ef3af2300979366_9366/Quan_Adidas_Tiro_21.png',
+                'image_url' => 'https://down-vn.img.susercontent.com/file/sg-11134201-7rcc5-lrjhdodtl5lz27',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'category_name' => 'Giày thể thao',
-                'image_url' => 'https://assets.adidas.com/images/w_600,f_auto,q_auto/3e734bfa4acb482d9ef3af2300979366_9366/Giay_Adidas_Samba_OG_Trang_B75806_01_standard.jpg',
+                'image_url' => 'https://down-vn.img.susercontent.com/file/vn-11134201-7r98o-lsah7r2uxrns6d',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'category_name' => 'Phụ kiện gym',
-                'image_url' => 'https://underarmour.scene7.com/is/image/Underarmour/1369823-001_DEFAULT?$pdp$',
+                'image_url' => 'https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lr1k8vqopnfn14',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

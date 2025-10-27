@@ -5,21 +5,22 @@ namespace App\Http\Controllers\Api;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse; // Import đúng lớp Response
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class CategoryController extends Controller
 {
     /**
-     * Lấy danh sách tất cả các danh mục.
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * 📂 Lấy danh sách tất cả danh mục.
+     * GET /api/v1/categories
      */
     public function index()
     {
         try {
-            $categories = Category::all();
+            $categories = Category::select('category_id', 'category_name', 'image_url')->get();
+
             return response()->json([
                 'status' => 'success',
+                'total' => $categories->count(),
                 'data' => $categories,
             ], SymfonyResponse::HTTP_OK);
         } catch (\Exception $e) {
@@ -32,24 +33,22 @@ class CategoryController extends Controller
     }
 
     /**
-     * Tạo mới một danh mục.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * 🆕 Tạo mới một danh mục.
      */
     public function store(Request $request)
     {
         try {
             $validatedData = $request->validate([
                 'category_name' => 'required|string|max:255',
+                'image_url' => 'nullable|string|max:255',
             ]);
 
             $category = Category::create($validatedData);
 
             return response()->json([
                 'status' => 'success',
-                'data' => $category,
                 'message' => 'Danh mục đã được tạo thành công.',
+                'data' => $category,
             ], SymfonyResponse::HTTP_CREATED);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -67,15 +66,13 @@ class CategoryController extends Controller
     }
 
     /**
-     * Lấy chi tiết một danh mục.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
+     * 🔍 Lấy chi tiết danh mục theo ID.
      */
     public function show($id)
     {
         try {
-            $category = Category::findOrFail($id);
+            $category = Category::with('products')->findOrFail($id);
+
             return response()->json([
                 'status' => 'success',
                 'data' => $category,
@@ -83,29 +80,26 @@ class CategoryController extends Controller
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Danh mục không tồn tại.',
+                'message' => 'Không tìm thấy danh mục có ID = ' . $id,
             ], SymfonyResponse::HTTP_NOT_FOUND);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Đã xảy ra lỗi khi lấy chi tiết danh mục.',
+                'message' => 'Đã xảy ra lỗi khi tải chi tiết danh mục.',
                 'error' => $e->getMessage(),
             ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
-     * Cập nhật một danh mục.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
+     * ✏️ Cập nhật danh mục theo ID.
      */
     public function update(Request $request, $id)
     {
         try {
             $validatedData = $request->validate([
                 'category_name' => 'required|string|max:255',
+                'image_url' => 'nullable|string|max:255',
             ]);
 
             $category = Category::findOrFail($id);
@@ -113,8 +107,8 @@ class CategoryController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'data' => $category,
                 'message' => 'Danh mục đã được cập nhật thành công.',
+                'data' => $category,
             ], SymfonyResponse::HTTP_OK);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -125,7 +119,7 @@ class CategoryController extends Controller
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Danh mục không tồn tại.',
+                'message' => 'Không tìm thấy danh mục để cập nhật.',
             ], SymfonyResponse::HTTP_NOT_FOUND);
         } catch (\Exception $e) {
             return response()->json([
@@ -137,10 +131,7 @@ class CategoryController extends Controller
     }
 
     /**
-     * Xóa một danh mục.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
+     * 🗑️ Xóa danh mục theo ID.
      */
     public function destroy($id)
     {
@@ -151,11 +142,11 @@ class CategoryController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Danh mục đã được xóa thành công.',
-            ], SymfonyResponse::HTTP_NO_CONTENT);
+            ], SymfonyResponse::HTTP_OK);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Danh mục không tồn tại.',
+                'message' => 'Không tìm thấy danh mục để xóa.',
             ], SymfonyResponse::HTTP_NOT_FOUND);
         } catch (\Exception $e) {
             return response()->json([
