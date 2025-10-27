@@ -12,7 +12,7 @@ interface Review {
 }
 
 const ShopDetail: FC = () => {
-  const { id } = useParams(); // id = product_id
+  const { id } = useParams();
   const { addToCart, clearCart } = useContext(CartContext);
   const navigate = useNavigate();
 
@@ -38,7 +38,7 @@ const ShopDetail: FC = () => {
         const data = res.data.data;
         setProduct(data);
 
-        // Lấy sản phẩm liên quan
+        // ✅ Lấy sản phẩm liên quan
         if (data?.category_id) {
           const relatedRes = await axiosClient.get(
             `/products?category_id=${data.category_id}`
@@ -112,29 +112,20 @@ const ShopDetail: FC = () => {
     );
   }
 
-  // ✅ Lấy danh sách màu / size từ biến thể
-  const colors =
-    product.variants?.map((v: any) => v.color?.name).filter((v: any) => v) ||
-    [];
-  const sizes =
-    product.variants?.map((v: any) => v.size?.name).filter((v: any) => v) || [];
+  // ✅ Kiểm tra danh mục để hiển thị size/màu
+  const showSizeColor =
+    product.category_id === 1 || // Áo thể thao
+    product.category_id === 2 || // Quần thể thao
+    product.category_id === 3; // Giày thể thao
+
+  // ✅ Danh sách giả lập size và màu
+  const sizes = showSizeColor ? ["S", "M", "L", "XL", "XXL"] : [];
+
+  const colors = showSizeColor ? ["Đen", "Trắng", "Xanh", "Đỏ"] : [];
 
   // ✅ Thêm vào giỏ
   const handleAddToCart = () => {
-    if (
-      (sizes.length > 0 && !selectedSize) ||
-      (colors.length > 0 && !selectedColor)
-    ) {
-      alert("Vui lòng chọn đầy đủ size và màu (nếu có)!");
-      return;
-    }
-
-    const price =
-      product.variant_sale_price ||
-      product.variant_listed_price ||
-      product.price ||
-      0;
-
+    const price = product.price || 0;
     addToCart({
       id: product.product_id,
       title:
@@ -154,11 +145,7 @@ const ShopDetail: FC = () => {
   // ✅ Mua ngay
   const handleBuyNow = () => {
     clearCart();
-    const price =
-      product.variant_sale_price ||
-      product.variant_listed_price ||
-      product.price ||
-      0;
+    const price = product.price || 0;
     addToCart({
       id: product.product_id,
       title: product.product_name,
@@ -214,22 +201,17 @@ const ShopDetail: FC = () => {
           </div>
 
           <p className="text-2xl text-yellow-600 font-semibold mb-4">
-            {(
-              product.variant_sale_price ||
-              product.variant_listed_price ||
-              product.price
-            ).toLocaleString("vi-VN")}
-            đ
+            {Number(product.price).toLocaleString("vi-VN")}₫
           </p>
 
           {/* Size */}
-          {sizes.length > 0 && (
+          {showSizeColor && (
             <div className="mb-4">
               <h3 className="font-semibold mb-2">Chọn Size:</h3>
               <div className="flex gap-3 flex-wrap">
-                {sizes.map((s: string, idx: number) => (
+                {sizes.map((s: string) => (
                   <button
-                    key={idx}
+                    key={s}
                     onClick={() => setSelectedSize(s)}
                     className={`px-4 py-2 border rounded ${
                       selectedSize === s
@@ -245,13 +227,13 @@ const ShopDetail: FC = () => {
           )}
 
           {/* Màu */}
-          {colors.length > 0 && (
+          {showSizeColor && (
             <div className="mb-4">
               <h3 className="font-semibold mb-2">Chọn Màu:</h3>
               <div className="flex gap-3 flex-wrap">
-                {colors.map((c: string, idx: number) => (
+                {colors.map((c: string) => (
                   <button
-                    key={idx}
+                    key={c}
                     onClick={() => setSelectedColor(c)}
                     className={`px-4 py-2 border rounded ${
                       selectedColor === c
@@ -266,7 +248,7 @@ const ShopDetail: FC = () => {
             </div>
           )}
 
-          {/* Số lượng */}
+          {/* Số lượng & nút */}
           <div className="flex items-center gap-3 mt-4">
             <div className="flex items-center border rounded">
               <button
@@ -303,7 +285,7 @@ const ShopDetail: FC = () => {
         </div>
       </div>
 
-      {/* 🔹 Tabs */}
+      {/* 🔹 Tabs mô tả & đánh giá */}
       <div className="container mx-auto mt-16 px-6">
         <div className="flex border-b mb-6">
           <button
@@ -329,9 +311,17 @@ const ShopDetail: FC = () => {
         </div>
 
         {activeTab === "desc" && (
-          <div className="bg-white p-6 rounded-lg shadow text-gray-700 whitespace-pre-line">
-            {product.product_description ||
-              "Hiện chưa có mô tả cho sản phẩm này."}
+          <div className="bg-white p-6 rounded-lg shadow text-gray-700 space-y-3">
+            <p>
+              <strong>Mô tả ngắn:</strong>{" "}
+              {product.short_description || "Chưa có mô tả ngắn."}
+            </p>
+            <p className="whitespace-pre-line">
+              <strong>Chi tiết:</strong>{" "}
+              {product.long_description ||
+                product.product_description ||
+                "Chưa có mô tả chi tiết."}
+            </p>
           </div>
         )}
 
@@ -437,12 +427,7 @@ const ShopDetail: FC = () => {
                   {item.product_name}
                 </Link>
                 <p className="text-yellow-600 mt-1 font-medium">
-                  {(
-                    item.variant_sale_price ||
-                    item.variant_listed_price ||
-                    item.price
-                  ).toLocaleString("vi-VN")}
-                  đ
+                  {Number(item.price).toLocaleString("vi-VN")}₫
                 </p>
               </div>
             </div>

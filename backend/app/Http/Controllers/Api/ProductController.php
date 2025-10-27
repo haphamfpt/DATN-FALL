@@ -10,21 +10,32 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 class ProductController extends Controller
 {
     /**
-     * Lấy danh sách sản phẩm (có thể lọc theo danh mục và giá).
-     * GET /api/v1/products?category_id=2&max_price=1000000
+     * 📦 Lấy danh sách sản phẩm (lọc theo danh mục hoặc khoảng giá).
+     * GET /api/v1/products?category_id=2&min_price=500000&max_price=2000000
      */
     public function index(Request $request)
     {
         try {
-            $query = Product::with('category');
+            $query = Product::select(
+                'product_id',
+                'category_id',
+                'product_name',
+                'product_image_url',
+                'description',
+                'price'
+            );
 
             // ✅ Lọc theo danh mục
             if ($request->has('category_id')) {
                 $query->where('category_id', $request->category_id);
             }
 
-            // ✅ Lọc theo giá
-            if ($request->has('max_price')) {
+            // ✅ Lọc theo khoảng giá
+            if ($request->has('min_price') && $request->has('max_price')) {
+                $query->whereBetween('price', [$request->min_price, $request->max_price]);
+            } elseif ($request->has('min_price')) {
+                $query->where('price', '>=', $request->min_price);
+            } elseif ($request->has('max_price')) {
                 $query->where('price', '<=', $request->max_price);
             }
 
@@ -32,19 +43,22 @@ class ProductController extends Controller
 
             return response()->json([
                 'status' => 'success',
+                'total' => $products->count(),
                 'data' => $products,
             ], SymfonyResponse::HTTP_OK);
-        } catch (\Exception $e) {
+
+        } catch (\Throwable $th) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Đã xảy ra lỗi khi lấy danh sách sản phẩm.',
-                'error' => $e->getMessage(),
+                'message' => 'Không thể tải danh sách sản phẩm.',
+                'error' => $th->getMessage(),
             ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
-     * Tạo sản phẩm mới.
+     * 🆕 Tạo mới sản phẩm.
+     * POST /api/v1/products
      */
     public function store(Request $request)
     {
@@ -55,8 +69,6 @@ class ProductController extends Controller
                 'description' => 'nullable|string',
                 'price' => 'required|numeric|min:0',
                 'product_image_url' => 'nullable|string|max:255',
-                'product_image2_url' => 'nullable|string|max:255',
-                'product_image3_url' => 'nullable|string|max:255',
             ]);
 
             $product = Product::create($validatedData);
@@ -66,17 +78,26 @@ class ProductController extends Controller
                 'message' => 'Sản phẩm đã được tạo thành công.',
                 'data' => $product,
             ], SymfonyResponse::HTTP_CREATED);
-        } catch (\Exception $e) {
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Dữ liệu không hợp lệ.',
+                'errors' => $e->errors(),
+            ], SymfonyResponse::HTTP_UNPROCESSABLE_ENTITY);
+
+        } catch (\Throwable $th) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Đã xảy ra lỗi khi tạo sản phẩm.',
-                'error' => $e->getMessage(),
+                'error' => $th->getMessage(),
             ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
-     * Lấy chi tiết sản phẩm.
+     * 🔍 Lấy chi tiết sản phẩm theo ID.
+     * GET /api/v1/products/{id}
      */
     public function show($id)
     {
@@ -87,17 +108,25 @@ class ProductController extends Controller
                 'status' => 'success',
                 'data' => $product,
             ], SymfonyResponse::HTTP_OK);
-        } catch (\Exception $e) {
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Không tìm thấy sản phẩm.',
-                'error' => $e->getMessage(),
+                'message' => 'Không tìm thấy sản phẩm có ID = ' . $id,
             ], SymfonyResponse::HTTP_NOT_FOUND);
+
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi tải chi tiết sản phẩm.',
+                'error' => $th->getMessage(),
+            ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
-     * Cập nhật sản phẩm.
+     * ✏️ Cập nhật thông tin sản phẩm.
+     * PUT /api/v1/products/{id}
      */
     public function update(Request $request, $id)
     {
@@ -108,8 +137,6 @@ class ProductController extends Controller
                 'description' => 'nullable|string',
                 'price' => 'required|numeric|min:0',
                 'product_image_url' => 'nullable|string|max:255',
-                'product_image2_url' => 'nullable|string|max:255',
-                'product_image3_url' => 'nullable|string|max:255',
             ]);
 
             $product = Product::findOrFail($id);
@@ -117,20 +144,35 @@ class ProductController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Sản phẩm đã được cập nhật.',
+                'message' => 'Sản phẩm đã được cập nhật thành công.',
                 'data' => $product,
             ], SymfonyResponse::HTTP_OK);
-        } catch (\Exception $e) {
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Dữ liệu không hợp lệ.',
+                'errors' => $e->errors(),
+            ], SymfonyResponse::HTTP_UNPROCESSABLE_ENTITY);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Không tìm thấy sản phẩm để cập nhật.',
+            ], SymfonyResponse::HTTP_NOT_FOUND);
+
+        } catch (\Throwable $th) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Đã xảy ra lỗi khi cập nhật sản phẩm.',
-                'error' => $e->getMessage(),
+                'error' => $th->getMessage(),
             ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
-     * Xóa sản phẩm.
+     * 🗑️ Xóa sản phẩm theo ID.
+     * DELETE /api/v1/products/{id}
      */
     public function destroy($id)
     {
@@ -140,13 +182,20 @@ class ProductController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Sản phẩm đã được xóa.',
+                'message' => 'Sản phẩm đã được xóa thành công.',
             ], SymfonyResponse::HTTP_OK);
-        } catch (\Exception $e) {
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Không thể xóa sản phẩm.',
-                'error' => $e->getMessage(),
+                'message' => 'Không tìm thấy sản phẩm để xóa.',
+            ], SymfonyResponse::HTTP_NOT_FOUND);
+
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi xóa sản phẩm.',
+                'error' => $th->getMessage(),
             ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
