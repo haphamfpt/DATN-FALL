@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useContext } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
@@ -6,10 +6,79 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import CategoryCard from "../components/CategoryCard";
-import ProductCard from "../components/ProductCard";
 import BlogCard from "../components/BlogCard";
+import { CartContext } from "../context/CartContext";
+import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const Home: FC = () => {
+  const { addToCart } = useContext(CartContext);
+  const navigate = useNavigate();
+
+  // 💰 format giá tiền chuẩn Việt Nam
+  const formatPrice = (price: number) => {
+    return (
+      Number(price).toLocaleString("vi-VN", {
+        maximumFractionDigits: 0,
+      }) + "đ"
+    );
+  };
+
+  // ⚙️ Thêm sản phẩm nhanh
+  const handleAddToCart = (product: any) => {
+    addToCart({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      image: product.image,
+      quantity: 1,
+    });
+    toast.success("✅ Đã thêm vào giỏ hàng!");
+  };
+
+  // ⚙️ Mua ngay
+  const handleBuyNow = (product: any) => {
+    addToCart({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      image: product.image,
+      quantity: 1,
+    });
+    navigate("/checkout");
+  };
+
+  const featuredProducts = [
+    {
+      id: 1,
+      title: "Áo thun thể thao Nike Dri-FIT",
+      price: 650000,
+      image: "/assets/images/product/Dri-Fit.avif",
+      rating: 4.5,
+    },
+    {
+      id: 2,
+      title: "Quần jogger Adidas nam",
+      price: 850000,
+      image: "/assets/images/product/Z.N.E._Pants_Black.avif",
+      rating: 4.0,
+    },
+    {
+      id: 3,
+      title: "Giày chạy bộ Asics Gel",
+      price: 1900000,
+      image: "/assets/images/product/Samba_OG_Shoes_White.avif",
+      rating: 5.0,
+    },
+    {
+      id: 4,
+      title: "Áo khoác thể thao Puma",
+      price: 1200000,
+      image: "/assets/images/product/Áo-khoác-dệt-Prime-Retro-T7-Puma.avif",
+      rating: 4.8,
+    },
+  ];
+
   return (
     <div className="w-full overflow-hidden">
       {/* 🔹 Banner slideshow */}
@@ -90,35 +159,60 @@ const Home: FC = () => {
         <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6 text-center md:text-left">
           Sản phẩm nổi bật
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
-          <ProductCard
-            id={1}
-            title="Áo thun thể thao Nike Dri-FIT"
-            price="650.000đ"
-            image="/assets/images/product/Dri-Fit.avif"
-            rating={4.5}
-          />
-          <ProductCard
-            id={2}
-            title="Quần jogger Adidas nam"
-            price="850.000đ"
-            image="/assets/images/product/Z.N.E._Pants_Black.avif"
-            rating={4.0}
-          />
-          <ProductCard
-            id={3}
-            title="Giày chạy bộ Asics Gel"
-            price="1.900.000đ"
-            image="/assets/images/product/Samba_OG_Shoes_White.avif"
-            rating={5.0}
-          />
-          <ProductCard
-            id={4}
-            title="Áo khoác thể thao Puma"
-            price="1.200.000đ"
-            image="/assets/images/product/Áo-khoác-dệt-Prime-Retro-T7-Puma.avif"
-            rating={4.8}
-          />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+          {featuredProducts.map((product) => (
+            <div
+              key={product.id}
+              className="group bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col"
+            >
+              <Link to={`/shop/${product.id}`} className="relative block">
+                <img
+                  src={product.image}
+                  alt={product.title}
+                  className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              </Link>
+
+              <div className="p-4 flex flex-col flex-1">
+                <Link
+                  to={`/shop/${product.id}`}
+                  className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2 hover:text-blue-600 transition mb-2"
+                >
+                  {product.title}
+                </Link>
+
+                {/* 💰 Giá hiển thị chuẩn */}
+                <p className="text-red-600 font-bold text-lg mb-2">
+                  {formatPrice(product.price)}
+                </p>
+
+                {/* ⭐ Đánh giá sao */}
+                <div className="flex items-center text-yellow-500 text-sm mb-3">
+                  {"★".repeat(Math.floor(product.rating || 4))}
+                  {"☆".repeat(5 - Math.floor(product.rating || 4))}
+                  <span className="ml-1 text-gray-500 text-xs sm:text-sm">
+                    ({product.rating.toFixed(1)})
+                  </span>
+                </div>
+
+                {/* 🔘 Nút hành động */}
+                <div className="flex gap-2 mt-auto">
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all duration-300 bg-green-500 hover:bg-green-600 text-white"
+                  >
+                    🛒 Thêm giỏ
+                  </button>
+                  <button
+                    onClick={() => handleBuyNow(product)}
+                    className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black py-2 rounded-lg text-sm font-semibold transition-all duration-300"
+                  >
+                    ⚡ Mua ngay
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
