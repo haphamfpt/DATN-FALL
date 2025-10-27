@@ -20,6 +20,7 @@ import OrderSuccess from "./pages/OrderSuccess"; // ✅ Thêm dòng này
 import ProfileUser from "./pages/ProfileUser/Page";
 import UserAccount from "./pages/ProfileUser/profile/UserAccount";
 import BlogDetail from "./pages/BlogDetail";
+import OrdersHistory from "./pages/OrdersHistory";
 
 function App() {
   const isLoggedIn = () => !!localStorage.getItem("token");
@@ -39,6 +40,7 @@ function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-success" element={<OrderSuccess />} />{" "}
+          <Route path="/orders" element={<OrdersHistory />} />
           {/* ✅ Thêm route này */}
           {/* Blog & Liên hệ */}
           <Route path="/blog" element={<Blog />} />
