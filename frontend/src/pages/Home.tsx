@@ -72,10 +72,10 @@ const Home: FC = () => {
     },
     {
       id: 4,
-      title: "Áo khoác thể thao Puma",
-      price: 1200000,
-      image: "/assets/images/product/Áo-khoác-dệt-Prime-Retro-T7-Puma.avif",
-      rating: 4.8,
+      title: "Găng tay tập gym Under Armour",
+      price: 350000,
+      image: "/assets/images/product/gym.webp",
+      rating: 4.2,
     },
   ];
 

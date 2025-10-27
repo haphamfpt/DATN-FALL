@@ -29,7 +29,7 @@ const Shop: React.FC = () => {
   const { addToCart } = useContext(CartContext);
   const navigate = useNavigate();
 
-  // 📦 Gọi API danh mục
+  // 📦 Lấy danh mục
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -42,14 +42,14 @@ const Shop: React.FC = () => {
     fetchCategories();
   }, []);
 
-  // 🛍️ Gọi API sản phẩm
+  // 🛍️ Lấy sản phẩm
   const fetchProducts = async (
     categoryId?: number,
     minPrice?: number,
     maxPrice?: number
   ) => {
     try {
-      let url = "http://127.0.0.1:8000/api/v1/products";
+      const url = "http://127.0.0.1:8000/api/v1/products";
       const params: any = {};
 
       if (categoryId) params.category_id = categoryId;
@@ -71,13 +71,13 @@ const Shop: React.FC = () => {
     fetchProducts();
   }, []);
 
-  // 🎯 Lọc theo danh mục
+  // 🎯 Lọc danh mục
   const handleFilterCategory = (categoryId: number | null) => {
     setActiveCategory(categoryId);
     fetchProducts(categoryId || undefined);
   };
 
-  // 🎯 Lọc theo giá tiền
+  // 🎯 Lọc giá
   const handleFilterPrice = (range: string) => {
     setPriceFilter(range);
     const ranges: Record<string, [number, number]> = {
@@ -93,6 +93,13 @@ const Shop: React.FC = () => {
   // ⚙️ Kiểm tra loại sản phẩm
   const isSimpleProduct = (product: Product) =>
     [4].includes(product.category_id);
+
+  // 💰 Format tiền chuẩn Việt Nam
+  const formatPrice = (price: number | string) => {
+    const num = Number(price);
+    if (isNaN(num)) return "0đ";
+    return num.toLocaleString("vi-VN", { maximumFractionDigits: 0 }) + "đ";
+  };
 
   // 🛒 Thêm giỏ
   const handleAddToCart = (product: Product) => {
@@ -128,11 +135,24 @@ const Shop: React.FC = () => {
     navigate("/checkout");
   };
 
-  // 💰 Hàm format giá tiền chuẩn Việt Nam
-  const formatPrice = (price: number | string) => {
-    const num = Number(price); // ép kiểu chắc chắn về số
-    if (isNaN(num)) return "0đ";
-    return num.toLocaleString("vi-VN", { maximumFractionDigits: 0 }) + "đ";
+  // 🖼️ Fallback ảnh theo danh mục
+  const getFallbackImage = (categoryId: number) => {
+    switch (categoryId) {
+      case 1: // Áo thể thao
+        return "/assets/images/product/Dri-Fit.avif";
+      case 2: // Quần thể thao
+        return "/assets/images/product/Z.N.E._Pants_Black.avif";
+      case 3: // Giày thể thao
+        return "/assets/images/product/Samba_OG_Shoes_White.avif"; // ✅ Cập nhật theo yêu cầu mới
+      case 4: // Áo khoác thể thao
+        return "/assets/images/product/Áo-khoác-dệt-Prime-Retro-T7-Puma.avif";
+      case 5: // Túi, balo
+        return "/assets/images/product/tui-deo-cheo-reebok-classics-foundation-waist.webp";
+      case 6: // Phụ kiện gym (găng tay, bình nước, dây)
+        return "/assets/images/product/gym.webp"; // ✅ riêng cho găng tay
+      default:
+        return "/assets/images/product/Dri-Fit.avif"; // fallback chung
+    }
   };
 
   if (loading) return <p className="text-center py-10">Đang tải dữ liệu...</p>;
@@ -140,7 +160,7 @@ const Shop: React.FC = () => {
   return (
     <div className="w-full min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-6">
-        {/* 🔹 Sidebar danh mục & lọc giá */}
+        {/* 🔹 Sidebar */}
         <aside className="w-full md:w-1/4 bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
           <h2 className="text-lg font-semibold mb-4 text-gray-700">
             Danh mục sản phẩm
@@ -171,6 +191,7 @@ const Shop: React.FC = () => {
             ))}
           </ul>
 
+          {/* 🔹 Bộ lọc giá */}
           <h2 className="text-lg font-semibold mb-3 text-gray-700">
             Lọc theo giá (VNĐ)
           </h2>
@@ -246,10 +267,13 @@ const Shop: React.FC = () => {
                       src={product.product_image_url}
                       alt={product.product_name}
                       className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) =>
-                        ((e.target as HTMLImageElement).src =
-                          "https://via.placeholder.com/300x300?text=No+Image")
-                      }
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (!target.dataset.fallback) {
+                          target.src = getFallbackImage(product.category_id);
+                          target.dataset.fallback = "true";
+                        }
+                      }}
                     />
                   </Link>
 
@@ -261,7 +285,6 @@ const Shop: React.FC = () => {
                       {product.product_name}
                     </Link>
 
-                    {/* 💰 Giá hiển thị chuẩn Việt Nam */}
                     <p className="text-red-600 font-bold text-lg mb-2">
                       {formatPrice(product.price)}
                     </p>
