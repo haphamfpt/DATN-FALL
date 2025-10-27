@@ -13,22 +13,22 @@ const Header: FC = () => {
       <div className="container mx-auto flex justify-between items-center py-4 px-6">
         {/* Logo */}
         <Link to="/" className="text-2xl font-bold text-gray-800">
-          MaleFashion
+          Aveline Shop
         </Link>
 
         {/* Navigation */}
         <nav className="space-x-6">
           <Link to="/" className="hover:text-black">
-            Home
+            Trang chủ
           </Link>
           <Link to="/shop" className="hover:text-black">
-            Shop
+            Sản Phẩm
           </Link>
           <Link to="/blog" className="hover:text-black">
-            Blog
+            Bài viết
           </Link>
           <Link to="/contact" className="hover:text-black">
-            Contact
+            Liên hệ
           </Link>
         </nav>
 
@@ -66,7 +66,7 @@ const Header: FC = () => {
             </>
           ) : (
             <div className="flex items-center space-x-2">
-              <span>Xin chào, {user}</span>
+              <span>Xin chào bn {user}</span>
               <button onClick={logout} className="text-red-600 hover:underline">
                 Logout
               </button>
