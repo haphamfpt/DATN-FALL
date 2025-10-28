@@ -58,14 +58,14 @@ const Home: FC = () => {
     },
     {
       id: 2,
-      title: "Quần jogger Adidas nam",
+      title: "Quần jogger Adidas nam Tiro 21",
       price: 850000,
       image: "/assets/images/product/Z.N.E._Pants_Black.avif",
       rating: 4.0,
     },
     {
       id: 3,
-      title: "Giày chạy bộ Asics Gel",
+      title: "Giày Adidas Ultraboost 22",
       price: 1900000,
       image: "/assets/images/product/Samba_OG_Shoes_White.avif",
       rating: 5.0,
