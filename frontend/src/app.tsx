@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
@@ -37,79 +37,76 @@ function App() {
   const isLoggedIn = () => !!localStorage.getItem("token");
 
   return (
-    <BrowserRouter>
-      <div className="flex flex-col min-h-screen">
-        {/* ✅ Header và Footer chỉ xuất hiện cho trang user */}
-        <Header />
-        <ScrollToTop />
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <ScrollToTop />
 
-        <main className="flex-1 pt-20">
-          <Routes>
-            {/* === 👤 PHẦN NGƯỜI DÙNG (CLIENT) === */}
-            <Route path="/" element={<Home />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/shop/category/:category" element={<Shop />} />
-            <Route path="/shop/:id" element={<ShopDetail />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order-success" element={<OrderSuccess />} />
-            <Route path="/orders" element={<OrdersHistory />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:id" element={<BlogDetail />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/user" element={<UserPage />} />
+      <main className="flex-1 pt-20">
+        <Routes>
+          {/* === 👤 PHẦN NGƯỜI DÙNG === */}
+          <Route path="/" element={<Home />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/shop/category/:category" element={<Shop />} />
+          <Route path="/shop/:id" element={<ShopDetail />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/order-success" element={<OrderSuccess />} />
+          <Route path="/orders" element={<OrdersHistory />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:id" element={<BlogDetail />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/user" element={<UserPage />} />
 
-            {/* 🔐 Auth routes */}
-            <Route path="/auth" element={<Auth />}>
-              <Route
-                index
-                element={
-                  isLoggedIn() ? (
-                    <Navigate to="/" replace />
-                  ) : (
-                    <Navigate to="login" replace />
-                  )
-                }
-              />
-              <Route
-                path="login"
-                element={isLoggedIn() ? <Navigate to="/" replace /> : <Login />}
-              />
-              <Route
-                path="register"
-                element={
-                  isLoggedIn() ? <Navigate to="/" replace /> : <Register />
-                }
-              />
-            </Route>
+          {/* 🔐 Auth */}
+          <Route path="/auth" element={<Auth />}>
+            <Route
+              index
+              element={
+                isLoggedIn() ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <Navigate to="login" replace />
+                )
+              }
+            />
+            <Route
+              path="login"
+              element={isLoggedIn() ? <Navigate to="/" replace /> : <Login />}
+            />
+            <Route
+              path="register"
+              element={
+                isLoggedIn() ? <Navigate to="/" replace /> : <Register />
+              }
+            />
+          </Route>
 
-            {/* 👤 Hồ sơ người dùng */}
-            <Route path="/account" element={<ProfileUser />}>
-              <Route index element={<Navigate to="profile" replace />} />
-              <Route path="profile" element={<UserAccount />} />
-            </Route>
+          {/* 👤 Hồ sơ người dùng */}
+          <Route path="/account" element={<ProfileUser />}>
+            <Route index element={<Navigate to="profile" replace />} />
+            <Route path="profile" element={<UserAccount />} />
+          </Route>
 
-            {/* === 🧭 PHẦN QUẢN TRỊ (ADMIN) === */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="categories" element={<Categories />} />
-              <Route path="attributes" element={<Attributes />} />
-              <Route path="products" element={<Products />} />
-              <Route path="users" element={<Users />} />
-              <Route path="orders" element={<Orders />} />
-              <Route path="revenue" element={<Revenue />} />
-              <Route path="blogs" element={<Blogs />} />
-              <Route path="comments" element={<Comments />} />
-            </Route>
+          {/* === 🧭 PHẦN QUẢN TRỊ === */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="categories" element={<Categories />} />
+            <Route path="attributes" element={<Attributes />} />
+            <Route path="products" element={<Products />} />
+            <Route path="users" element={<Users />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="revenue" element={<Revenue />} />
+            <Route path="blogs" element={<Blogs />} />
+            <Route path="comments" element={<Comments />} />
+          </Route>
 
-            {/* ❌ Nếu URL không hợp lệ → quay về Home */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
+          {/* ❌ URL sai → quay về Home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
 
-        <Footer />
-      </div>
-    </BrowserRouter>
+      <Footer />
+    </div>
   );
 }
 
