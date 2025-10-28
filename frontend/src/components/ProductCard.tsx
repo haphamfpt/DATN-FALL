@@ -83,10 +83,10 @@ const ProductCard: FC<ProductCardProps> = ({
             to={`/shop/${id}`}
             className="bg-yellow-500 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"
           >
-            Xem chi tiết
+            Xem chi tiết sản phẩm
           </Link>
           <button className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-gray-900 transition">
-            Mua ngay
+            Mua ngay sản phẩm
           </button>
         </div>
       </div>
