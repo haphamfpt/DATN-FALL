@@ -63,7 +63,7 @@ const Home: FC = () => {
       {/* 🔹 Categories */}
       <section className="max-w-screen-xl mx-auto py-10 px-4 sm:px-6 md:px-8">
         <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6 text-center md:text-left">
-          Danh mục thể thao
+          Danh mục thể thao của shop
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
           <CategoryCard
