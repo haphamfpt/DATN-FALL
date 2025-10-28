@@ -112,16 +112,44 @@ const ShopDetail: FC = () => {
     );
   }
 
-  // ✅ Kiểm tra danh mục để hiển thị size/màu
-  const showSizeColor =
-    product.category_id === 1 || // Áo thể thao
-    product.category_id === 2 || // Quần thể thao
-    product.category_id === 3; // Giày thể thao
+  // ✅ Xác định danh mục & size/màu tương ứng
+  let sizes: string[] = [];
+  let colors: string[] = [];
 
-  // ✅ Danh sách giả lập size và màu
-  const sizes = showSizeColor ? ["S", "M", "L", "XL", "XXL"] : [];
+  if (product.category_id === 3) {
+    // Giày thể thao: size 35–45
+    sizes = Array.from({ length: 11 }, (_, i) => (35 + i).toString());
+    colors = ["Trắng", "Đen", "Xám", "Xanh navy"];
+  } else if (product.category_id === 1 || product.category_id === 2) {
+    // Áo & Quần: size chữ
+    sizes = ["S", "M", "L", "XL", "XXL"];
+    colors = ["Đen", "Trắng", "Xanh", "Đỏ"];
+  } else {
+    // Phụ kiện, găng tay, v.v.
+    sizes = [];
+    colors = ["Đen", "Xanh", "Đỏ"];
+  }
 
-  const colors = showSizeColor ? ["Đen", "Trắng", "Xanh", "Đỏ"] : [];
+  // ✅ Chọn ảnh tương ứng theo tên sản phẩm
+  const getProductImage = () => {
+    const name = product.product_name?.toLowerCase() || "";
+
+    if (
+      name.includes("pants") ||
+      name.includes("z.n.e") ||
+      name.includes("quần")
+    )
+      return "/assets/images/product/Z.N.E._Pants_Black.avif";
+
+    if (name.includes("dri-fit")) return "/assets/images/product/Dri-Fit.avif";
+
+    if (name.includes("gym")) return "/assets/images/product/gym.webp";
+
+    if (name.includes("samba") || name.includes("giày"))
+      return "/assets/images/product/Samba_OG_Shoes_White.avif";
+
+    return "/assets/images/product/default.webp";
+  };
 
   // ✅ Thêm vào giỏ
   const handleAddToCart = () => {
@@ -136,7 +164,7 @@ const ShopDetail: FC = () => {
             }${selectedColor || ""})`
           : ""),
       price,
-      image: product.product_image_url || "/assets/images/product/default.webp",
+      image: getProductImage(),
       quantity,
     });
     alert("✅ Đã thêm vào giỏ hàng!");
@@ -150,7 +178,7 @@ const ShopDetail: FC = () => {
       id: product.product_id,
       title: product.product_name,
       price,
-      image: product.product_image_url || "/assets/images/product/default.webp",
+      image: getProductImage(),
       quantity,
     });
     navigate("/checkout");
@@ -174,9 +202,7 @@ const ShopDetail: FC = () => {
       <div className="container mx-auto grid md:grid-cols-2 gap-10 px-6">
         <div>
           <img
-            src={
-              product.product_image_url || "/assets/images/product/default.webp"
-            }
+            src={getProductImage()}
             alt={product.product_name}
             className="w-full h-[400px] object-contain bg-gray-100 rounded-lg mb-4"
           />
@@ -204,51 +230,54 @@ const ShopDetail: FC = () => {
             {Number(product.price).toLocaleString("vi-VN")}₫
           </p>
 
-          {/* Size */}
-          {showSizeColor && (
-            <div className="mb-4">
-              <h3 className="font-semibold mb-2">Chọn Size:</h3>
-              <div className="flex gap-3 flex-wrap">
-                {sizes.map((s: string) => (
-                  <button
-                    key={s}
-                    onClick={() => setSelectedSize(s)}
-                    className={`px-4 py-2 border rounded ${
-                      selectedSize === s
-                        ? "bg-yellow-500 text-white"
-                        : "hover:border-yellow-400"
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
+          {/* Size và Màu */}
+          {(sizes.length > 0 || colors.length > 0) && (
+            <>
+              {sizes.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="font-semibold mb-2">Chọn Size:</h3>
+                  <div className="flex gap-3 flex-wrap">
+                    {sizes.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setSelectedSize(s)}
+                        className={`px-4 py-2 border rounded ${
+                          selectedSize === s
+                            ? "bg-yellow-500 text-white"
+                            : "hover:border-yellow-400"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {colors.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="font-semibold mb-2">Chọn Màu:</h3>
+                  <div className="flex gap-3 flex-wrap">
+                    {colors.map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => setSelectedColor(c)}
+                        className={`px-4 py-2 border rounded ${
+                          selectedColor === c
+                            ? "bg-black text-white"
+                            : "hover:border-yellow-400"
+                        }`}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
-          {/* Màu */}
-          {showSizeColor && (
-            <div className="mb-4">
-              <h3 className="font-semibold mb-2">Chọn Màu:</h3>
-              <div className="flex gap-3 flex-wrap">
-                {colors.map((c: string) => (
-                  <button
-                    key={c}
-                    onClick={() => setSelectedColor(c)}
-                    className={`px-4 py-2 border rounded ${
-                      selectedColor === c
-                        ? "bg-black text-white"
-                        : "hover:border-yellow-400"
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Số lượng & nút */}
+          {/* Số lượng và nút */}
           <div className="flex items-center gap-3 mt-4">
             <div className="flex items-center border rounded">
               <button
@@ -282,165 +311,6 @@ const ShopDetail: FC = () => {
               Mua ngay
             </button>
           </div>
-        </div>
-      </div>
-
-      {/* 🔹 Tabs mô tả & đánh giá */}
-      <div className="container mx-auto mt-16 px-6">
-        <div className="flex border-b mb-6">
-          <button
-            onClick={() => setActiveTab("desc")}
-            className={`py-2 px-6 font-semibold ${
-              activeTab === "desc"
-                ? "border-b-2 border-yellow-500 text-yellow-600"
-                : ""
-            }`}
-          >
-            Mô tả sản phẩm
-          </button>
-          <button
-            onClick={() => setActiveTab("reviews")}
-            className={`py-2 px-6 font-semibold ${
-              activeTab === "reviews"
-                ? "border-b-2 border-yellow-500 text-yellow-600"
-                : ""
-            }`}
-          >
-            Đánh giá & Bình luận
-          </button>
-        </div>
-
-        {activeTab === "desc" && (
-          <div className="bg-white p-6 rounded-lg shadow text-gray-700 space-y-3">
-            <p>
-              <strong>Mô tả ngắn:</strong>{" "}
-              {product.short_description || "Chưa có mô tả ngắn."}
-            </p>
-            <p className="whitespace-pre-line">
-              <strong>Chi tiết:</strong>{" "}
-              {product.long_description ||
-                product.product_description ||
-                "Chưa có mô tả chi tiết."}
-            </p>
-          </div>
-        )}
-
-        {activeTab === "reviews" && (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-3 text-gray-800">
-              Viết đánh giá của bạn
-            </h3>
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
-              <input
-                type="text"
-                placeholder="Tên của bạn"
-                value={newReview.name}
-                onChange={(e) =>
-                  setNewReview({ ...newReview, name: e.target.value })
-                }
-                className="border p-2 rounded"
-              />
-              <select
-                value={newReview.rating}
-                onChange={(e) =>
-                  setNewReview({ ...newReview, rating: Number(e.target.value) })
-                }
-                className="border p-2 rounded"
-              >
-                {[5, 4, 3, 2, 1].map((r) => (
-                  <option key={r} value={r}>
-                    {r} ★
-                  </option>
-                ))}
-              </select>
-            </div>
-            <textarea
-              placeholder="Nhận xét của bạn..."
-              value={newReview.comment}
-              onChange={(e) =>
-                setNewReview({ ...newReview, comment: e.target.value })
-              }
-              className="border p-2 rounded w-full mb-3"
-              rows={3}
-            ></textarea>
-            <button
-              onClick={handleAddReview}
-              className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-4 py-2 rounded"
-            >
-              Gửi đánh giá
-            </button>
-
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                Đánh giá từ người mua ({reviews.length})
-              </h3>
-              {reviews.length === 0 ? (
-                <p className="text-gray-500">Chưa có đánh giá nào.</p>
-              ) : (
-                reviews.map((r) => (
-                  <div
-                    key={r.id}
-                    className="border-b py-3 flex flex-col md:flex-row md:items-center md:justify-between"
-                  >
-                    <div>
-                      <p className="font-semibold text-gray-800">{r.name}</p>
-                      <div className="text-yellow-500 text-sm">
-                        {"★".repeat(r.rating)} {"☆".repeat(5 - r.rating)}
-                      </div>
-                      <p className="text-gray-700 mt-1">{r.comment}</p>
-                    </div>
-                    <span className="text-sm text-gray-400">{r.createdAt}</span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 🔹 Sản phẩm liên quan */}
-      <div className="container mx-auto px-6 mt-20">
-        <h3 className="text-2xl font-bold mb-8 text-gray-800">
-          Sản phẩm liên quan
-        </h3>
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {related.map((item) => (
-            <div
-              key={item.product_id}
-              className="bg-white rounded-lg shadow hover:shadow-lg overflow-hidden transition-transform hover:-translate-y-1"
-            >
-              <Link to={`/shop/${item.product_id}`}>
-                <img
-                  src={
-                    item.product_image_url ||
-                    "/assets/images/product/default.webp"
-                  }
-                  alt={item.product_name}
-                  className="w-full h-56 object-contain bg-gray-100"
-                />
-              </Link>
-              <div className="p-4 text-center">
-                <Link
-                  to={`/shop/${item.product_id}`}
-                  className="block font-semibold text-gray-800 hover:text-yellow-600"
-                >
-                  {item.product_name}
-                </Link>
-                <p className="text-yellow-600 mt-1 font-medium">
-                  {Number(item.price).toLocaleString("vi-VN")}₫
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="text-center mt-10">
-          <Link
-            to="/shop"
-            className="text-yellow-600 font-semibold hover:underline"
-          >
-            ← Quay lại cửa hàng
-          </Link>
         </div>
       </div>
     </div>
