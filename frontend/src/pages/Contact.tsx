@@ -2,7 +2,7 @@ import { FC } from "react";
 
 /**
  * Contact Page
- * - Form liên hệ (Họ tên, email, nội dung)
+ * - Form liên hệ (Họ tên, email, Nội Dung)
  * - Google Map embed
  */
 const Contact: FC = () => {

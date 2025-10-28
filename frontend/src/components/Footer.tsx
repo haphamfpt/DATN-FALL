@@ -15,14 +15,16 @@ const Footer: FC = () => {
           </h2>
           <p className="text-sm leading-relaxed">
             Cửa hàng thời trang thể thao chính hãng – mang đến phong cách năng
-            động, khỏe khoắn và đậm chất cá tính. Đồng hành cùng bạn trên mọi
+            động, khỏe khoắn và đậm chất cá tính.Đồng hành cùng bạn trên mọi
             hành trình luyện tập.
           </p>
         </div>
 
         {/* 🔹 Cột 2: Danh mục nhanh */}
         <div>
-          <h3 className="text-yellow-500 font-semibold mb-4">Danh mục</h3>
+          <h3 className="text-yellow-500 font-semibold mb-4">
+            Danh mục sản phẩm
+          </h3>
           <ul className="space-y-2 text-sm">
             <li className="hover:text-yellow-400 cursor-pointer">
               Áo thể thao

@@ -19,15 +19,13 @@ import {
   IconUser,
 } from "@tabler/icons-react";
 
-
 const UserAccount = () => {
-
   return (
     <div className="bg-white !pb-6 h-[610px]">
       <div className="px-10 py-2">
         <div className="flex items-center justify-between">
           <div className="mt-4">
-            <Text size="xl">Hồ sơ của tôi</Text>
+            <Text size="xl">Hồ sơ cá nhân của tôi</Text>
             <Text size="md" className="!mb-2 !text-[#9B9B9B]">
               Quản lý thông tin hồ sơ để bảo mật tài khoản{" "}
             </Text>
@@ -132,8 +130,7 @@ const UserAccount = () => {
               />
             </div>
             <div className="flex justify-center mt-6">
-              <Button
-                className="bg-brown-600 hover:bg-brown-700 text-white py-2 px-4 rounded-full shadow-lg transition-transform transform hover:scale-105">
+              <Button className="bg-brown-600 hover:bg-brown-700 text-white py-2 px-4 rounded-full shadow-lg transition-transform transform hover:scale-105">
                 Sửa thông tin
               </Button>
             </div>
