@@ -1,9 +1,20 @@
-import { FC } from "react";
+import { FC, useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 
 const OrderSuccess: FC = () => {
   const { state } = useLocation();
-  const order = state?.order;
+  const [order, setOrder] = useState<any>(null);
+
+  // ✅ Lưu hoặc lấy order từ sessionStorage
+  useEffect(() => {
+    if (state?.order) {
+      setOrder(state.order);
+      sessionStorage.setItem("lastOrder", JSON.stringify(state.order));
+    } else {
+      const saved = sessionStorage.getItem("lastOrder");
+      if (saved) setOrder(JSON.parse(saved));
+    }
+  }, [state]);
 
   if (!order) {
     return (
@@ -49,7 +60,7 @@ const OrderSuccess: FC = () => {
               💳 <b>Số tài khoản:</b> 0123456789
             </p>
             <p>
-              📝 <b>Nội dung chuyển khoản:</b> <code>ORDER-{order.id}</code>
+              📝 <b>Nội dung:</b> <code>ORDER-{order.id}</code>
             </p>
             <p className="mt-2">
               💰 <b>Số tiền:</b>{" "}
@@ -60,8 +71,7 @@ const OrderSuccess: FC = () => {
           </div>
 
           <p className="text-gray-600 text-sm mt-4">
-            Sau khi chuyển khoản, shop sẽ xác nhận và tiến hành giao hàng cho
-            bạn 💛
+            Sau khi chuyển khoản, shop sẽ xác nhận và giao hàng cho bạn 💛
           </p>
         </div>
       ) : (

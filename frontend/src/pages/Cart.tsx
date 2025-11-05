@@ -11,21 +11,18 @@ const Cart: FC = () => {
   const [discount, setDiscount] = useState(0);
   const [appliedVoucher, setAppliedVoucher] = useState<string | null>(null);
 
-  // ✅ Danh sách voucher hợp lệ (có thể mở rộng sau)
   const validVouchers: Record<string, number> = {
-    GIAM10: 0.1, // giảm 10%
-    VIP20: 0.2, // giảm 20%
-    FREESHIP: 0.05, // giảm 5%
+    GIAM10: 0.1,
+    VIP20: 0.2,
+    FREESHIP: 0.05,
   };
 
-  // ✅ Toggle chọn 1 sản phẩm
   const toggleSelect = (id: number) => {
     setSelectedItems((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
 
-  // ✅ Chọn tất cả
   const toggleSelectAll = () => {
     if (selectedItems.length === cart.length) {
       setSelectedItems([]);
@@ -34,7 +31,6 @@ const Cart: FC = () => {
     }
   };
 
-  // ✅ Xóa sản phẩm đã chọn
   const handleDeleteSelected = () => {
     if (selectedItems.length === 0) {
       alert("Vui lòng chọn ít nhất 1 sản phẩm để xóa!");
@@ -44,20 +40,14 @@ const Cart: FC = () => {
     setSelectedItems([]);
   };
 
-  // ✅ Tính tổng tiền
   const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const selectedTotal = cart
     .filter((i) => selectedItems.includes(i.id))
     .reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-  // ✅ Áp dụng voucher
   const handleApplyVoucher = () => {
     const code = voucherCode.trim().toUpperCase();
-    if (!code) {
-      alert("Vui lòng nhập mã giảm giá!");
-      return;
-    }
-
+    if (!code) return alert("Vui lòng nhập mã giảm giá!");
     if (validVouchers[code]) {
       const rate = validVouchers[code];
       setDiscount(rate);
@@ -72,10 +62,9 @@ const Cart: FC = () => {
     }
   };
 
-  // ✅ Thanh toán sản phẩm đã chọn
   const handleCheckoutSelected = () => {
     if (selectedItems.length === 0) {
-      alert("Vui lòng chọn ít nhất một sản phẩm để thanh toán!");
+      alert("Vui lòng chọn ít nhất 1 sản phẩm để thanh toán!");
       return;
     }
 
@@ -83,7 +72,6 @@ const Cart: FC = () => {
       selectedItems.includes(item.id)
     );
 
-    // ✅ Lưu sản phẩm + mã giảm giá
     const checkoutData = {
       products: selectedProducts,
       discountRate: discount,
@@ -97,7 +85,6 @@ const Cart: FC = () => {
   if (cart.length === 0)
     return <p className="text-center py-20 text-gray-500">Giỏ hàng trống.</p>;
 
-  // ✅ Tổng tiền sau giảm
   const discountedTotal = selectedTotal - selectedTotal * discount;
 
   return (
@@ -181,7 +168,6 @@ const Cart: FC = () => {
         </tbody>
       </table>
 
-      {/* 🔹 Voucher + tổng tiền */}
       <div className="mt-8 flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex flex-col sm:flex-row items-center gap-3">
           <input

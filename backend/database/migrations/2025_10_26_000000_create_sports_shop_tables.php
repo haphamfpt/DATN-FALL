@@ -62,7 +62,8 @@ return new class extends Migration {
             $table->foreignId('brand_id')->nullable()->constrained('brands')->onDelete('set null');
             $table->string('product_name');
             $table->text('description')->nullable();
-            $table->decimal('price', 10, 2)->default(0); // ✅ thêm dòng này
+            $table->decimal('price', 10, 2)->nullable();
+
             $table->string('product_image_url')->nullable();
             $table->string('product_image2_url')->nullable();
             $table->string('product_image3_url')->nullable();
