@@ -13,14 +13,14 @@ class Category extends Model
     protected $table = 'categories';
 
     // Khóa chính
-    protected $primaryKey = 'category_id';
+    protected $primaryKey = 'id';
 
     // Tự động quản lý created_at, updated_at
     public $timestamps = true;
 
     // Cho phép gán hàng loạt các cột sau
     protected $fillable = [
-        'category_name',
+        'name',
         'image_url',
     ];
 
@@ -29,6 +29,6 @@ class Category extends Model
      */
     public function products()
     {
-        return $this->hasMany(Product::class, 'category_id', 'category_id');
+        return $this->hasMany(Product::class, 'id', 'id');
     }
 }

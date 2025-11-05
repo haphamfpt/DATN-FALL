@@ -6,7 +6,7 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
-
+use Illuminate\Support\Facades\Log;
 class CategoryController extends Controller
 {
     /**
@@ -16,7 +16,7 @@ class CategoryController extends Controller
     public function index()
     {
         try {
-            $categories = Category::select('category_id', 'category_name', 'image_url')->get();
+            $categories = Category::all();
 
             return response()->json([
                 'status' => 'success',
@@ -39,11 +39,19 @@ class CategoryController extends Controller
     {
         try {
             $validatedData = $request->validate([
-                'category_name' => 'required|string|max:255',
-                'image_url' => 'nullable|string|max:255',
+                'name' => 'required|string|max:255',
+                'image_url' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             ]);
 
-            $category = Category::create($validatedData);
+            if ($request->hasFile('image_url')) {
+                $path = $request->file('image_url')->store('categories', 'public');
+                $validatedData['image_url'] = asset('storage/' . $path);
+            }
+
+            $category = Category::create([
+                'name' => $validatedData['name'],
+                'image_url' => $validatedData['image_url'] ?? null,
+            ]);
 
             return response()->json([
                 'status' => 'success',
@@ -64,6 +72,52 @@ class CategoryController extends Controller
             ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            ]);
+
+            $category = Category::findOrFail($id);
+
+            if ($request->hasFile('image_url')) {
+                $path = $request->file('image_url')->store('categories', 'public');
+                $validatedData['image_url'] = asset('storage/' . $path);
+            }
+
+            $category->update([
+                'name' => $validatedData['name'],
+                'image_url' => $validatedData['image_url'] ?? $category->image_url,
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Danh mục đã được cập nhật thành công.',
+                'data' => $category,
+            ], SymfonyResponse::HTTP_OK);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Dữ liệu không hợp lệ.',
+                'errors' => $e->errors(),
+            ], SymfonyResponse::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Không tìm thấy danh mục để cập nhật.',
+            ], SymfonyResponse::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Đã xảy ra lỗi khi cập nhật danh mục.',
+                'error' => $e->getMessage(),
+            ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
     /**
      * 🔍 Lấy chi tiết danh mục theo ID.
@@ -94,41 +148,7 @@ class CategoryController extends Controller
     /**
      * ✏️ Cập nhật danh mục theo ID.
      */
-    public function update(Request $request, $id)
-    {
-        try {
-            $validatedData = $request->validate([
-                'category_name' => 'required|string|max:255',
-                'image_url' => 'nullable|string|max:255',
-            ]);
 
-            $category = Category::findOrFail($id);
-            $category->update($validatedData);
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Danh mục đã được cập nhật thành công.',
-                'data' => $category,
-            ], SymfonyResponse::HTTP_OK);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Dữ liệu không hợp lệ.',
-                'errors' => $e->errors(),
-            ], SymfonyResponse::HTTP_UNPROCESSABLE_ENTITY);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Không tìm thấy danh mục để cập nhật.',
-            ], SymfonyResponse::HTTP_NOT_FOUND);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Đã xảy ra lỗi khi cập nhật danh mục.',
-                'error' => $e->getMessage(),
-            ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
 
     /**
      * 🗑️ Xóa danh mục theo ID.
