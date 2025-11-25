@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
-import "./banner.css"; 
+import "./banner.css";
 
 const Banner = () => {
   const [banners, setBanners] = useState([]);
@@ -14,14 +14,15 @@ const Banner = () => {
         setBanners(res.data || []);
       } catch (err) {
         console.error("Lỗi tải banner:", err);
-        // Fallback banners khi lỗi
         setBanners([
           {
-            image: "https://via.placeholder.com/1920x700/222222/ffffff?text=AVELINE+SPORTS",
+            image:
+              "https://via.placeholder.com/1920x700/222222/ffffff?text=AVELINE+SPORTS",
             link: "/",
           },
           {
-            image: "https://via.placeholder.com/1920x700/111111/ffffff?text=NEW+COLLECTION+2025",
+            image:
+              "https://via.placeholder.com/1920x700/111111/ffffff?text=NEW+COLLECTION+2025",
             link: "/",
           },
         ]);
@@ -44,7 +45,6 @@ const Banner = () => {
     }
   }, [banners.length]);
 
-  // Auto slide
   useEffect(() => {
     if (banners.length <= 1 || loading) return;
     const interval = setInterval(goNext, 6000);
@@ -83,10 +83,18 @@ const Banner = () => {
             <div className="banner-item" key={index}>
               {banner.link ? (
                 <a href={banner.link} target="_blank" rel="noopener noreferrer">
-                  <img src={banner.image} alt={`Banner ${index + 1}`} loading="lazy" />
+                  <img
+                    src={banner.image}
+                    alt={`Banner ${index + 1}`}
+                    loading="lazy"
+                  />
                 </a>
               ) : (
-                <img src={banner.image} alt={`Banner ${index + 1}`} loading="lazy" />
+                <img
+                  src={banner.image}
+                  alt={`Banner ${index + 1}`}
+                  loading="lazy"
+                />
               )}
             </div>
           ))}
@@ -95,14 +103,28 @@ const Banner = () => {
 
       {banners.length > 1 && (
         <>
-          <button className="banner-btn prev" onClick={goPrev} aria-label="Previous">
+          <button
+            className="banner-btn prev"
+            onClick={goPrev}
+            aria-label="Previous"
+          >
             <svg viewBox="0 0 24 24" width="32" height="32">
-              <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="white" />
+              <path
+                d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"
+                fill="white"
+              />
             </svg>
           </button>
-          <button className="banner-btn next" onClick={goNext} aria-label="Next">
+          <button
+            className="banner-btn next"
+            onClick={goNext}
+            aria-label="Next"
+          >
             <svg viewBox="0 0 24 24" width="32" height="32">
-              <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" fill="white" />
+              <path
+                d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"
+                fill="white"
+              />
             </svg>
           </button>
 

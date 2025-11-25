@@ -1,9 +1,24 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const bannerSchema = new mongoose.Schema({
-  image: { type: String, required: true },     // link ảnh
-  link: { type: String, default: '/' },        // click vào banner đi đâu
-  active: { type: Boolean, default: true }    // bật/tắt
-});
+const bannerSchema = new mongoose.Schema(
+  {
+    image: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    active: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-export default mongoose.model('Banner', bannerSchema);
+bannerSchema.index({ active: 1 });
+
+const Banner = mongoose.models.Banner || mongoose.model("Banner", bannerSchema);
+
+export default Banner;

@@ -110,52 +110,11 @@ const Home = () => {
     },
   ];
 
-  const blogPosts = [
-    {
-      id: 1,
-      slug: "cach-chon-quan-ao-tap-gym-phu-hop",
-      title: "Cách chọn quần áo tập gym đúng chuẩn cho người mới",
-      excerpt:
-        "Tìm hiểu chất liệu, form dáng và những lưu ý quan trọng để tập luyện hiệu quả và thoải mái nhất...",
-      image:
-        "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=80",
-      category: "Hướng dẫn",
-      createdAt: "2025-03-15",
-      readTime: 5,
-      author: "AVELINE Team",
-    },
-    {
-      id: 1,
-      slug: "cach-chon-quan-ao-tap-gym-phu-hop",
-      title: "Cách chọn quần áo tập gym đúng chuẩn cho người mới",
-      excerpt:
-        "Tìm hiểu chất liệu, form dáng và những lưu ý quan trọng để tập luyện hiệu quả và thoải mái nhất...",
-      image:
-        "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=80",
-      category: "Hướng dẫn",
-      createdAt: "2025-03-15",
-      readTime: 5,
-      author: "AVELINE Team",
-    },
-    {
-      id: 1,
-      slug: "cach-chon-quan-ao-tap-gym-phu-hop",
-      title: "Cách chọn quần áo tập gym đúng chuẩn cho người mới",
-      excerpt:
-        "Tìm hiểu chất liệu, form dáng và những lưu ý quan trọng để tập luyện hiệu quả và thoải mái nhất...",
-      image:
-        "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=80",
-      category: "Hướng dẫn",
-      createdAt: "2025-03-15",
-      readTime: 5,
-      author: "AVELINE Team",
-    },
-  ];
   return (
     <>
       <Banner />
       <ProductList products={featuredProducts} />
-      <BlogList posts={blogPosts} limit={3} />
+      <BlogList />
     </>
   );
 };

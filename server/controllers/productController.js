@@ -1,99 +1,199 @@
-import asyncHandler from 'express-async-handler';
-import Product from '../models/Product.js';
-import Variant from '../models/Variant.js';
+import asyncHandler from "express-async-handler";
+import Product from "../models/Product.js";
+import Variant from "../models/Variant.js";
 
-export const getProducts = asyncHandler(async (req, res) => {
-  const { category, color, size, minPrice, maxPrice } = req.query;
+const getAdminProducts = asyncHandler(async (req, res) => {
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
 
-  let query = { is_active: true };
+  const products = await Product.find({})
+    .populate("category", "product_category_name")
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit);
 
-  if (category) query.category = category;
-  if (minPrice || maxPrice) {
-    query.sale_price = {};
-    if (minPrice) query.sale_price.$gte = Number(minPrice);
-    if (maxPrice) query.sale_price.$lte = Number(maxPrice);
-  }
-
-  const products = await Product.find(query)
-    .populate('category', 'name')
-    .sort({ createdAt: -1 });
-
-  if (color || size) {
-    const variantFilter = {};
-    if (color) variantFilter.color = color;
-    if (size) variantFilter.size = size;
-
-    const variantProducts = await Variant.find(variantFilter).distinct('product');
-    const filteredProducts = products.filter(p => variantProducts.includes(p._id));
-    return res.json(filteredProducts);
-  }
-
-  res.json(products);
-});
-
-export const getProductById = asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id)
-    .populate('category', 'name');
-
-  if (!product) {
-    res.status(404);
-    throw new Error('Không tìm thấy sản phẩm');
-  }
-
-  const variants = await Variant.find({ product: product._id })
-    .populate('color', 'name code')
-    .populate('size', 'name');
+  const total = await Product.countDocuments();
 
   res.json({
-    ...product.toObject(),
-    variants
+    products,
+    pagination: { page, pages: Math.ceil(total / limit), total },
   });
 });
 
-export const createProduct = asyncHandler(async (req, res) => {
-  const { name, category, description, images, variants } = req.body;
+const getAdminProductById = asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id).populate(
+    "category",
+    "product_category_name"
+  );
+
+  if (!product) {
+    res.status(404);
+    throw new Error("Không tìm thấy sản phẩm");
+  }
+
+  const variants = await Variant.find({ product: product._id })
+    .populate("color", "attribute_color_name attribute_color_code")
+    .populate("size", "attribute_size_name");
+
+  res.json({
+    ...product.toObject(),
+    variants,
+  });
+});
+
+const createProductWithVariants = asyncHandler(async (req, res) => {
+  const {
+    name,
+    category,
+    brand,
+    description,
+    short_description,
+    images,
+    colors,
+    sizes,
+    listed_price,
+    sale_price,
+    import_price,
+    stock_per_variant = 0,
+    is_active = true,
+    is_featured = false,
+    tags = [],
+  } = req.body;
+
+  if (!name || !category || !description) {
+    res.status(400);
+    throw new Error("Vui lòng nhập đầy đủ tên, danh mục và mô tả");
+  }
+
+  const hasVariants = colors && sizes && colors.length > 0 && sizes.length > 0;
 
   const product = await Product.create({
     name,
     category,
+    brand: brand || "",
     description,
-    short_description: description.slice(0, 160),
-    images,
-    has_variants: variants && variants.length > 0,
-    is_active: true
+    short_description: short_description || "",
+    images: images || [],
+    price: sale_price || listed_price || 0,
+    sale_price: sale_price || listed_price || 0,
+    import_price: import_price || 0,
+    has_variants: hasVariants,
+    is_active,
+    is_featured,
+    tags,
   });
 
-  if (variants && variants.length > 0) {
-    const variantData = variants.map(v => ({
-      ...v,
-      product: product._id
-    }));
-    await Variant.insertMany(variantData);
+  if (hasVariants) {
+    const variantsToCreate = [];
+
+    for (const colorId of colors) {
+      for (const sizeId of sizes) {
+        variantsToCreate.push({
+          product: product._id,
+          color: colorId,
+          size: sizeId,
+          listed_price: listed_price || 0,
+          sale_price: sale_price || listed_price || 0,
+          import_price: import_price || 0,
+          stock: stock_per_variant,
+          is_show: true,
+        });
+      }
+    }
+
+    await Variant.insertMany(variantsToCreate);
   }
 
-  res.status(201).json(product);
-});
+  const finalProduct = await Product.findById(product._id).populate(
+    "category",
+    "product_category_name"
+  );
 
-export const updateProduct = asyncHandler(async (req, res) => {
+  res.status(201).json({
+    message: "Tạo sản phẩm thành công!",
+    product: finalProduct,
+    variantCount: hasVariants ? colors.length * sizes.length : 0,
+  });
+});
+const updateProductWithVariants = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) {
     res.status(404);
-    throw new Error('Không tìm thấy sản phẩm');
+    throw new Error("Không tìm thấy sản phẩm");
   }
 
-  Object.assign(product, req.body);
+  const {
+    colors,
+    sizes,
+    listed_price,
+    sale_price,
+    import_price,
+    stock_per_variant,
+    ...productData
+  } = req.body;
+
+  const hasVariants = colors && sizes && colors.length > 0 && sizes.length > 0;
+
+  Object.assign(product, {
+    ...productData,
+    has_variants: hasVariants,
+    price: sale_price || listed_price || product.price,
+    sale_price: sale_price || listed_price || product.sale_price,
+  });
+
   await product.save();
-  res.json(product);
+
+  if (hasVariants) {
+    await Variant.deleteMany({ product: product._id });
+
+    const newVariants = [];
+    for (const colorId of colors) {
+      for (const sizeId of sizes) {
+        newVariants.push({
+          product: product._id,
+          color: colorId,
+          size: sizeId,
+          listed_price: listed_price || product.price,
+          sale_price: sale_price || product.sale_price,
+          import_price: import_price || product.import_price,
+          stock: stock_per_variant ?? 0,
+          is_show: true,
+        });
+      }
+    }
+    await Variant.insertMany(newVariants);
+  } else {
+    await Variant.deleteMany({ product: product._id });
+  }
+
+  const updatedProduct = await Product.findById(product._id).populate(
+    "category",
+    "product_category_name"
+  );
+
+  res.json({
+    message: "Cập nhật thành công!",
+    product: updatedProduct,
+  });
 });
 
-export const deleteProduct = asyncHandler(async (req, res) => {
+const deleteProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) {
     res.status(404);
-    throw new Error('Không tìm thấy sản phẩm');
+    throw new Error("Không tìm thấy sản phẩm");
   }
 
   await Variant.deleteMany({ product: product._id });
   await product.deleteOne();
-  res.json({ message: 'Đã xóa sản phẩm và tất cả variant' });
+
+  res.json({ message: "Đã xóa sản phẩm và tất cả biến thể" });
 });
+
+export {
+  getAdminProducts,
+  getAdminProductById,
+  createProductWithVariants,
+  updateProductWithVariants,
+  deleteProduct,
+};

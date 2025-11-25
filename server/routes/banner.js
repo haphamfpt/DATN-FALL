@@ -1,16 +1,18 @@
-import express from 'express';
-import Banner from '../models/Banner.js';
+import express from "express";
+import {
+  getActiveBanners,
+  getAllBannersAdmin,
+  createBanner,
+  updateBanner,
+  deleteBanner,
+} from "../controllers/bannerController.js";
 
 const router = express.Router();
 
-// API lấy tất cả banner đang bật (dùng cho trang chủ)
-router.get('/', async (req, res) => {
-  try {
-    const banners = await Banner.find({ active: true }).sort({ _id: 1 });
-    res.json(banners);
-  } catch (err) {
-    res.status(500).json({ message: 'Lỗi server' });
-  }
-});
+router.get("/", getActiveBanners);
+router.get("/admin", getAllBannersAdmin);
+router.post("/", createBanner);
+router.put("/:id", updateBanner);
+router.delete("/:id", deleteBanner);
 
 export default router;

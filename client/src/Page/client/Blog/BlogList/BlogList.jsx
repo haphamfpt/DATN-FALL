@@ -21,18 +21,14 @@ const BlogList = ({ title = "TIN TỨC MỚI NHẤT", limit }) => {
     const fetchBlogs = async () => {
       try {
         setLoading(true);
-        setError(null);
-
-        const page = 1;
         const limitParam = limit ? limit : 12;
-        const res = await fetch(`/api/blogs?page=${page}&limit=${limitParam}`);
+        const res = await fetch(`/api/blogs?page=1&limit=${limitParam}`);
 
         if (!res.ok) throw new Error("Không thể tải bài viết");
-
         const data = await res.json();
         setPosts(data.blogs || []);
       } catch (err) {
-        setError(err.message || "Đã có lỗi xảy ra khi tải bài viết");
+        setError(err.message || "Có lỗi xảy ra");
       } finally {
         setLoading(false);
       }
@@ -44,11 +40,9 @@ const BlogList = ({ title = "TIN TỨC MỚI NHẤT", limit }) => {
   if (loading) {
     return (
       <section className="py-5">
-        <Container>
-          <div className="text-center py-5">
-            <Spinner animation="border" variant="primary" />
-            <p className="mt-3 text-muted">Đang tải bài viết...</p>
-          </div>
+        <Container className="text-center py-5">
+          <Spinner animation="border" variant="primary" />
+          <p className="mt-3 text-muted">Đang tải bài viết...</p>
         </Container>
       </section>
     );
@@ -79,42 +73,37 @@ const BlogList = ({ title = "TIN TỨC MỚI NHẤT", limit }) => {
   const displayPosts = limit ? posts.slice(0, limit) : posts;
 
   return (
-    <section className="py-5">
+    <section className="blog-section py-5">
       <Container>
-        <h2 className="text-center fw-bold mb-5 display-6 text-primary">
-          {title}
-        </h2>
+        <h2 className="section-title">{title}</h2>
 
         <Row className="g-4 g-xl-5">
           {displayPosts.map((post) => (
             <Col md={6} lg={4} key={post._id}>
-              <Card className="blog-card h-100 border-0 shadow-sm overflow-hidden">
-                <div className="blog-img-wrapper position-relative">
+              <Card className="blog-card">
+                <div className="blog-img-wrapper">
                   <Card.Img
                     variant="top"
                     src={post.coverImage}
                     alt={post.title}
                     className="blog-img"
-                    style={{ objectFit: "cover", height: "220px" }}
                   />
-                  <div className="blog-overlay"></div>
+                  <div className="blog-overlay" />
+                  {post.tags?.[0] && (
+                    <Badge className="blog-category">{post.tags[0]}</Badge>
+                  )}
                 </div>
 
-                <Card.Body className="d-flex flex-column p-4">
-                  <Card.Title className="fw-bold fs-4 text-dark mb-3 line-clamp-2 text-center">
-                    <Link
-                      to={`/blog/${post.slug}`}
-                      className="text-decoration-none text-dark hover-primary"
-                    >
+                <Card.Body className="d-flex flex-column">
+                  <Card.Title className="blog-title text-center">
+                    <Link to={`/blog/${post.slug}`} className="title-link">
                       {post.title}
                     </Link>
                   </Card.Title>
 
-                  <Card.Text className="text-muted flex-grow-1 line-clamp-3 mb-4">
-                    {post.excerpt}
-                  </Card.Text>
+                  <Card.Text className="blog-excerpt">{post.excerpt}</Card.Text>
 
-                  <div className="d-flex align-items-center text-muted small mt-auto">
+                 <div className="d-flex align-items-center text-muted small mt-auto">
                     <div className="d-flex gap-3 flex-wrap justify-content-center w-100">
                       <span className="d-flex align-items-center gap-1">
                         <Calendar size={16} />
@@ -135,8 +124,8 @@ const BlogList = ({ title = "TIN TỨC MỚI NHẤT", limit }) => {
 
                   <Link
                     to={`/blog/${post.slug}`}
-                    className="btn btn-outline-primary rounded-pill mt-3 px-5 py-2 fw-semibold align-self-start"
                     style={{ width: "100%" }}
+                    className="text-center btn-readmore mt-3"
                   >
                     Đọc thêm
                   </Link>
@@ -148,10 +137,7 @@ const BlogList = ({ title = "TIN TỨC MỚI NHẤT", limit }) => {
 
         {limit && posts.length >= limit && (
           <div className="text-center mt-5">
-            <Link
-              to="/blog"
-              className="btn btn-primary rounded-pill px-5 py-3 fw-bold"
-            >
+            <Link to="/blog" className="btn-viewall">
               Xem tất cả bài viết
             </Link>
           </div>
