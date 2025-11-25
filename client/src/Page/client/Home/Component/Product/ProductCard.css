@@ -1,0 +1,65 @@
+.product-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
+}
+
+.product-img {
+  height: 320px;
+  object-fit: cover;
+  transition: transform 0.7s ease;
+}
+
+.product-card:hover .product-img {
+  transform: scale(1.08);
+}
+
+.product-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 50%, rgba(0,0,0,0.4));
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.product-card:hover .product-img-overlay {
+  opacity: 1;
+}
+
+.quick-add-btn {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: all 0.4s ease;
+}
+
+.product-card:hover .quick-add-btn {
+  opacity: 1;
+  bottom: 30px;
+}
+
+/* Badge */
+.badge-new {
+  background: linear-gradient(135deg, #7e5eff, #00d4ff);
+  color: white;
+  font-weight: 700;
+  z-index: 2;
+}
+
+.badge-sale {
+  background: linear-gradient(135deg, #ff6b9d, #ff8e8e);
+  color: white;
+  font-weight: 700;
+  z-index: 2;
+}
+
+.btn-add-cart {
+  background: linear-gradient(135deg, #7e5eff, #00d4ff);
+  border: none;
+  transition: all 0.4s ease;
+}
+
+.tracking-wider {
+  letter-spacing: 1.5px;
+}
