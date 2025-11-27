@@ -119,8 +119,10 @@ const VoucherManagement = () => {
   const validateForm = () => {
     if (!formData.voucher_code.trim()) return toast.error("Mã giảm giá không được để trống!");
     if (!formData.voucher_value || formData.voucher_value <= 0) return toast.error("Giá trị giảm phải lớn hơn 0!");
+    if (!formData.voucher_value || formData.voucher_value >= formData.rank_price) return toast.error("Giá trị giảm phải nhỏ hơn đơn hàng tối thiểu");
     if (!formData.rank_price || formData.rank_price < 0) return toast.error("Đơn tối thiểu không hợp lệ!");
     if (!formData.start_datetime) return toast.error("Chọn ngày bắt đầu!");
+    if (!formData.start_datetime || formData.start_datetime < new Date()) return toast.error("Ngày bắt đầu không được nhỏ hơn thời điểm hiện tại.");
     if (!formData.end_datetime) return toast.error("Chọn ngày kết thúc!");
     if (new Date(formData.start_datetime) >= new Date(formData.end_datetime))
       return toast.error("Ngày kết thúc phải sau ngày bắt đầu!");
@@ -201,7 +203,7 @@ const VoucherManagement = () => {
                           </td>
                           <td className="text-center">
                             <span className={`badge ${isActive ? "bg-success" : "bg-secondary"}`}>
-                              {isActive ? "Đang hoạt động" : "Hết hạn / Hết lượt"}
+                              {isActive ? "Đang hoạt động" : "Không khả dụng"}
                             </span>
                           </td>
                           <td className="text-center">
