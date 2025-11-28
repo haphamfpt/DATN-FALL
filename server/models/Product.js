@@ -23,17 +23,13 @@ const productSchema = mongoose.Schema({
   
   images: [{
     url: { type: String, required: true },
-    alt: { type: String }
+    alt: { type: String, default: '' },
+    is_main: { type: Boolean, default: false }
   }],
-
-  price: { type: Number, default: 0 },
-  sale_price: { type: Number, default: 0 },
-  import_price: { type: Number, default: 0 },
 
   rating: { type: Number, default: 0 },
   numReviews: { type: Number, default: 0 },
   total_sold: { type: Number, default: 0 },
-  countInStock: { type: Number, default: 0 }, 
 
   is_active: { type: Boolean, default: true },
   is_featured: { type: Boolean, default: false },
@@ -47,13 +43,15 @@ const productSchema = mongoose.Schema({
 });
 
 productSchema.pre('save', function(next) {
-  if (this.isModified('name')) {
-    this.slug = this.name
+  if (this.isModified('name') || !this.slug) {
+    let slug = this.name
       .toLowerCase()
       .replace(/đ/g, 'd')
       .replace(/[^a-z0-9\s-]/g, '')
       .trim()
       .replace(/\s+/g, '-');
+
+    this.slug = slug;
   }
   next();
 });
