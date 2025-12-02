@@ -14,25 +14,65 @@ const getAdminProducts = asyncHandler(async (req, res) => {
     .lean();
 
   const total = await Product.countDocuments();
+  const productIds = products.map((p) => p._id);
 
-  const enhancedProducts = await Promise.all(
-    products.map(async (p) => {
-      const variantCount = await Variant.countDocuments({ product: p._id });
-      const variantPrices = await Variant.find({ product: p._id }).select(
-        "sale_price"
-      );
-      const minPrice =
-        variantPrices.length > 0
-          ? Math.min(...variantPrices.map((v) => v.sale_price))
-          : 0;
-
-      return {
-        ...p,
-        total_variants: variantCount,
-        min_price: minPrice,
-      };
+  const variants = await Variant.find({ product: { $in: productIds } })
+    .select("product color size import_price sale_price stock sku")
+    .populate({
+      path: "color",
+      select: "attribute_color_name attribute_color_code",
     })
-  );
+    .populate({
+      path: "size",
+      select: "attribute_size_name",
+    })
+    .lean();
+
+  const variantsByProduct = {};
+  variants.forEach((v) => {
+    const productId = v.product.toString();
+
+    if (!variantsByProduct[productId]) {
+      variantsByProduct[productId] = [];
+    }
+
+    variantsByProduct[productId].push({
+      _id: v._id,
+      name:
+        v.name ||
+        `${v.color?.attribute_color_name || "Màu"} - ${
+          v.size?.attribute_size_name || "Size"
+        }`,
+      color: v.color
+        ? {
+            name: v.color.attribute_color_name,
+            code: v.color.attribute_color_code,
+          }
+        : null,
+      size: v.size
+        ? {
+            name: v.size.attribute_size_name,
+          }
+        : null,
+      import_price: v.import_price,
+      sale_price: v.sale_price,
+      stock: v.stock,
+      sku: v.sku,
+    });
+  });
+
+  const enhancedProducts = products.map((p) => {
+    const productVariants = variantsByProduct[p._id.toString()] || [];
+    const prices = productVariants.map((v) => v.sale_price).filter(Boolean);
+    const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+
+    return {
+      ...p,
+      total_variants: productVariants.length,
+      min_price: minPrice,
+      variants: productVariants,
+    };
+  });
 
   res.json({
     products: enhancedProducts,
@@ -90,7 +130,7 @@ const createProductWithVariants = asyncHandler(async (req, res) => {
     brand = "",
     description,
     short_description = "",
-    images: oldImages = [], 
+    images: oldImages = [],
     tags = [],
     variants = [],
   } = payload;
@@ -107,7 +147,7 @@ const createProductWithVariants = asyncHandler(async (req, res) => {
   if (req.files && req.files.length > 0) {
     req.files.forEach((file) => {
       finalImages.push({
-        url: `/uploads/products/${file.filename}`, 
+        url: `/uploads/products/${file.filename}`,
         alt: name.trim(),
       });
     });
