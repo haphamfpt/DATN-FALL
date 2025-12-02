@@ -6,6 +6,7 @@ import LayoutAdmin from "./Page/admin/Layout.jsx";
 import Home from "./Page/client/Home/Home.jsx";
 import BlogList from "./Page/client/Blog/BlogList/BlogList.jsx";
 import ContactForm from "./Page/client/Contact/ContactForm.jsx";
+import ProductDetail from "./Page/client/ProductDetail/ProductDetail.jsx";
 
 import AuthPage from "./Page/auth/AuthPage";
 import AdminWelcome from "./Page/admin/Welcome/AdminWelcome.jsx";
@@ -18,6 +19,7 @@ import BlogDetail from "./Page/client/Blog/BlogDetail/BlogDetail.jsx";
 import ContactManagement from "./Page/admin/Contact/ContactManagement.jsx";
 import VariantAttributesManagement from "./Page/admin/Variant/VariantAttributesManagement.jsx";
 import ProductManagement from "./Page/admin/Product/ProductManagement.jsx";
+
 function App() {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -27,6 +29,7 @@ function App() {
           <Route path="blog" element={<BlogList/>}></Route>
           <Route path="blog/:slug" element={<BlogDetail />} />
           <Route path="contact" element={ <ContactForm/> }></Route>
+          <Route path="product/:slug" element={<ProductDetail/>}></Route>
           <Route path="*" element={<NotFound />} />
         </Route>
 

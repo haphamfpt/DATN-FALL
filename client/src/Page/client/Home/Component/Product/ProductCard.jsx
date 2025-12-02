@@ -2,7 +2,6 @@ import { Card, Badge } from "react-bootstrap";
 import { ShoppingCart, Zap } from "react-feather";
 import { Link } from "react-router-dom";
 import "./ProductCard.css";
-
 const ProductCard = ({ product }) => {
   const colors = product.variants
     ? Array.from(
@@ -62,9 +61,11 @@ const ProductCard = ({ product }) => {
         </Link>
 
         <div className="quick-add-btn">
-          <button className="btn btn-light rounded-circle shadow-lg p-3">
-            <ShoppingCart size={24} />
-          </button>
+          <Link to={`/product/${product.slug}`}>
+            <button className="btn btn-light rounded-circle shadow-lg p-3">
+              <ShoppingCart size={24} />
+            </button>
+          </Link>
         </div>
       </div>
 
@@ -89,9 +90,7 @@ const ProductCard = ({ product }) => {
                 {product.oldPrice}
               </span>
             )}
-            <span className="text-danger fw-bold fs-4">
-              {product.price}
-            </span>
+            <span className="text-danger fw-bold fs-4">{product.price}</span>
           </div>
         </div>
       </Card.Body>
