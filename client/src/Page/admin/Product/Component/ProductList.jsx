@@ -3,8 +3,6 @@ import {
   PencilSquare,
   Trash,
   PlusLg,
-  Eye,
-  EyeSlash,
   ChevronDown,
   ChevronUp,
 } from "react-bootstrap-icons";
@@ -82,7 +80,6 @@ const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
                     <th>Danh mục</th>
                     <th className="text-center">Biến thể</th>
                     <th className="text-center">Giá từ</th>
-                    <th className="text-center">Trạng thái</th>
                     <th className="text-center">Hành động</th>
                   </tr>
                 </thead>
@@ -122,13 +119,6 @@ const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
                         </td>
                         <td className="text-center text-danger fw-bold">
                           {p.min_price > 0 ? `${p.min_price.toLocaleString()}đ` : "—"}
-                        </td>
-                        <td className="text-center">
-                          {p.is_active ? (
-                            <Eye className="text-success" />
-                          ) : (
-                            <EyeSlash className="text-secondary" />
-                          )}
                         </td>
                         <td className="text-center">
                           <button
