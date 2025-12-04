@@ -9,6 +9,7 @@ import ContactForm from "./Page/client/Contact/ContactForm.jsx";
 import ProductDetail from "./Page/client/ProductDetail/ProductDetail.jsx";
 import Cart from "./Page/client/Cart/Cart.jsx";
 import Checkout from "./Page/client/Checkout/Checkout.jsx";
+import Product from "./Page/client/Product/Product.jsx";
 
 import AuthPage from "./Page/auth/AuthPage";
 import AdminWelcome from "./Page/admin/Welcome/AdminWelcome.jsx";
@@ -28,12 +29,13 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
-          <Route path="blog" element={<BlogList/>}></Route>
+          <Route path="blog" element={<BlogList />}></Route>
           <Route path="blog/:slug" element={<BlogDetail />} />
-          <Route path="contact" element={ <ContactForm/> }></Route>
-          <Route path="product/:slug" element={<ProductDetail/>}></Route>
-          <Route path="cart" element={<Cart/>}></Route>
-          <Route path="checkout" element={<Checkout/>}></Route>
+          <Route path="contact" element={<ContactForm />}></Route>
+          <Route path="product/:slug" element={<ProductDetail />}></Route>
+          <Route path="cart" element={<Cart />}></Route>
+          <Route path="checkout" element={<Checkout />}></Route>
+          <Route path="shop" element={<Product/>}></Route>
           <Route path="*" element={<NotFound />} />
         </Route>
 
@@ -42,14 +44,17 @@ function App() {
         <Route path="/register" element={<AuthPage />} />
 
         <Route path="/admin" element={<LayoutAdmin />}>
-          <Route index element={<AdminWelcome/>}></Route>
+          <Route index element={<AdminWelcome />}></Route>
           <Route path="categories" element={<CategoryManagement />}></Route>
           <Route path="banners" element={<BannerManagement />}></Route>
-          <Route path="vouchers" element={<VoucherManagement/>}></Route>
-          <Route path="blogs" element={<BlogManagement/>}></Route>
-          <Route path="contacts" element={<ContactManagement/>}></Route>
-          <Route path="variants" element={<VariantAttributesManagement/>}></Route>
-          <Route path="products" element={<ProductManagement/>}></Route>
+          <Route path="vouchers" element={<VoucherManagement />}></Route>
+          <Route path="blogs" element={<BlogManagement />}></Route>
+          <Route path="contacts" element={<ContactManagement />}></Route>
+          <Route
+            path="variants"
+            element={<VariantAttributesManagement />}
+          ></Route>
+          <Route path="products" element={<ProductManagement />}></Route>
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
