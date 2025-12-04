@@ -8,6 +8,7 @@ import BlogList from "./Page/client/Blog/BlogList/BlogList.jsx";
 import ContactForm from "./Page/client/Contact/ContactForm.jsx";
 import ProductDetail from "./Page/client/ProductDetail/ProductDetail.jsx";
 import Cart from "./Page/client/Cart/Cart.jsx";
+import Checkout from "./Page/client/Checkout/Checkout.jsx";
 
 import AuthPage from "./Page/auth/AuthPage";
 import AdminWelcome from "./Page/admin/Welcome/AdminWelcome.jsx";
@@ -32,6 +33,7 @@ function App() {
           <Route path="contact" element={ <ContactForm/> }></Route>
           <Route path="product/:slug" element={<ProductDetail/>}></Route>
           <Route path="cart" element={<Cart/>}></Route>
+          <Route path="checkout" element={<Checkout/>}></Route>
           <Route path="*" element={<NotFound />} />
         </Route>
 
