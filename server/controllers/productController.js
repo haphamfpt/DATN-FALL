@@ -317,10 +317,14 @@ const getProductDetail = asyncHandler(async (req, res) => {
     .populate({
       path: "variants",
       populate: [
-        { path: "color", select: "attribute_color_name attribute_color_code" },
-        { path: "size", select: "attribute_size_name" },
+        {
+          path: "color",
+          select: "attribute_color_name attribute_color_code _id",
+        },
+        { path: "size", select: "attribute_size_name _id" },
       ],
-    });
+    })
+    .lean(); 
 
   if (!product) {
     res.status(404);
@@ -331,54 +335,71 @@ const getProductDetail = asyncHandler(async (req, res) => {
 
   const prices = variants
     .map((v) => v.sale_price)
-    .filter((p) => typeof p === "number");
+    .filter((p) => typeof p === "number" && p > 0);
 
   const minPrice = prices.length ? Math.min(...prices) : 0;
   const maxPrice = prices.length ? Math.max(...prices) : 0;
 
-  const colors = [
-    ...new Map(
-      variants.map((v) => [
-        v.color?._id,
-        {
-          id: v.color?._id,
-          name: v.color?.attribute_color_name,
-          code: v.color?.attribute_color_code,
-        },
-      ])
-    ).values(),
-  ];
+  const colorsMap = new Map();
+  const sizesMap = new Map();
 
-  const sizes = [
-    ...new Map(
-      variants.map((v) => [
-        v.size?._id,
-        { id: v.size?._id, name: v.size?.attribute_size_name },
-      ])
-    ).values(),
-  ];
+  variants.forEach((v) => {
+    if (v.color) {
+      colorsMap.set(v.color._id.toString(), {
+        id: v.color._id,
+        name: v.color.attribute_color_name,
+        code: v.color.attribute_color_code?.toUpperCase() || "#000000",
+      });
+    }
+    if (v.size) {
+      sizesMap.set(v.size._id.toString(), {
+        id: v.size._id,
+        name: v.size.attribute_size_name,
+      });
+    }
+  });
+
+  const cleanVariants = variants.map((v) => ({
+    _id: v._id,
+    sale_price: v.sale_price,
+    stock: v.stock || 0,
+    color: v.color
+      ? {
+          _id: v.color._id,
+          attribute_color_name: v.color.attribute_color_name,
+          attribute_color_code: v.color.attribute_color_code,
+        }
+      : null,
+    size: v.size
+      ? {
+          _id: v.size._id,
+          attribute_size_name: v.size.attribute_size_name,
+        }
+      : null,
+  }));
 
   res.json({
     _id: product._id,
     name: product.name,
     slug: product.slug,
     category: product.category,
-    brand: product.brand,
+    brand: product.brand || "",
     description: product.description,
-    short_description: product.short_description,
-    images: product.images,
+    short_description: product.short_description || "",
+    images: product.images || [],
 
-    rating: product.rating,
-    numReviews: product.numReviews,
-    total_sold: product.total_sold,
+    rating: product.rating || 0,
+    numReviews: product.numReviews || 0,
+    total_sold: product.total_sold || 0,
 
     has_variants: product.has_variants,
 
     minPrice,
     maxPrice,
-    variants,
-    colors,
-    sizes,
+
+    variants: cleanVariants,
+    colors: Array.from(colorsMap.values()),
+    sizes: Array.from(sizesMap.values()),
   });
 });
 
@@ -388,5 +409,5 @@ export {
   createProductWithVariants,
   updateProductWithVariants,
   deleteProduct,
-  getProductDetail
+  getProductDetail,
 };

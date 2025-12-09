@@ -14,6 +14,7 @@ import voucherRoutes from "./routes/voucherRoutes.js";
 import bannerRoutes from "./routes/banner.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
+import cartRoutes from './routes/cartRoutes.js';
 import { notFound, errorHandler } from "./middlewares/errorMiddleware.js";
 
 dotenv.config();
@@ -46,6 +47,7 @@ app.use("/api/vouchers", voucherRoutes);
 app.use("/api/banners", bannerRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/contacts", contactRoutes);
+app.use('/api/cart', cartRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
