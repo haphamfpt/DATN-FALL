@@ -309,10 +309,84 @@ const deleteProduct = asyncHandler(async (req, res) => {
   res.json({ message: "Đã xóa sản phẩm và tất cả biến thể!" });
 });
 
+const getProductDetail = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+
+  const product = await Product.findOne({ slug })
+    .populate("category", "product_category_name")
+    .populate({
+      path: "variants",
+      populate: [
+        { path: "color", select: "attribute_color_name attribute_color_code" },
+        { path: "size", select: "attribute_size_name" },
+      ],
+    });
+
+  if (!product) {
+    res.status(404);
+    throw new Error("Không tìm thấy sản phẩm");
+  }
+
+  const variants = product.variants || [];
+
+  const prices = variants
+    .map((v) => v.sale_price)
+    .filter((p) => typeof p === "number");
+
+  const minPrice = prices.length ? Math.min(...prices) : 0;
+  const maxPrice = prices.length ? Math.max(...prices) : 0;
+
+  const colors = [
+    ...new Map(
+      variants.map((v) => [
+        v.color?._id,
+        {
+          id: v.color?._id,
+          name: v.color?.attribute_color_name,
+          code: v.color?.attribute_color_code,
+        },
+      ])
+    ).values(),
+  ];
+
+  const sizes = [
+    ...new Map(
+      variants.map((v) => [
+        v.size?._id,
+        { id: v.size?._id, name: v.size?.attribute_size_name },
+      ])
+    ).values(),
+  ];
+
+  res.json({
+    _id: product._id,
+    name: product.name,
+    slug: product.slug,
+    category: product.category,
+    brand: product.brand,
+    description: product.description,
+    short_description: product.short_description,
+    images: product.images,
+
+    rating: product.rating,
+    numReviews: product.numReviews,
+    total_sold: product.total_sold,
+
+    has_variants: product.has_variants,
+
+    minPrice,
+    maxPrice,
+    variants,
+    colors,
+    sizes,
+  });
+});
+
 export {
   getAdminProducts,
   getAdminProductById,
   createProductWithVariants,
   updateProductWithVariants,
   deleteProduct,
+  getProductDetail
 };
