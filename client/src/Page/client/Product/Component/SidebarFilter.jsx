@@ -14,6 +14,8 @@ export default function SidebarFilter({
   setSelectedColors,
   selectedSizes,
   setSelectedSizes,
+  availableColors,
+  availableSizes,
   onClear
 }) {
   const toggleColor = (color) => {
@@ -37,8 +39,8 @@ export default function SidebarFilter({
 
       <SearchBox value={searchTerm} onChange={setSearchTerm} />
       <PriceRangeFilter value={priceMax} onChange={setPriceMax} />
-      <ColorFilter selected={selectedColors} onToggle={toggleColor} />
-      <SizeFilter selected={selectedSizes} onToggle={toggleSize} />
+      <ColorFilter selected={selectedColors} onToggle={toggleColor} availableColors={availableColors} />
+      <SizeFilter selected={selectedSizes} onToggle={toggleSize} availableSizes={availableSizes} />
 
       <button className="btn btn-outline-danger w-100" onClick={onClear}>
         Xóa tất cả bộ lọc

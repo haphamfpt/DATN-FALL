@@ -1,26 +1,29 @@
 import React from "react";
-import { Star, Heart } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Heart, Star } from "lucide-react";
 
 const formatPrice = (price) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
 
 export default function ProductCard({ product }) {
+  const hasSale = product.variants.some((v) => v.sale_price < v.import_price);
+
   return (
-    <div className="col-6 col-md-4 col-lg-4 mb-4">
+    <Link to={`/product/${product.slug}`} className="text-decoration-none text-dark">
       <div className="card border-0 shadow-sm rounded-3 overflow-hidden h-100 hover-shadow transition-all">
         <div className="position-relative">
           <img
-            src="https://resource.nhuahvt.com/0x0/tmp/chup-anh-san-pham-phang-1596647399.jpg"
+            src={product.images[0]?.url || "/placeholder.jpg"}
             className="card-img-top"
             alt={product.name}
             style={{ height: "280px", objectFit: "cover" }}
           />
-          {product.sale && (
+          {hasSale && (
             <span className="position-absolute top-0 start-0 bg-danger text-white px-3 py-1 small fw-bold">
               SALE
             </span>
           )}
-          <button className="position-absolute top-0 end-0 btn btn-link p-2">
+          <button className="position-absolute top-0 end-0 btn btn-link p-2" onClick={(e) => e.preventDefault()}>
             <Heart size={22} className="text-muted" />
           </button>
         </div>
@@ -30,32 +33,22 @@ export default function ProductCard({ product }) {
 
           <div className="d-flex align-items-center gap-1 mb-2">
             <Star size={16} className="text-warning fill-warning" />
-            <span className="small fw-bold">{product.rating}</span>
-            <span className="text-muted small">({product.reviews})</span>
+            <span className="small fw-bold">4.8</span>
+            <span className="text-muted small">(128)</span>
           </div>
 
-          <div className="mb-2">
-            <small className="text-muted">Màu: </small>
-            {product.colors.map((c, i) => (
-              <span key={i} className="badge bg-light text-dark border me-1">{c}</span>
-            ))}
-          </div>
-
-          <div className="mb-3">
-            <small className="text-muted">Size: </small>
-            {product.sizes.map((s, i) => (
-              <span key={i} className="badge bg-secondary text-white me-1">{s}</span>
-            ))}
-          </div>
+          {/* Hiển thị số lượng màu & size */}
+          <small className="text-muted d-block mb-2">
+            {product.total_variants} biến thể • Từ {formatPrice(product.min_price)}
+          </small>
 
           <div className="d-flex align-items-center gap-2">
-            <span className="fs-5 fw-bold text-danger">{formatPrice(product.price)}</span>
-            {product.oldPrice && (
-              <del className="text-muted small">{formatPrice(product.oldPrice)}</del>
-            )}
+            <span className="fs-5 fw-bold text-danger">
+              {formatPrice(product.min_price)}
+            </span>
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

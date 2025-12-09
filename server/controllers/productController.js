@@ -84,6 +84,108 @@ const getAdminProducts = asyncHandler(async (req, res) => {
   });
 });
 
+const getProducts = asyncHandler(async (req, res) => {
+  const page = Number(req.query.page) || 1;
+  const limit = 12;
+
+  const { search, price_lte, color, size } = req.query;
+
+  let productQuery = {};
+
+  if (search) {
+    productQuery.$or = [
+      { name: { $regex: search.trim(), $options: "i" } },
+      { tags: { $in: [new RegExp(search.trim(), "i")] } },
+    ];
+  }
+
+  let variantQuery = { is_show: true };
+
+  if (price_lte) {
+    variantQuery.sale_price = { $lte: Number(price_lte) };
+  }
+
+  if (color) {
+    const colors = Array.isArray(color) ? color : [color];
+    variantQuery.color = { $in: colors };
+  }
+
+  if (size) {
+    const sizes = Array.isArray(size) ? size : [size];
+    variantQuery.size = { $in: sizes };
+  }
+
+  let allowedProductIds = [];
+
+  if (Object.keys(variantQuery).length > 1 || price_lte) { // có filter variant
+    allowedProductIds = await Variant.distinct("product", variantQuery);
+  }
+
+  if (allowedProductIds.length > 0) {
+    productQuery._id = { $in: allowedProductIds };
+  }
+
+  const total = await Product.countDocuments(productQuery);
+
+  let products = await Product.find(productQuery)
+    .populate("category", "product_category_name")
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .lean();
+
+  const productIds = products.map(p => p._id);
+
+  const variants = await Variant.find({ product: { $in: productIds }, is_show: true })
+    .populate("color", "attribute_color_name attribute_color_code")
+    .populate("size", "attribute_size_name")
+    .lean();
+
+  const variantsByProduct = {};
+  variants.forEach(v => {
+    const pid = v.product.toString();
+    if (!variantsByProduct[pid]) variantsByProduct[pid] = [];
+    variantsByProduct[pid].push({
+      _id: v._id,
+      color: v.color ? {
+        _id: v.color._id,
+        attribute_color_name: v.color.attribute_color_name,
+        attribute_color_code: v.color.attribute_color_code,
+      } : null,
+      size: v.size ? {
+        _id: v.size._id,
+        attribute_size_name: v.size.attribute_size_name,
+      } : null,
+      sale_price: v.sale_price,
+      import_price: v.import_price,
+      stock: v.stock,
+    });
+  });
+
+  const enhancedProducts = products.map(p => {
+    const vars = variantsByProduct[p._id.toString()] || [];
+    const prices = vars.map(v => v.sale_price).filter(p => p > 0);
+    const minPrice = prices.length ? Math.min(...prices) : 0;
+
+    return {
+      ...p,
+      total_variants: vars.length,
+      min_price: minPrice,
+      variants: vars,
+    };
+  });
+
+  res.json({
+    products: enhancedProducts,
+    pagination: {
+      page,
+      total,
+      pages: Math.ceil(total / limit),
+      limit,
+    },
+  });
+});
+
 const getAdminProductById = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id).populate(
     "category",
@@ -324,7 +426,7 @@ const getProductDetail = asyncHandler(async (req, res) => {
         { path: "size", select: "attribute_size_name _id" },
       ],
     })
-    .lean(); 
+    .lean();
 
   if (!product) {
     res.status(404);
@@ -405,6 +507,7 @@ const getProductDetail = asyncHandler(async (req, res) => {
 
 export {
   getAdminProducts,
+  getProducts,
   getAdminProductById,
   createProductWithVariants,
   updateProductWithVariants,

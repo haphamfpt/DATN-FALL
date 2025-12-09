@@ -1,97 +1,70 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import SidebarFilter from "./Component/SidebarFilter";
 import ProductCard from "./Component/ProductCard";
-
-const products = [
-  {
-    id: 1,
-    name: "Áo Thun ProFlex 2025",
-    price: 450000,
-    oldPrice: 590000,
-    rating: 4.8,
-    reviews: 128,
-    colors: ["Đen", "Trắng", "Xám"],
-    sizes: ["M", "L", "XL"],
-    sale: true,
-  },
-  {
-    id: 2,
-    name: "Quần Jogger Thể Thao",
-    price: 580000,
-    oldPrice: 750000,
-    rating: 4.9,
-    reviews: 89,
-    colors: ["Đen", "Xanh Navy"],
-    sizes: ["S", "M", "L", "XL"],
-    sale: true,
-  },
-  {
-    id: 3,
-    name: "Áo Khoác Gió Windbreaker",
-    price: 890000,
-    oldPrice: null,
-    rating: 5.0,
-    reviews: 201,
-    colors: ["Xanh", "Đen", "Đỏ"],
-    sizes: ["M", "L", "XL", "XXL"],
-  },
-  {
-    id: 4,
-    name: "Áo Polo Cao Cấp Cotton",
-    price: 420000,
-    oldPrice: 550000,
-    rating: 4.7,
-    reviews: 156,
-    colors: ["Trắng", "Xanh Mint", "Hồng"],
-    sizes: ["S", "M", "L"],
-    sale: true,
-  },
-  {
-    id: 5,
-    name: "Short Kaki Nam Basic",
-    price: 380000,
-    oldPrice: null,
-    rating: 4.6,
-    reviews: 92,
-    colors: ["Be", "Xám", "Đen"],
-    sizes: ["29", "30", "31", "32", "33"],
-  },
-  {
-    id: 6,
-    name: "Hoodie Oversize Streetwear",
-    price: 720000,
-    oldPrice: 950000,
-    rating: 4.9,
-    reviews: 312,
-    colors: ["Đen", "Xám", "Nâu"],
-    sizes: ["M", "L", "XL"],
-    sale: true,
-  },
-];
+import Pagination from "./Component/Pagination";
 
 export default function ProductListPage() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [priceMax, setPriceMax] = useState(1500000);
+  const [priceMax, setPriceMax] = useState(2000000);
   const [selectedColors, setSelectedColors] = useState([]);
   const [selectedSizes, setSelectedSizes] = useState([]);
 
-  const filteredProducts = products.filter((p) => {
-    const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchPrice = p.price <= priceMax;
-    const matchColor =
-      selectedColors.length === 0 ||
-      p.colors.some((c) => selectedColors.includes(c));
-    const matchSize =
-      selectedSizes.length === 0 ||
-      p.sizes.some((s) => selectedSizes.includes(s));
-    return matchSearch && matchPrice && matchColor && matchSize;
-  });
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [availableColors, setAvailableColors] = useState([]);
+  const [availableSizes, setAvailableSizes] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        params.append("page", page);
+        params.append("limit", 12);
+
+        if (searchTerm.trim()) params.append("search", searchTerm.trim());
+        if (priceMax < 2000000) params.append("price_lte", priceMax);
+
+        selectedColors.forEach((id) => params.append("color", id));
+        selectedSizes.forEach((id) => params.append("size", id));
+
+        const res = await axios.get(`/api/products?${params.toString()}`);
+
+        setProducts(res.data.products);
+        setTotalPages(res.data.pagination.pages);
+
+        const colorsSet = new Set();
+        const sizesSet = new Set();
+        res.data.products.forEach((p) => {
+          p.variants.forEach((v) => {
+            if (v.color) colorsSet.add(JSON.stringify(v.color));
+            if (v.size) sizesSet.add(JSON.stringify(v.size));
+          });
+        });
+
+        setAvailableColors(Array.from(colorsSet).map(JSON.parse));
+        setAvailableSizes(Array.from(sizesSet).map(JSON.parse));
+      } catch (err) {
+        console.error("Lỗi fetch:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [page, searchTerm, priceMax, selectedColors, selectedSizes]);
 
   const clearFilters = () => {
     setSearchTerm("");
-    setPriceMax(1500000);
+    setPriceMax(2000000);
     setSelectedColors([]);
     setSelectedSizes([]);
+    setPage(1);
   };
 
   return (
@@ -107,7 +80,10 @@ export default function ProductListPage() {
 
       <div className="container py-5" style={{ maxWidth: "1400px" }}>
         <div className="row g-4">
-          <div className="col-lg-3">
+          <div
+            className="col-lg-3 position-sticky"
+            style={{ top: "100px", height: "fit-content" }}
+          >
             <SidebarFilter
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
@@ -117,21 +93,49 @@ export default function ProductListPage() {
               setSelectedColors={setSelectedColors}
               selectedSizes={selectedSizes}
               setSelectedSizes={setSelectedSizes}
+              availableColors={availableColors}
+              availableSizes={availableSizes}
               onClear={clearFilters}
             />
           </div>
 
           <div className="col-lg-9">
-            <div className="row">
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-
-            {filteredProducts.length === 0 && (
+            {loading ? (
               <div className="text-center py-5">
-                <p className="fs-4 text-muted">Không tìm thấy sản phẩm nào</p>
+                <div className="spinner-border text-danger" role="status"></div>
               </div>
+            ) : (
+              <>
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                  <p className="mb-0 text-muted">
+                    Hiển thị {products.length} sản phẩm
+                  </p>
+                </div>
+
+                <div className="row g-4">
+                  {products.map((product) => (
+                    <div key={product._id} className="col-6 col-md-4 col-lg-4">
+                      <ProductCard product={product} />
+                    </div>
+                  ))}
+                </div>
+
+                {products.length === 0 && (
+                  <div className="text-center py-5">
+                    <p className="fs-4 text-muted">
+                      Không tìm thấy sản phẩm nào
+                    </p>
+                  </div>
+                )}
+
+                {totalPages > 1 && (
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                  />
+                )}
+              </>
             )}
           </div>
         </div>

@@ -3,6 +3,7 @@ import multer from "multer";
 import path from "path";
 import {
   getAdminProducts,
+  getProducts,
   getAdminProductById,
   createProductWithVariants,
   updateProductWithVariants,
@@ -37,6 +38,8 @@ const upload = multer({
 });
 
 const router = express.Router();
+
+router.get("/", getProducts); 
 
 router
   .route("/admin")

@@ -1,20 +1,17 @@
 import React from "react";
 
-const sizes = ["S", "M", "L", "XL", "XXL", "29", "30", "31", "32", "33", "34", "35"];
-
-export default function SizeFilter({ selected, onToggle }) {
+export default function SizeFilter({ selected, onToggle, availableSizes }) {
   return (
     <div className="mb-4">
       <h6 className="fw-bold mb-3">Kích thước</h6>
 
       <div className="d-grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(72px, 1fr))" }}>
-        {sizes.map((size) => {
-          const isSelected = selected.includes(size);
-
+        {availableSizes.map((size) => {
+          const isSelected = selected.includes(size._id);
           return (
             <label
-              key={size}
-              onClick={() => onToggle(size)}
+              key={size._id}
+              onClick={() => onToggle(size._id)}
               className={`
                 d-flex align-items-center justify-content-center
                 py-3 rounded-3 border cursor-pointer user-select-none
@@ -30,7 +27,7 @@ export default function SizeFilter({ selected, onToggle }) {
                 minWidth: "72px", 
               }}
             >
-              {size}
+              {size.attribute_size_name}
             </label>
           );
         })}
