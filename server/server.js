@@ -15,6 +15,7 @@ import bannerRoutes from "./routes/banner.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
 import auth from "./routes/auth.js";
 
 import { notFound, errorHandler } from "./middlewares/errorMiddleware.js";
@@ -56,6 +57,7 @@ app.use("/api/banners", bannerRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/contacts", contactRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/orders", orderRoutes);
 app.use("/api/auth", auth);
 
 app.use(notFound);
