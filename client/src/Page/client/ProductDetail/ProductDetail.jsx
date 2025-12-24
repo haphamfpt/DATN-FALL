@@ -90,7 +90,7 @@ const ProductDetail = () => {
         throw new Error(data.message || "Thêm vào giỏ thất bại");
       }
 
-      toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
+      toast.success(`Đã thêm sản phẩm vào giỏ hàng!`);
       setQuantity(1);
 
       refreshCartCount();
