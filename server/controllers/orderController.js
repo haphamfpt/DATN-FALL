@@ -39,7 +39,7 @@ export const createOrder = async (req, res) => {
         });
       }
 
-      totalAmount += variant.sale_price * item.quantity;
+      totalAmount += variant.sale_price * item.quantity + 30000;
 
       orderItems.push({
         product: variant.product._id,
