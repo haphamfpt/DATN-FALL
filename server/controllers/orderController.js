@@ -61,7 +61,7 @@ export const createOrder = async (req, res) => {
       tomorrow.setDate(tomorrow.getDate() + 1);
 
       const vnpParams = {
-        vnp_Amount: totalAmount * 100,
+        vnp_Amount: totalAmount,
         vnp_IpAddr: req.ip || "127.0.0.1",
         vnp_TxnRef: Date.now().toString(),
         vnp_OrderInfo: `Thanh toán đơn hàng Aveline #${Date.now()}`,
