@@ -1,3 +1,17 @@
 html, body {
   scroll-behavior: auto !important;
 }
+
+.user-dropdown:hover > .dropdown-menu {
+  display: block;
+  margin-top: 0;
+}
+
+.user-dropdown > .dropdown-toggle:active {
+  pointer-events: none;
+}
+
+.user-dropdown .dropdown-menu {
+  transition: all 0.2s ease-in-out;
+  border: 1px solid rgba(0,0,0,0.1);
+}

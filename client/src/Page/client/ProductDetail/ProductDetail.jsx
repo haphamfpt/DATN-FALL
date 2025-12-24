@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 
 const ProductDetail = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
 
   const [product, setProduct] = useState(null);
   const [mainImage, setMainImage] = useState(0);
@@ -23,7 +24,6 @@ const ProductDetail = () => {
 
         setProduct(data);
 
-        // Tự động chọn màu + size đầu tiên
         if (data.colors?.length > 0) setSelectedColor(data.colors[0]);
         if (data.sizes?.length > 0) setSelectedSize(data.sizes[0]);
       } catch (err) {
@@ -34,7 +34,6 @@ const ProductDetail = () => {
     fetchProduct();
   }, [slug]);
 
-  // Tìm variant đang được chọn
   const getSelectedVariant = () => {
     if (!product?.variants || !selectedColor || !selectedSize) return null;
 
@@ -59,6 +58,14 @@ const ProductDetail = () => {
       return;
     }
 
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng!");
+      setTimeout(() => navigate("/login"), 1500);
+      return;
+    }
+
     setAdding(true);
 
     try {
@@ -66,7 +73,7 @@ const ProductDetail = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Không gửi token → backend sẽ xử lý guest hoặc bạn tạm thời bỏ middleware protect
+          Authorization: `Bearer ${token}`, 
         },
         body: JSON.stringify({
           variantId: variant._id,
@@ -76,12 +83,21 @@ const ProductDetail = () => {
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.message || "Thêm vào giỏ thất bại");
+      if (!res.ok) {
+        throw new Error(data.message || "Thêm vào giỏ thất bại");
+      }
 
       toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
-      setQuantity(1); // reset lại số lượng sau khi thêm thành công
+      setQuantity(1); 
     } catch (err) {
-      toast.error(err.message);
+      if (err.message.includes("Token")) {
+        toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setTimeout(() => navigate("/login"), 1500);
+      } else {
+        toast.error(err.message);
+      }
     } finally {
       setAdding(false);
     }
@@ -105,7 +121,6 @@ const ProductDetail = () => {
 
       <div className="container my-5">
         <div className="row g-5">
-          {/* === HÌNH ẢNH === */}
           <div className="col-lg-6">
             <div className="row g-3">
               <div className="col-12">
@@ -140,7 +155,6 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          {/* === THÔNG TIN === */}
           <div className="col-lg-6">
             <h1 className="display-5 fw-bold mb-3">{product.name}</h1>
 
@@ -151,7 +165,6 @@ const ProductDetail = () => {
               </span>
             </div>
 
-            {/* Giá */}
             <div className="mb-4">
               <span className="h2 text-danger fw-bold">
                 {selectedVariant
@@ -164,7 +177,6 @@ const ProductDetail = () => {
               </span>
             </div>
 
-            {/* Cảnh báo tồn kho */}
             {outOfStock ? (
               <div className="alert alert-danger mb-3">Hết hàng</div>
             ) : selectedVariant && selectedVariant.stock < 10 ? (
@@ -175,7 +187,6 @@ const ProductDetail = () => {
 
             <p className="text-muted lead">{product.short_description}</p>
 
-            {/* === CHỌN MÀU === */}
             <div className="mb-4">
               <h5 className="fw-bold">
                 Màu sắc:{" "}
@@ -208,7 +219,6 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* === CHỌN SIZE === */}
             <div className="mb-4">
               <h5 className="fw-bold">
                 Kích thước:{" "}
@@ -245,7 +255,6 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* === SỐ LƯỢNG === */}
             <div className="mb-4">
               <h5 className="fw-bold">Số lượng</h5>
               <div className="d-flex align-items-center">
@@ -267,7 +276,6 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* === NÚT THÊM GIỎ HÀNG === */}
             <button
               className="btn btn-danger btn-lg px-5 py-3 fw-bold w-100"
               onClick={handleAddToCart}

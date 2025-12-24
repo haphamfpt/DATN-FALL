@@ -1,9 +1,9 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const cartItemSchema = new mongoose.Schema({
   variant: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Variant',
+    ref: "Variant",
     required: true,
   },
   quantity: {
@@ -14,19 +14,28 @@ const cartItemSchema = new mongoose.Schema({
   },
 });
 
-const cartSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    unique: true, 
+const cartSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+    },
+    items: [cartItemSchema],
   },
-  items: [cartItemSchema],
-}, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
+
+cartSchema.virtual("totalAmount").get(function () {
+  return this.items.reduce((sum, item) => {
+    return sum + (item.variant?.sale_price || 0) * item.quantity;
+  }, 0);
 });
 
-const Cart = mongoose.model('Cart', cartSchema);
+const Cart = mongoose.model("Cart", cartSchema);
 export default Cart;

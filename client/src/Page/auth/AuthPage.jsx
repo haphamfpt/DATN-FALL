@@ -30,7 +30,6 @@ const AuthPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Tự động chuyển form theo URL
   useEffect(() => {
     if (location.pathname.includes("/register")) {
       setIsLogin(false);
@@ -39,13 +38,11 @@ const AuthPage = () => {
     }
   }, [location.pathname]);
 
-  // Xử lý thay đổi input
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError("");
   };
 
-  // Validate form realtime
   const validateForm = () => {
     if (!formData.email.includes("@") || !formData.email.includes(".")) {
       setError("Email không hợp lệ");
@@ -76,14 +73,13 @@ const AuthPage = () => {
 
     try {
       if (!isLogin) {
-        // ĐĂNG KÝ
         const res = await axios.post("/api/auth/register", {
           name: formData.name.trim(),
           email: formData.email.toLowerCase(),
           password: formData.password,
         });
 
-        setSuccess("Đăng ký thành công! Đang chuyển sang đăng nhập...");
+        setSuccess("Đăng ký thành công! Hãy tiến hành đăng nhập!");
         setTimeout(() => {
           setIsLogin(true);
           setFormData({
@@ -95,13 +91,11 @@ const AuthPage = () => {
           navigate("/login", { replace: true });
         }, 2000);
       } else {
-        // ĐĂNG NHẬP
         const res = await axios.post("/api/auth/login", {
           email: formData.email.toLowerCase(),
           password: formData.password,
         });
 
-        // Lưu token + user
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
 
@@ -126,14 +120,12 @@ const AuthPage = () => {
       <Container className="h-100 d-flex align-items-center justify-content-center">
         <Card className="auth-card border-0">
           <Card.Body className="p-5">
-            {/* Header */}
             <div className="auth-header">
               <Link to="/" className="text-decoration-none">
                 <h1 className="logo-text">AVELINE</h1>
               </Link>
             </div>
 
-            {/* Thông báo */}
             {error && (
               <Alert variant="danger" className="mb-4">
                 {error}
@@ -146,7 +138,6 @@ const AuthPage = () => {
             )}
 
             <Form onSubmit={handleSubmit}>
-              {/* Tên */}
               {!isLogin && (
                 <div className="auth-input-group">
                   <User className="input-icon" size={22} />
@@ -162,7 +153,6 @@ const AuthPage = () => {
                 </div>
               )}
 
-              {/* Email */}
               <div className="auth-input-group">
                 <Mail className="input-icon" size={22} />
                 <Form.Control
@@ -176,7 +166,6 @@ const AuthPage = () => {
                 />
               </div>
 
-              {/* Mật khẩu */}
               <div className="auth-input-group">
                 <Lock className="input-icon" size={22} />
                 <Form.Control
@@ -197,7 +186,6 @@ const AuthPage = () => {
                 </Button>
               </div>
 
-              {/* Xác nhận mật khẩu */}
               {!isLogin && (
                 <div className="auth-input-group">
                   <Lock className="input-icon" size={22} />
@@ -224,7 +212,6 @@ const AuthPage = () => {
                 </div>
               )}
 
-              {/* Nút submit */}
               <Button
                 type="submit"
                 disabled={loading}
@@ -240,7 +227,6 @@ const AuthPage = () => {
               </Button>
             </Form>
 
-            {/* Chuyển đổi */}
             <div className="switch-container">
               <span className="switch-text">
                 {isLogin ? "Chưa có tài khoản? " : "Đã có tài khoản? "}

@@ -1,54 +1,87 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast";
 import CartItem from "./Component/CartItem";
 import CartSummary from "./Component/CartSummary";
 
 const Cart = () => {
-  const cartItems = [
-    {
-      id: 1,
-      name: "Áo Thun Thể Thao ProFlex",
-      color: "Đen",
-      size: "L",
-      price: 450000,
-      quantity: 1,
-      image:
-        "https://resource.nhuahvt.com/0x0/tmp/chup-anh-san-pham-phang-1596647399.jpg",
-      inStock: true,
-    },
-    {
-      id: 2,
-      name: "Quần Short Gym Training",
-      color: "Xám",
-      size: "M",
-      price: 380000,
-      quantity: 2,
-      image:
-        "https://resource.nhuahvt.com/0x0/tmp/chup-anh-san-pham-phang-1596647399.jpg",
-      inStock: true,
-    },
-    {
-      id: 3,
-      name: "Áo Khoác Chạy Bộ Windbreaker",
-      color: "Xanh Navy",
-      size: "XL",
-      price: 890000,
-      quantity: 1,
-      image:
-        "https://resource.nhuahvt.com/0x0/tmp/chup-anh-san-pham-phang-1596647399.jpg",
-      inStock: true,
-    },
-  ];
+  const [cart, setCart] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const shipping = 30000;
+  useEffect(() => {
+    const fetchCart = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        toast.error("Vui lòng đăng nhập để xem giỏ hàng!");
+        setLoading(false);
+        setTimeout(() => navigate("/login"), 1500);
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/cart", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Không thể tải giỏ hàng");
+        }
+
+        setCart(data); 
+      } catch (err) {
+        toast.error(err.message);
+        if (err.message.includes("Token") || err.message.includes("đăng nhập")) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setTimeout(() => navigate("/login"), 1500);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCart();
+  }, [navigate]);
+
+  const cartItems = cart?.data?.items || [];
+  const subtotal = cart?.totalAmount || 0;
+  const shipping = subtotal >= 800000 ? 0 : 30000; 
   const total = subtotal + shipping;
-  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = cart?.count || 0;
+
+  if (loading) {
+    return (
+      <div className="container py-5 text-center">
+        <div className="spinner-border text-danger" style={{ width: "4rem", height: "4rem" }}>
+          <span className="visually-hidden">Đang tải giỏ hàng...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!cart || cartItems.length === 0) {
+    return (
+      <div className="container py-5 text-center">
+        <Toaster position="top-center" />
+        <h3 className="mb-4">Giỏ hàng của bạn đang trống</h3>
+        <p className="text-muted mb-4">Hãy thêm sản phẩm yêu thích vào giỏ ngay nào!</p>
+        <a href="/shop" className="btn btn-danger btn-lg px-5">
+          Tiếp tục mua sắm
+        </a>
+      </div>
+    );
+  }
 
   return (
     <>
+      <Toaster position="top-center" />
+
       <div className="container py-5" style={{ maxWidth: "1200px" }}>
         <h2
           className="fw-bold mb-5 text-center text-uppercase"
@@ -77,14 +110,26 @@ const Cart = () => {
                 <div></div>
               </div>
 
-              {cartItems.map((item) => (
-                <CartItem key={item.id} item={item} />
-              ))}
+              {cartItems.map((cartItem) => {
+                const item = {
+                  id: cartItem._id,
+                  name: cartItem.variant?.product?.name || "Sản phẩm",
+                  color: cartItem.variant?.color?.attribute_color_name || "N/A",
+                  size: cartItem.variant?.size?.attribute_size_name || "N/A",
+                  price: cartItem.variant?.sale_price || 0,
+                  quantity: cartItem.quantity,
+                  image: cartItem.variant?.product?.images?.[0]?.url || "/placeholder.jpg",
+                  inStock: (cartItem.variant?.stock || 0) >= cartItem.quantity,
+                  variantId: cartItem.variant?._id, 
+                };
+
+                return <CartItem key={cartItem._id} item={item} />;
+              })}
             </div>
 
             <div className="mt-4">
-              <a href="/" className="btn btn-outline-dark px-4">
-                <i className="bi bi-arrow-left me-2"></i> Tiếp tục mua sắm
+              <a href="/shop" className="btn btn-outline-dark px-4">
+                ← Tiếp tục mua sắm
               </a>
             </div>
           </div>
