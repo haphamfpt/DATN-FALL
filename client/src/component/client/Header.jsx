@@ -1,11 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { BsCart, BsPerson, BsBoxArrowRight } from "react-icons/bs";
-import { useState } from "react";
+import { useCart } from "../../context/CartContext"; 
 
 const Header = () => {
-  const [totalItems] = useState(0);
-
+  const { cartCount } = useCart(); 
   const user = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
 
@@ -13,7 +12,7 @@ const Header = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/");
-    window.location.reload(); 
+    window.location.reload();
   };
 
   return (
@@ -64,15 +63,16 @@ const Header = () => {
             <div className="d-flex align-items-center gap-3">
               <Link to="/cart" className="btn btn-outline-danger position-relative">
                 <BsCart size={24} />
-                {totalItems > 0 && (
+                {cartCount > 0 && (
                   <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                    {totalItems}
+                    {cartCount}
+                    <span className="visually-hidden">{cartCount} sản phẩm</span>
                   </span>
                 )}
               </Link>
 
               {user ? (
-                <div className="dropdown user-dropdown"> 
+                <div className="dropdown user-dropdown">
                   <button
                     className="btn btn-outline-primary dropdown-toggle d-flex align-items-center gap-2"
                     type="button"
@@ -102,12 +102,8 @@ const Header = () => {
                 </div>
               ) : (
                 <>
-                  <Link to="/login" className="btn btn-outline-primary">
-                    Đăng nhập
-                  </Link>
-                  <Link to="/register" className="btn btn-primary">
-                    Đăng ký
-                  </Link>
+                  <Link to="/login" className="btn btn-outline-primary">Đăng nhập</Link>
+                  <Link to="/register" className="btn btn-primary">Đăng ký</Link>
                 </>
               )}
             </div>

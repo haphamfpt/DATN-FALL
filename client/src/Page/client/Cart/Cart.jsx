@@ -9,8 +9,25 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const fetchCart = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await fetch("/api/cart", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Không thể tải giỏ hàng");
+      setCart(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    const fetchCart = async () => {
+    const loadCart = async () => {
       const token = localStorage.getItem("token");
 
       if (!token) {
@@ -20,38 +37,60 @@ const Cart = () => {
         return;
       }
 
-      try {
-        const res = await fetch("/api/cart", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.message || "Không thể tải giỏ hàng");
-        }
-
-        setCart(data); 
-      } catch (err) {
-        toast.error(err.message);
-        if (err.message.includes("Token") || err.message.includes("đăng nhập")) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          setTimeout(() => navigate("/login"), 1500);
-        }
-      } finally {
-        setLoading(false);
-      }
+      await fetchCart();
+      setLoading(false);
     };
 
-    fetchCart();
+    loadCart();
   }, [navigate]);
+
+  const updateQuantity = async (variantId, newQuantity) => {
+    if (newQuantity < 1) return;
+
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`/api/cart/${variantId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ quantity: newQuantity }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Cập nhật thất bại");
+
+      toast.success("Đã cập nhật số lượng!");
+      await fetchCart();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const removeItem = async (variantId) => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`/api/cart/${variantId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Xóa thất bại");
+
+      toast.success("Đã xóa sản phẩm khỏi giỏ hàng!");
+      await fetchCart(); 
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
 
   const cartItems = cart?.data?.items || [];
   const subtotal = cart?.totalAmount || 0;
-  const shipping = subtotal >= 800000 ? 0 : 30000; 
+  const shipping = subtotal >= 800000 ? 0 : 30000;
   const total = subtotal + shipping;
   const totalItems = cart?.count || 0;
 
@@ -59,7 +98,7 @@ const Cart = () => {
     return (
       <div className="container py-5 text-center">
         <div className="spinner-border text-danger" style={{ width: "4rem", height: "4rem" }}>
-          <span className="visually-hidden">Đang tải giỏ hàng...</span>
+          <span className="visually-hidden">Đang tải...</span>
         </div>
       </div>
     );
@@ -83,10 +122,7 @@ const Cart = () => {
       <Toaster position="top-center" />
 
       <div className="container py-5" style={{ maxWidth: "1200px" }}>
-        <h2
-          className="fw-bold mb-5 text-center text-uppercase"
-          style={{ letterSpacing: "2px" }}
-        >
+        <h2 className="fw-bold mb-5 text-center text-uppercase" style={{ letterSpacing: "2px" }}>
           Giỏ hàng của bạn
         </h2>
 
@@ -120,10 +156,18 @@ const Cart = () => {
                   quantity: cartItem.quantity,
                   image: cartItem.variant?.product?.images?.[0]?.url || "/placeholder.jpg",
                   inStock: (cartItem.variant?.stock || 0) >= cartItem.quantity,
-                  variantId: cartItem.variant?._id, 
+                  variantId: cartItem.variant?._id,
+                  maxStock: cartItem.variant?.stock || 0,
                 };
 
-                return <CartItem key={cartItem._id} item={item} />;
+                return (
+                  <CartItem
+                    key={cartItem._id}
+                    item={item}
+                    onUpdateQuantity={updateQuantity}
+                    onRemove={removeItem}
+                  />
+                );
               })}
             </div>
 
@@ -135,12 +179,7 @@ const Cart = () => {
           </div>
 
           <div className="col-lg-4">
-            <CartSummary
-              subtotal={subtotal}
-              shipping={shipping}
-              total={total}
-              totalItems={totalItems}
-            />
+            <CartSummary subtotal={subtotal} shipping={shipping} total={total} totalItems={totalItems} />
           </div>
         </div>
       </div>

@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useParams, useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
+import { useCart } from "../../../context/CartContext";
 
 const ProductDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { refreshCartCount } = useCart();
 
   const [product, setProduct] = useState(null);
   const [mainImage, setMainImage] = useState(0);
@@ -20,7 +22,9 @@ const ProductDetail = () => {
         const res = await fetch(`/api/products/detail/${slug}`);
         const data = await res.json();
 
-        if (!res.ok) throw new Error(data.message || "Không tải được sản phẩm");
+        if (!res.ok) {
+          throw new Error(data.message || "Không tải được sản phẩm");
+        }
 
         setProduct(data);
 
@@ -59,7 +63,6 @@ const ProductDetail = () => {
     }
 
     const token = localStorage.getItem("token");
-
     if (!token) {
       toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng!");
       setTimeout(() => navigate("/login"), 1500);
@@ -73,7 +76,7 @@ const ProductDetail = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, 
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           variantId: variant._id,
@@ -88,9 +91,11 @@ const ProductDetail = () => {
       }
 
       toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
-      setQuantity(1); 
+      setQuantity(1);
+
+      refreshCartCount();
     } catch (err) {
-      if (err.message.includes("Token")) {
+      if (err.message.toLowerCase().includes("token")) {
         toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
@@ -103,7 +108,7 @@ const ProductDetail = () => {
     }
   };
 
-  if (!product)
+  if (!product) {
     return (
       <div className="container my-5 text-center">
         <div className="spinner-border text-danger" role="status">
@@ -111,6 +116,7 @@ const ProductDetail = () => {
         </div>
       </div>
     );
+  }
 
   const selectedVariant = getSelectedVariant();
   const outOfStock = selectedVariant?.stock === 0;
@@ -161,19 +167,17 @@ const ProductDetail = () => {
             <div className="d-flex align-items-center mb-3">
               <span className="text-warning fs-5">★★★★★</span>
               <span className="text-muted ms-2">
-                ({product.numReviews} đánh giá)
+                ({product.numReviews || 0} đánh giá)
               </span>
             </div>
 
             <div className="mb-4">
               <span className="h2 text-danger fw-bold">
                 {selectedVariant
-                  ? selectedVariant.sale_price.toLocaleString("vi-VN") + "₫"
+                  ? `${selectedVariant.sale_price.toLocaleString("vi-VN")}₫`
                   : product.minPrice === product.maxPrice
-                  ? product.minPrice.toLocaleString("vi-VN") + "₫"
-                  : `${product.minPrice.toLocaleString(
-                      "vi-VN"
-                    )}₫ - ${product.maxPrice.toLocaleString("vi-VN")}₫`}
+                  ? `${product.minPrice.toLocaleString("vi-VN")}₫`
+                  : `${product.minPrice.toLocaleString("vi-VN")}₫ - ${product.maxPrice.toLocaleString("vi-VN")}₫`}
               </span>
             </div>
 
@@ -189,17 +193,14 @@ const ProductDetail = () => {
 
             <div className="mb-4">
               <h5 className="fw-bold">
-                Màu sắc:{" "}
-                <span className="text-primary">{selectedColor?.name}</span>
+                Màu sắc: <span className="text-primary">{selectedColor?.name || ""}</span>
               </h5>
               <div className="d-flex gap-3 flex-wrap">
                 {product.colors.map((color) => (
                   <div
                     key={color.id}
                     className={`border rounded-circle p-1 cursor-pointer ${
-                      selectedColor?.id === color.id
-                        ? "border-primary border-3"
-                        : ""
+                      selectedColor?.id === color.id ? "border-primary border-3" : ""
                     }`}
                     onClick={() => setSelectedColor(color)}
                   >
@@ -221,8 +222,7 @@ const ProductDetail = () => {
 
             <div className="mb-4">
               <h5 className="fw-bold">
-                Kích thước:{" "}
-                <span className="text-primary">{selectedSize?.name}</span>
+                Kích thước: <span className="text-primary">{selectedSize?.name || ""}</span>
               </h5>
               <div className="d-flex gap-3 flex-wrap">
                 {product.sizes.map((size) => {
@@ -283,7 +283,7 @@ const ProductDetail = () => {
             >
               {adding ? (
                 <>
-                  <span className="spinner-border spinner-border-sm me-2" />
+                  <span className="spinner-border spinner-border-sm me-2" role="status" />
                   Đang thêm...
                 </>
               ) : outOfStock ? (
