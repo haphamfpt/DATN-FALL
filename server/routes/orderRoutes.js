@@ -3,17 +3,17 @@ import {
   createOrder,
   getUserOrders,
   getOrderById,
-  cancelOrder,
+  vnpayReturn,
 } from "../controllers/orderController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.use(protect); 
+router.use(protect);
 
-router.post("/", createOrder);          
-router.get("/", getUserOrders);          
-router.get("/:id", getOrderById);        
-router.put("/:id/cancel", cancelOrder); 
+router.post("/", createOrder);
+router.get("/", getUserOrders);
+router.get("/:id", getOrderById);
+router.get("/vnpay/return", vnpayReturn);
 
 export default router;

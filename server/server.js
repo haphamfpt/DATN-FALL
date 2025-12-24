@@ -67,4 +67,7 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log("VNP_TMN_CODE:", process.env.VNP_TMN_CODE);
+  console.log("VNP_HASH_SECRET:", process.env.VNP_HASH_SECRET ? "ĐÃ LOAD" : "UNDEFINED - LỖI ĐÂY");
 });
+

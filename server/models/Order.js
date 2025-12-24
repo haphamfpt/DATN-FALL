@@ -20,7 +20,7 @@ const orderItemSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  name: String, 
+  name: String,
   color: String,
   size: String,
   image: String,
@@ -45,7 +45,7 @@ const orderSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ["cod", "online", "bank"],
+    enum: ["cod", "online"],
     default: "cod",
   },
   paymentStatus: {
@@ -58,7 +58,7 @@ const orderSchema = new mongoose.Schema({
     enum: ["pending", "confirmed", "shipped", "delivered", "cancelled"],
     default: "pending",
   },
-  cancelledReason: String,
+  vnp_TxnRef: String,
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
