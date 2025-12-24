@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-import CartItem from "./Component/CartItem";
-import CartSummary from "./Component/CartSummary";
+import CartItem from "./Component/CartItem.jsx"; 
+import CartSummary from "./Component/CartSummary.jsx";
+import { useCart } from "../../../context/CartContext.jsx"; 
 
 const Cart = () => {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { refreshCartCount } = useCart();
 
   const fetchCart = async () => {
     const token = localStorage.getItem("token");
@@ -15,14 +17,21 @@ const Cart = () => {
 
     try {
       const res = await fetch("/api/cart", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
+
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.message || "Không thể tải giỏ hàng");
+      if (!res.ok) {
+        throw new Error(data.message || "Không thể tải giỏ hàng");
+      }
+
       setCart(data);
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi tải giỏ hàng:", err);
+      toast.error(err.message);
     }
   };
 
@@ -31,9 +40,8 @@ const Cart = () => {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        toast.error("Vui lòng đăng nhập để xem giỏ hàng!");
         setLoading(false);
-        setTimeout(() => navigate("/login"), 1500);
+         navigate("/login");
         return;
       }
 
@@ -48,6 +56,7 @@ const Cart = () => {
     if (newQuantity < 1) return;
 
     const token = localStorage.getItem("token");
+
     try {
       const res = await fetch(`/api/cart/${variantId}`, {
         method: "PUT",
@@ -60,31 +69,36 @@ const Cart = () => {
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.message || "Cập nhật thất bại");
+      if (!res.ok) throw new Error(data.message || "Cập nhật số lượng thất bại");
 
       toast.success("Đã cập nhật số lượng!");
-      await fetchCart();
+      await fetchCart(); 
+      refreshCartCount(); 
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || "Có lỗi xảy ra");
     }
   };
 
   const removeItem = async (variantId) => {
     const token = localStorage.getItem("token");
+
     try {
       const res = await fetch(`/api/cart/${variantId}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.message || "Xóa thất bại");
+      if (!res.ok) throw new Error(data.message || "Xóa sản phẩm thất bại");
 
       toast.success("Đã xóa sản phẩm khỏi giỏ hàng!");
       await fetchCart(); 
+      refreshCartCount(); 
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || "Có lỗi xảy ra");
     }
   };
 
@@ -97,20 +111,25 @@ const Cart = () => {
   if (loading) {
     return (
       <div className="container py-5 text-center">
-        <div className="spinner-border text-danger" style={{ width: "4rem", height: "4rem" }}>
-          <span className="visually-hidden">Đang tải...</span>
+        <div
+          className="spinner-border text-danger"
+          style={{ width: "4rem", height: "4rem" }}
+          role="status"
+        >
+          <span className="visually-hidden">Đang tải giỏ hàng...</span>
         </div>
+        <p className="mt-3 fw-bold">Đang tải giỏ hàng...</p>
       </div>
     );
   }
 
-  if (!cart || cartItems.length === 0) {
+  if (cartItems.length === 0) {
     return (
       <div className="container py-5 text-center">
         <Toaster position="top-center" />
-        <h3 className="mb-4">Giỏ hàng của bạn đang trống</h3>
-        <p className="text-muted mb-4">Hãy thêm sản phẩm yêu thích vào giỏ ngay nào!</p>
-        <a href="/shop" className="btn btn-danger btn-lg px-5">
+        <h3 className="mb-4 fw-bold">Giỏ hàng của bạn đang trống</h3>
+        <p className="text-muted mb-4">Hãy thêm những sản phẩm bạn yêu thích nào!</p>
+        <a href="/shop" className="btn btn-danger btn-lg px-5 py-3">
           Tiếp tục mua sắm
         </a>
       </div>
@@ -122,7 +141,10 @@ const Cart = () => {
       <Toaster position="top-center" />
 
       <div className="container py-5" style={{ maxWidth: "1200px" }}>
-        <h2 className="fw-bold mb-5 text-center text-uppercase" style={{ letterSpacing: "2px" }}>
+        <h2
+          className="fw-bold mb-5 text-center text-uppercase"
+          style={{ letterSpacing: "2px" }}
+        >
           Giỏ hàng của bạn
         </h2>
 
@@ -154,8 +176,11 @@ const Cart = () => {
                   size: cartItem.variant?.size?.attribute_size_name || "N/A",
                   price: cartItem.variant?.sale_price || 0,
                   quantity: cartItem.quantity,
-                  image: cartItem.variant?.product?.images?.[0]?.url || "/placeholder.jpg",
-                  inStock: (cartItem.variant?.stock || 0) >= cartItem.quantity,
+                  image:
+                    cartItem.variant?.product?.images?.[0]?.url ||
+                    "/placeholder.jpg",
+                  inStock:
+                    (cartItem.variant?.stock || 0) >= cartItem.quantity,
                   variantId: cartItem.variant?._id,
                   maxStock: cartItem.variant?.stock || 0,
                 };
@@ -179,7 +204,12 @@ const Cart = () => {
           </div>
 
           <div className="col-lg-4">
-            <CartSummary subtotal={subtotal} shipping={shipping} total={total} totalItems={totalItems} />
+            <CartSummary
+              subtotal={subtotal}
+              shipping={shipping}
+              total={total}
+              totalItems={totalItems}
+            />
           </div>
         </div>
       </div>
