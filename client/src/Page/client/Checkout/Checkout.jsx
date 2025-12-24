@@ -1,39 +1,15 @@
-import React, { useState } from "react";
-import DeliveryInfoForm from "./Component/DeliveryInfoForm";
-import OrderItemsList from "./Component/OrderItemsList";
-import OrderSummary from "./Component/OrderSummary";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast";
+import DeliveryInfoForm from "./Component/DeliveryInfoForm.jsx";
+import OrderItemsList from "./Component/OrderItemsList.jsx";
+import OrderSummary from "./Component/OrderSummary.jsx";
 
-const cartItems = [
-  {
-    id: 1,
-    name: "Áo Thun Thể Thao ProFlex",
-    color: "Đen",
-    size: "L",
-    price: 450000,
-    quantity: 1,
-    image: "https://resource.nhuahvt.com/0x0/tmp/chup-anh-san-pham-phang-1596647399.jpg",
-  },
-  {
-    id: 2,
-    name: "Quần Short Gym Training",
-    color: "Xám",
-    size: "M",
-    price: 380000,
-    quantity: 2,
-    image: "https://resource.nhuahvt.com/0x0/tmp/chup-anh-san-pham-phang-1596647399.jpg",
-  },
-  {
-    id: 3,
-    name: "Áo Khoác Chạy Bộ Windbreaker",
-    color: "Xanh Navy",
-    size: "XL",
-    price: 890000,
-    quantity: 1,
-    image: "https://resource.nhuahvt.com/0x0/tmp/chup-anh-san-pham-phang-1596647399.jpg",
-  },
-];
+const CheckoutPage = () => {
+  const [cart, setCart] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-export default function CheckoutPage() {
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -45,15 +21,78 @@ export default function CheckoutPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = 35000;
+  useEffect(() => {
+    const fetchCart = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        toast.error("Vui lòng đăng nhập để thanh toán!");
+        setTimeout(() => navigate("/login"), 2000);
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/cart", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Không thể tải giỏ hàng");
+        }
+
+        setCart(data);
+      } catch (err) {
+        toast.error(err.message);
+        if (err.message.toLowerCase().includes("token")) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setTimeout(() => navigate("/login"), 2000);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCart();
+  }, [navigate]);
+
+  const cartItems = cart?.data?.items || [];
+  const subtotal = cart?.totalAmount || 0;
+  const shipping = subtotal >= 800000 ? 0 : 30000; 
   const total = subtotal + shipping;
-  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = cart?.count || 0;
+
+  if (loading) {
+    return (
+      <div className="container py-5 text-center">
+        <div className="spinner-border text-danger" style={{ width: "4rem", height: "4rem" }}>
+          <span className="visually-hidden">Đang tải thông tin thanh toán...</span>
+        </div>
+        <p className="mt-3 fw-bold">Đang chuẩn bị đơn hàng...</p>
+      </div>
+    );
+  }
+
+  if (cartItems.length === 0) {
+    return (
+      <div className="container py-5 text-center">
+        <Toaster position="top-center" />
+        <h3 className="mb-4 fw-bold">Giỏ hàng trống</h3>
+        <p className="text-muted mb-4">Bạn chưa có sản phẩm nào để thanh toán.</p>
+        <a href="/shop" className="btn btn-danger btn-lg px-5">
+          Tiếp tục mua sắm
+        </a>
+      </div>
+    );
+  }
 
   return (
     <>
-      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+      <Toaster position="top-center" />
 
       <div className="container py-5" style={{ maxWidth: "1200px" }}>
         <h2 className="fw-bold mb-5 text-center text-dark">Thanh toán đơn hàng</h2>
@@ -61,7 +100,16 @@ export default function CheckoutPage() {
         <div className="row g-5">
           <div className="col-lg-8">
             <DeliveryInfoForm formData={formData} onChange={handleChange} />
-            <OrderItemsList items={cartItems} />
+
+            <OrderItemsList items={cartItems.map((cartItem) => ({
+              id: cartItem._id,
+              name: cartItem.variant?.product?.name || "Sản phẩm",
+              color: cartItem.variant?.color?.attribute_color_name || "N/A",
+              size: cartItem.variant?.size?.attribute_size_name || "N/A",
+              price: cartItem.variant?.sale_price || 0,
+              quantity: cartItem.quantity,
+              image: cartItem.variant?.product?.images?.[0]?.url || "/placeholder.jpg",
+            }))} />
           </div>
 
           <div className="col-lg-4">
@@ -76,4 +124,6 @@ export default function CheckoutPage() {
       </div>
     </>
   );
-}
+};
+
+export default CheckoutPage;

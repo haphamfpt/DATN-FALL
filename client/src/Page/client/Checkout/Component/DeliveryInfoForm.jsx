@@ -22,7 +22,10 @@ export default function DeliveryInfoForm({ formData, onChange }) {
               onChange={onChange}
               required
             />
-            <label htmlFor="fullName"><User size={18} className="me-2" />Họ và tên</label>
+            <label htmlFor="fullName">
+              <User size={18} className="me-2" />
+              Họ và tên
+            </label>
           </div>
         </div>
 
@@ -38,37 +41,13 @@ export default function DeliveryInfoForm({ formData, onChange }) {
               onChange={onChange}
               required
             />
-            <label htmlFor="phone"><Phone size={18} className="me-2" />Số điện thoại</label>
+            <label htmlFor="phone">
+              <Phone size={18} className="me-2" />
+              Số điện thoại
+            </label>
           </div>
         </div>
-
-        <div className="col-12">
-          <div className="form-floating">
-            <input
-              type="text"
-              className="form-control"
-              id="address"
-              name="address"
-              placeholder="Số 123, Đường ABC"
-              value={formData.address}
-              onChange={onChange}
-              required
-            />
-            <label htmlFor="address"><Home size={18} className="me-2" />Địa chỉ chi tiết</label>
-          </div>
-        </div>
-
-        <div className="col-md-4">
-          <div className="form-floating">
-            <select className="form-select" required>
-              <option value="">Chọn tỉnh/thành</option>
-              <option>Hồ Chí Minh</option>
-              <option>Hà Nội</option>
-            </select>
-            <label>Tỉnh/Thành phố</label>
-          </div>
-        </div>
-
+        
         <div className="col-md-4">
           <div className="form-floating">
             <select className="form-select" required>
@@ -87,6 +66,36 @@ export default function DeliveryInfoForm({ formData, onChange }) {
           </div>
         </div>
 
+        <div className="col-md-4">
+          <div className="form-floating">
+            <select className="form-select" required>
+              <option value="">Chọn tỉnh/thành</option>
+              <option>Hồ Chí Minh</option>
+              <option>Hà Nội</option>
+            </select>
+            <label>Tỉnh/Thành phố</label>
+          </div>
+        </div>
+
+        <div className="col-12">
+          <div className="form-floating">
+            <input
+              type="text"
+              className="form-control"
+              id="address"
+              name="address"
+              placeholder="Số 123, Đường ABC"
+              value={formData.address}
+              onChange={onChange}
+              required
+            />
+            <label htmlFor="address">
+              <Home size={18} className="me-2" />
+              Địa chỉ chi tiết
+            </label>
+          </div>
+        </div>
+
         <div className="col-12">
           <div className="form-floating">
             <textarea
@@ -98,7 +107,10 @@ export default function DeliveryInfoForm({ formData, onChange }) {
               value={formData.note}
               onChange={onChange}
             />
-            <label htmlFor="note"><FileText size={18} className="me-2" />Ghi chú (không bắt buộc)</label>
+            <label htmlFor="note">
+              <FileText size={18} className="me-2" />
+              Ghi chú (không bắt buộc)
+            </label>
           </div>
         </div>
       </div>
