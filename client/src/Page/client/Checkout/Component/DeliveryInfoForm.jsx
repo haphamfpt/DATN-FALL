@@ -1,7 +1,63 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { MapPin, Phone, User, Home, FileText } from "lucide-react";
 
 export default function DeliveryInfoForm({ formData, onChange }) {
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+
+  const [selectedProvince, setSelectedProvince] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+
+  useEffect(() => {
+    fetch("https://provinces.open-api.vn/api/?depth=2")
+      .then((res) => res.json())
+      .then((data) => {
+        setProvinces(data);
+      })
+      .catch((err) => console.error("Error loading provinces:", err));
+  }, []);
+
+  useEffect(() => {
+    if (selectedProvince) {
+      const province = provinces.find(
+        (p) => p.code === parseInt(selectedProvince)
+      );
+      if (province && province.districts) {
+        setDistricts(province.districts);
+        setWards([]);
+        setSelectedDistrict("");
+      }
+    } else {
+      setDistricts([]);
+      setWards([]);
+      setSelectedDistrict("");
+    }
+  }, [selectedProvince, provinces]);
+
+  useEffect(() => {
+    if (selectedDistrict) {
+      fetch(`https://provinces.open-api.vn/api/d/${selectedDistrict}?depth=2`)
+        .then((res) => res.json())
+        .then((data) => {
+          setWards(data.wards || []);
+        })
+        .catch((err) => console.error("Error loading wards:", err));
+    } else {
+      setWards([]);
+    }
+  }, [selectedDistrict]);
+
+  const handleProvinceChange = (e) => {
+    setSelectedProvince(e.target.value);
+    onChange({ target: { name: "provinceCode", value: e.target.value } });
+  };
+
+  const handleDistrictChange = (e) => {
+    setSelectedDistrict(e.target.value);
+    onChange({ target: { name: "districtCode", value: e.target.value } });
+  };
+
   return (
     <div className="bg-white rounded-3 shadow-sm p-4 p-md-5">
       <h4 className="fw-bold mb-4 d-flex align-items-center gap-2">
@@ -18,7 +74,7 @@ export default function DeliveryInfoForm({ formData, onChange }) {
               id="fullName"
               name="fullName"
               placeholder="Nguyễn Văn A"
-              value={formData.fullName}
+              value={formData.fullName || ""}
               onChange={onChange}
               required
             />
@@ -37,7 +93,7 @@ export default function DeliveryInfoForm({ formData, onChange }) {
               id="phone"
               name="phone"
               placeholder="0901234567"
-              value={formData.phone}
+              value={formData.phone || ""}
               onChange={onChange}
               required
             />
@@ -47,33 +103,64 @@ export default function DeliveryInfoForm({ formData, onChange }) {
             </label>
           </div>
         </div>
-        
-        <div className="col-md-4">
-          <div className="form-floating">
-            <select className="form-select" required>
-              <option value="">Chọn quận/huyện</option>
-            </select>
-            <label>Quận/Huyện</label>
-          </div>
-        </div>
 
         <div className="col-md-4">
           <div className="form-floating">
-            <select className="form-select" required>
-              <option value="">Chọn phường/xã</option>
-            </select>
-            <label>Phường/Xã</label>
-          </div>
-        </div>
-
-        <div className="col-md-4">
-          <div className="form-floating">
-            <select className="form-select" required>
+            <select
+              className="form-select"
+              id="province"
+              value={selectedProvince}
+              onChange={handleProvinceChange}
+              required
+            >
               <option value="">Chọn tỉnh/thành</option>
-              <option>Hồ Chí Minh</option>
-              <option>Hà Nội</option>
+              {provinces.map((prov) => (
+                <option key={prov.code} value={prov.code}>
+                  {prov.name}
+                </option>
+              ))}
             </select>
-            <label>Tỉnh/Thành phố</label>
+            <label htmlFor="province">Tỉnh/Thành phố</label>
+          </div>
+        </div>
+
+        <div className="col-md-4">
+          <div className="form-floating">
+            <select
+              className="form-select"
+              id="district"
+              value={selectedDistrict}
+              onChange={handleDistrictChange}
+              disabled={!selectedProvince}
+              required
+            >
+              <option value="">Chọn quận/huyện</option>
+              {districts.map((dist) => (
+                <option key={dist.code} value={dist.code}>
+                  {dist.name}
+                </option>
+              ))}
+            </select>
+            <label htmlFor="district">Quận/Huyện</label>
+          </div>
+        </div>
+
+        <div className="col-md-4">
+          <div className="form-floating">
+            <select
+              className="form-select"
+              id="ward"
+              disabled={!selectedDistrict}
+              required
+            >
+              <option value="">Chọn phường/xã</option>
+              {wards.map((ward) => (
+                <option key={ward.code} value={ward.code}>
+                  {ward.name}
+                </option>
+              ))}
+            </select>
+            <label htmlFor="ward">Phường/Xã</label>
           </div>
         </div>
 
@@ -85,7 +172,7 @@ export default function DeliveryInfoForm({ formData, onChange }) {
               id="address"
               name="address"
               placeholder="Số 123, Đường ABC"
-              value={formData.address}
+              value={formData.address || ""}
               onChange={onChange}
               required
             />
@@ -104,7 +191,7 @@ export default function DeliveryInfoForm({ formData, onChange }) {
               name="note"
               placeholder="Ghi chú cho shipper..."
               style={{ height: "100px" }}
-              value={formData.note}
+              value={formData.note || ""}
               onChange={onChange}
             />
             <label htmlFor="note">

@@ -11,6 +11,7 @@ import Cart from "./Page/client/Cart/Cart.jsx";
 import Checkout from "./Page/client/Checkout/Checkout.jsx";
 import Product from "./Page/client/Product/Product.jsx";
 import Profile from "./Page/client/Profile/Profile.jsx";
+import OrderSuccess from "./Page/client/Checkout/OrderSuccess.jsx";
 
 import AuthPage from "./Page/auth/AuthPage";
 import AdminWelcome from "./Page/admin/Welcome/AdminWelcome.jsx";
@@ -38,6 +39,7 @@ function App() {
           <Route path="checkout" element={<Checkout />}></Route>
           <Route path="shop" element={<Product />}></Route>
           <Route path="profile" element={<Profile />}></Route>
+          <Route path="/order-success" element={<OrderSuccess />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 

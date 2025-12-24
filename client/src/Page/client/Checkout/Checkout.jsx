@@ -15,6 +15,9 @@ const CheckoutPage = () => {
     phone: "",
     address: "",
     note: "",
+    provinceCode: "",
+    districtCode: "",
+    wardCode: "",
   });
 
   const handleChange = (e) => {
@@ -38,12 +41,12 @@ const CheckoutPage = () => {
           },
         });
 
-        const data = await res.json();
-
         if (!res.ok) {
-          throw new Error(data.message || "Không thể tải giỏ hàng");
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Không thể tải giỏ hàng");
         }
 
+        const data = await res.json();
         setCart(data);
       } catch (err) {
         toast.error(err.message);
@@ -62,7 +65,7 @@ const CheckoutPage = () => {
 
   const cartItems = cart?.data?.items || [];
   const subtotal = cart?.totalAmount || 0;
-  const shipping = subtotal >= 800000 ? 0 : 30000; 
+  const shipping = subtotal >= 800000 ? 0 : 30000;
   const total = subtotal + shipping;
   const totalItems = cart?.count || 0;
 
@@ -70,7 +73,7 @@ const CheckoutPage = () => {
     return (
       <div className="container py-5 text-center">
         <div className="spinner-border text-danger" style={{ width: "4rem", height: "4rem" }}>
-          <span className="visually-hidden">Đang tải thông tin thanh toán...</span>
+          <span className="visually-hidden">Đang tải...</span>
         </div>
         <p className="mt-3 fw-bold">Đang chuẩn bị đơn hàng...</p>
       </div>
@@ -101,15 +104,17 @@ const CheckoutPage = () => {
           <div className="col-lg-8">
             <DeliveryInfoForm formData={formData} onChange={handleChange} />
 
-            <OrderItemsList items={cartItems.map((cartItem) => ({
-              id: cartItem._id,
-              name: cartItem.variant?.product?.name || "Sản phẩm",
-              color: cartItem.variant?.color?.attribute_color_name || "N/A",
-              size: cartItem.variant?.size?.attribute_size_name || "N/A",
-              price: cartItem.variant?.sale_price || 0,
-              quantity: cartItem.quantity,
-              image: cartItem.variant?.product?.images?.[0]?.url || "/placeholder.jpg",
-            }))} />
+            <OrderItemsList
+              items={cartItems.map((cartItem) => ({
+                id: cartItem._id,
+                name: cartItem.variant?.product?.name || "Sản phẩm",
+                color: cartItem.variant?.color?.attribute_color_name || "N/A",
+                size: cartItem.variant?.size?.attribute_size_name || "N/A",
+                price: cartItem.variant?.sale_price || 0,
+                quantity: cartItem.quantity,
+                image: cartItem.variant?.product?.images?.[0]?.url || "/placeholder.jpg",
+              }))}
+            />
           </div>
 
           <div className="col-lg-4">
@@ -118,6 +123,8 @@ const CheckoutPage = () => {
               shipping={shipping}
               total={total}
               totalItems={totalItems}
+              formData={formData} 
+              cart={cart} 
             />
           </div>
         </div>
