@@ -185,7 +185,7 @@ export const createOrder = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Đặt hàng thành công!",
-      order,
+      orderId: order._id,
     });
   } catch (error) {
     console.error("Create order error:", error);

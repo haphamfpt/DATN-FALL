@@ -19,7 +19,7 @@ export default function OrderSummary({
   const [voucherCode, setVoucherCode] = useState("");
   const [applyingVoucher, setApplyingVoucher] = useState(false);
   const [discount, setDiscount] = useState(0);
-  const [appliedVoucher, setAppliedVoucher] = useState(null); 
+  const [appliedVoucher, setAppliedVoucher] = useState(null);
 
   const navigate = useNavigate();
 
@@ -140,13 +140,13 @@ export default function OrderSummary({
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.message || "Đặt hàng thất bại");
-
       if (paymentMethod === "online") {
         window.location.href = data.paymentUrl;
       } else {
         toast.success("Đặt hàng thành công!");
-        navigate("/order-success", { state: { orderId: data.order._id } });
+        navigate(`/order-success?orderId=${data.orderId}`);
       }
+
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -185,7 +185,7 @@ export default function OrderSummary({
             </div>
           </div>
         ) : (
-          <div className="input-group"> 
+          <div className="input-group">
             <input
               type="text"
               className="form-control"
@@ -252,8 +252,8 @@ export default function OrderSummary({
 
         <label
           className={`d-block border rounded-3 p-3 mb-3 cursor-pointer transition-all ${paymentMethod === "cod"
-              ? "border-danger bg-danger-subtle shadow-sm"
-              : "border-light"
+            ? "border-danger bg-danger-subtle shadow-sm"
+            : "border-light"
             }`}
           onClick={() => setPaymentMethod("cod")}
         >
@@ -272,8 +272,8 @@ export default function OrderSummary({
 
         <label
           className={`d-block border rounded-3 p-3 cursor-pointer transition-all ${paymentMethod === "online"
-              ? "border-danger bg-danger-subtle shadow-sm"
-              : "border-light"
+            ? "border-danger bg-danger-subtle shadow-sm"
+            : "border-light"
             }`}
           onClick={() => setPaymentMethod("online")}
         >
