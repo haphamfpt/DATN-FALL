@@ -21,7 +21,20 @@ export const createOrder = async (req, res) => {
     const cart = await Cart.findOne({ user: userId }).populate({
       path: "items.variant",
       select: "sale_price stock product color size",
-      populate: { path: "product", select: "name images" },
+      populate: [
+        {
+          path: "product",
+          select: "name images",
+        },
+        {
+          path: "color",
+          select: "attribute_color_name",
+        },
+        {
+          path: "size",
+          select: "attribute_size_name",
+        },
+      ],
     });
 
     if (!cart || cart.items.length === 0) {
@@ -215,7 +228,7 @@ export const vnpayReturn = async (req, res) => {
       }
 
       return res.redirect(
-        `${process.env.CLIENT_URL || "http://localhost:5173"}/order-success?status=success`
+        `${process.env.CLIENT_URL || "http://localhost:5173"}/order-success?orderId=${order._id}`
       );
     }
 

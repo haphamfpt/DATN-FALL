@@ -277,36 +277,6 @@ const OrderDetail = () => {
           </div>
         </div>
 
-        <div className="container py-5" style={{ maxWidth: "1000px" }}>
-          <div className="bg-light rounded-3 shadow-sm p-4">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5 className="fw-bold text-danger mb-0">Dữ liệu API (Debug Mode)</h5>
-              <button
-                className="btn btn-sm btn-outline-secondary"
-                onClick={() => {
-                  const el = document.getElementById("debug-json");
-                  el.style.display = el.style.display === "none" ? "block" : "none";
-                }}
-              >
-                Ẩn/Hiện
-              </button>
-            </div>
-            <pre
-              id="debug-json"
-              className="bg-dark text-white rounded p-3 overflow-auto"
-              style={{
-                maxHeight: "500px",
-                fontSize: "0.85rem",
-                display: "block",
-              }}
-            >
-              {JSON.stringify(order, null, 2)}
-            </pre>
-            <small className="text-muted">
-              Phần này chỉ nên giữ trong môi trường development. Xóa hoặc ẩn đi trước khi deploy production.
-            </small>
-          </div>
-        </div>
       </div>
     </>
   );
