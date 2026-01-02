@@ -1,7 +1,7 @@
 import Order from "../models/Order.js";
 import Cart from "../models/Cart.js";
 import Variant from "../models/Variant.js";
-import Voucher from "../models/Voucher.js"; 
+import Voucher from "../models/Voucher.js";
 import { VNPay, ignoreLogger, ProductCode, VnpLocale, dateFormat } from "vnpay";
 
 const vnpay = new VNPay({
@@ -129,7 +129,7 @@ export const createOrder = async (req, res) => {
     };
 
     if (paymentMethod === "online") {
-      orderData.vnp_TxnRef = `AVL${Date.now()}${Math.floor(Math.random() * 1000)}`; 
+      orderData.vnp_TxnRef = `AVL${Date.now()}${Math.floor(Math.random() * 1000)}`;
     }
 
     const order = await Order.create(orderData);
@@ -139,12 +139,12 @@ export const createOrder = async (req, res) => {
       tomorrow.setDate(tomorrow.getDate() + 1);
 
       const vnpParams = {
-        vnp_Amount: totalAmount, 
+        vnp_Amount: totalAmount,
         vnp_IpAddr: req.ip || "127.0.0.1",
         vnp_TxnRef: order.vnp_TxnRef,
         vnp_OrderInfo: `Thanh toán đơn hàng Aveline #${order._id}`,
         vnp_OrderType: ProductCode.Other,
-        vnp_ReturnUrl: process.env.VNP_RETURN_URL || "http://localhost:5173/vnpay-return",
+        vnp_ReturnUrl: "http://localhost:5000/api/orders/vnpay-return",
         vnp_Locale: VnpLocale.VN,
         vnp_CreateDate: dateFormat(new Date(), "yyyyMMddHHmmss"),
         vnp_ExpireDate: dateFormat(tomorrow, "yyyyMMddHHmmss"),
@@ -184,42 +184,58 @@ export const createOrder = async (req, res) => {
 };
 
 export const vnpayReturn = async (req, res) => {
-  const vnpParams = req.query;
-  const secureHash = vnpParams.vnp_SecureHash;
+  try {
+    const vnpParams = { ...req.query };
+    const secureHash = vnpParams.vnp_SecureHash;
 
-  delete vnpParams.vnp_SecureHash;
-  delete vnpParams.vnp_SecureHashType;
+    delete vnpParams.vnp_SecureHash;
+    delete vnpParams.vnp_SecureHashType;
 
-  const sortedParams = Object.keys(vnpParams).sort().reduce((obj, key) => {
-    obj[key] = vnpParams[key];
-    return obj;
-  }, {});
+    const isValid = vnpay.verifyReturnUrl(vnpParams, secureHash);
 
-  const signData = new URLSearchParams(sortedParams).toString();
-  const isValid = vnpay.verifyReturnUrl(signData, secureHash);
+    const paidAmount = Number(vnpParams.vnp_Amount) / 100;
 
-  if (isValid && vnpParams.vnp_ResponseCode === "00") {
-    const order = await Order.findOneAndUpdate(
-      { vnp_TxnRef: vnpParams.vnp_TxnRef },
-      { paymentStatus: "paid", orderStatus: "confirmed" },
-      { new: true }
-    );
+    if (isValid && vnpParams.vnp_ResponseCode === "00") {
+      const order = await Order.findOne({ vnp_TxnRef: vnpParams.vnp_TxnRef });
 
-    if (order?.voucher?.voucherId) {
-      await Voucher.findByIdAndUpdate(order.voucher.voucherId, {
-        $inc: { used_quantity: 1 },
-      });
+      if (!order || paidAmount !== order.totalAmount) {
+        return res.redirect(
+          `${process.env.CLIENT_URL || "http://localhost:5173"}/order-success?status=invalid`
+        );
+      }
+
+      order.paymentStatus = "paid";
+      order.orderStatus = "confirmed";
+      await order.save();
+
+      if (order.voucher?.voucherId) {
+        await Voucher.findByIdAndUpdate(order.voucher.voucherId, {
+          $inc: { used_quantity: 1 },
+        });
+      }
+
+      return res.redirect(
+        `${process.env.CLIENT_URL || "http://localhost:5173"}/order-success?status=success`
+      );
     }
 
-    res.redirect(`${process.env.CLIENT_URL || "http://localhost:5173"}/order-success?status=success`);
-  } else {
     await Order.findOneAndUpdate(
       { vnp_TxnRef: vnpParams.vnp_TxnRef },
       { paymentStatus: "failed" }
     );
-    res.redirect(`${process.env.CLIENT_URL || "http://localhost:5173"}/order-success?status=failed`);
+
+    res.redirect(
+      `${process.env.CLIENT_URL || "http://localhost:5173"}/order-success?status=failed`
+    );
+  } catch (error) {
+    console.error("VNPay return error:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
+
 
 export const getUserOrders = async (req, res) => {
   try {

@@ -9,11 +9,13 @@ import { protect } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.use(protect);
+router.get("/vnpay-return", vnpayReturn);
 
+router.use(protect);
 router.post("/", createOrder);
 router.get("/", getUserOrders);
 router.get("/:id", getOrderById);
-router.get("/vnpay/return", vnpayReturn);
+
+
 
 export default router;
