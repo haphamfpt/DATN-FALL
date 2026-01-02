@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { CreditCard, Package, Check, Tag } from "lucide-react";
+import { CreditCard, Package, Check, Tag, Clipboard, X } from "lucide-react";
 
 const formatPrice = (price) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
@@ -12,27 +12,39 @@ export default function OrderSummary({
   total,
   totalItems,
   formData,
-  cart, 
+  cart,
 }) {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [placingOrder, setPlacingOrder] = useState(false);
   const [voucherCode, setVoucherCode] = useState("");
   const [applyingVoucher, setApplyingVoucher] = useState(false);
-  const [discount, setDiscount] = useState(0); 
-  const [appliedVoucher, setAppliedVoucher] = useState(null);
+  const [discount, setDiscount] = useState(0);
+  const [appliedVoucher, setAppliedVoucher] = useState(null); 
+
   const navigate = useNavigate();
 
   const finalTotal = total - discount;
 
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setVoucherCode(text.trim().toUpperCase());
+      toast.success("Đã dán mã!");
+    } catch (err) {
+      toast.error("Không thể dán mã. Vui lòng thử lại!");
+    }
+  };
+
   const handleApplyVoucher = async () => {
     if (!voucherCode.trim()) {
-      toast.error("Vui lòng nhập mã giảm giá!");
+      toast.error("Vui lòng nhập hoặc dán mã giảm giá!");
       return;
     }
 
     const token = localStorage.getItem("token");
     if (!token) {
-      toast.error("Vui lòng đăng nhập!");
+      toast.error("Vui lòng đăng nhập để sử dụng mã giảm giá!");
+      navigate("/login");
       return;
     }
 
@@ -48,20 +60,30 @@ export default function OrderSummary({
         body: JSON.stringify({
           code: voucherCode.trim().toUpperCase(),
           subtotal,
-          cartItems: cart?.data?.items || [], 
+          cartItems: cart?.data?.items || [],
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Mã giảm giá không hợp lệ");
+        throw new Error(data.message || "Mã giảm giá không hợp lệ hoặc đã hết hạn");
       }
 
-      setDiscount(data.discountAmount);
-      setAppliedVoucher(data.voucher);
-      toast.success(`Áp dụng mã "${voucherCode.toUpperCase()}" thành công! Giảm ${formatPrice(data.discountAmount)}`);
+      setDiscount(data.discountAmount || 0);
+      setAppliedVoucher({
+        code: voucherCode.toUpperCase(),
+        discountAmount: data.discountAmount || 0,
+        type: data.voucher?.voucher_type,
+        value: data.voucher?.voucher_value,
+        max_price: data.voucher?.max_price || 0,
+      });
       setVoucherCode("");
+      toast.success(
+        `Áp dụng mã "${voucherCode.toUpperCase()}" thành công! Giảm ${formatPrice(
+          data.discountAmount
+        )}`
+      );
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -122,7 +144,7 @@ export default function OrderSummary({
       if (paymentMethod === "online") {
         window.location.href = data.paymentUrl;
       } else {
-        toast.success("Đặt hàng COD thành công!");
+        toast.success("Đặt hàng thành công!");
         navigate("/order-success", { state: { orderId: data.order._id } });
       }
     } catch (err) {
@@ -133,32 +155,37 @@ export default function OrderSummary({
   };
 
   return (
-    <div className="bg-white rounded-3 shadow-sm p-4" style={{ position: "sticky", top: "100px" }}>
-      <h4 className="fw-bold mb-4">Tóm tắt đơn hàng</h4>
+    <div className="bg-white rounded-3 shadow-sm p-4 sticky-top" style={{ top: "100px" }}>
+      <h4 className="fw-bold mb-4 d-flex align-items-center gap-2">
+        <Tag size={22} className="text-danger" />
+        Tóm tắt đơn hàng
+      </h4>
 
-      <div className="mb-4">
-        <div className="d-flex align-items-center gap-2 mb-3">
-          <Tag size={20} className="text-danger" />
-          <h5 className="fw-bold mb-0">Mã giảm giá</h5>
-        </div>
+      <div className="mb-4 p-3 border rounded-3 bg-light">
+        <h6 className="fw-bold mb-3">Mã giảm giá</h6>
 
         {appliedVoucher ? (
-          <div className="border rounded-3 p-3 bg-success-subtle border-success">
+          <div className="bg-success-subtle border border-success rounded-3 p-3">
             <div className="d-flex justify-content-between align-items-center">
               <div>
-                <span className="fw-bold text-success me-2">{appliedVoucher.code}</span>
-                <small className="text-success">− {formatPrice(discount)}</small>
+                <span className="fw-bold text-success fs-5 me-3">
+                  {appliedVoucher.code}
+                </span>
+                <span className="text-success fw-bold">
+                  − {formatPrice(appliedVoucher.discountAmount)}
+                </span>
               </div>
               <button
                 onClick={handleRemoveVoucher}
-                className="btn btn-sm btn-outline-danger"
+                className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
               >
-                Bỏ áp dụng
+                <X size={16} />
+                Bỏ
               </button>
             </div>
           </div>
         ) : (
-          <div className="d-flex gap-2">
+          <div className="input-group"> 
             <input
               type="text"
               className="form-control"
@@ -169,9 +196,18 @@ export default function OrderSummary({
               disabled={applyingVoucher}
             />
             <button
+              className="btn btn-outline-secondary"
+              type="button"
+              onClick={handlePaste}
+              title="Dán mã"
+              disabled={applyingVoucher}
+            >
+              <Clipboard size={18} />
+            </button>
+            <button
               onClick={handleApplyVoucher}
               disabled={applyingVoucher || !voucherCode.trim()}
-              className="btn btn-outline-danger px-4"
+              className="btn btn-danger fw-bold"
             >
               {applyingVoucher ? (
                 <span className="spinner-border spinner-border-sm" />
@@ -181,6 +217,10 @@ export default function OrderSummary({
             </button>
           </div>
         )}
+
+        <small className="text-muted d-block mt-2">
+          Dán mã từ trang khuyến mãi hoặc sao chép từ nơi khác
+        </small>
       </div>
 
       <div className="d-flex justify-content-between mb-3 text-muted">
@@ -195,7 +235,7 @@ export default function OrderSummary({
 
       {discount > 0 && (
         <div className="d-flex justify-content-between mb-3 text-success fw-bold">
-          <span>Giảm giá</span>
+          <span>Giảm giá (mã {appliedVoucher.code})</span>
           <span>- {formatPrice(discount)}</span>
         </div>
       )}
@@ -211,11 +251,10 @@ export default function OrderSummary({
         <h5 className="fw-bold mb-3">Phương thức thanh toán</h5>
 
         <label
-          className={`d-block border rounded-3 p-3 mb-3 cursor-pointer transition-all ${
-            paymentMethod === "cod"
+          className={`d-block border rounded-3 p-3 mb-3 cursor-pointer transition-all ${paymentMethod === "cod"
               ? "border-danger bg-danger-subtle shadow-sm"
               : "border-light"
-          }`}
+            }`}
           onClick={() => setPaymentMethod("cod")}
         >
           <div className="d-flex align-items-center gap-3">
@@ -232,11 +271,10 @@ export default function OrderSummary({
         </label>
 
         <label
-          className={`d-block border rounded-3 p-3 cursor-pointer transition-all ${
-            paymentMethod === "online"
+          className={`d-block border rounded-3 p-3 cursor-pointer transition-all ${paymentMethod === "online"
               ? "border-danger bg-danger-subtle shadow-sm"
               : "border-light"
-          }`}
+            }`}
           onClick={() => setPaymentMethod("online")}
         >
           <div className="d-flex align-items-center gap-3">
@@ -246,7 +284,7 @@ export default function OrderSummary({
             />
             <div className="flex-grow-1">
               <div className="fw-bold">Thanh toán Online (VNPay)</div>
-              <small className="text-muted">Visa, MasterCard, ATM, Internet Banking...</small>
+              <small className="text-muted">Visa, MasterCard, ATM...</small>
             </div>
             {paymentMethod === "online" && <Check size={24} className="text-danger" />}
           </div>

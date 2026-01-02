@@ -96,64 +96,77 @@ export const deleteVoucher = asyncHandler(async (req, res) => {
 });
 
 export const applyVoucher = asyncHandler(async (req, res) => {
-  const { code, userId, orderTotal } = req.body; 
+  const { code, subtotal } = req.body;
+  const user = req.user;
 
-  if (!code || !orderTotal) {
-    res.status(400);
-    throw new Error('Vui lòng nhập mã giảm giá và tổng tiền đơn hàng');
+  if (!code || subtotal == null) {
+    return res.status(400).json({
+      valid: false,
+      message: 'Vui lòng cung cấp mã giảm giá và tổng tiền tạm tính',
+    });
   }
 
+  const trimmedCode = code.trim().toUpperCase();
+
   const voucher = await Voucher.findOne({
-    voucher_code: code.toUpperCase().trim(),
+    voucher_code: trimmedCode,
     is_active: true,
     start_datetime: { $lte: new Date() },
     end_datetime: { $gte: new Date() },
-    used_quantity: { $lt: Voucher.schema.path('quantity').options.type } 
+    $expr: { $lt: ['$used_quantity', '$quantity'] },
   });
 
   if (!voucher) {
     return res.status(400).json({
       valid: false,
-      message: 'Mã giảm giá không hợp lệ, đã hết lượt hoặc hết hạn'
+      message: 'Mã giảm giá không hợp lệ, đã hết hạn hoặc hết lượt sử dụng',
     });
   }
 
-  if (orderTotal < voucher.rank_price) {
+  if (subtotal < voucher.rank_price) {
     return res.status(400).json({
       valid: false,
-      message: `Đơn hàng tối thiểu ${voucher.rank_price.toLocaleString()}đ để sử dụng mã này`
+      message: `Đơn hàng cần tối thiểu ${formatPrice(voucher.rank_price)} để sử dụng mã này`,
     });
   }
 
-  if (voucher.for_user_ids.length > 0 && userId) {
-    if (!voucher.for_user_ids.includes(userId)) {
-      return res.status(400).json({
+  if (voucher.for_user_ids.length > 0) {
+    if (!user) {
+      return res.status(401).json({
         valid: false,
-        message: 'Mã giảm giá này không dành cho tài khoản của bạn'
+        message: 'Vui lòng đăng nhập để sử dụng mã giảm giá này',
+      });
+    }
+    if (!voucher.for_user_ids.includes(user._id)) {
+      return res.status(403).json({
+        valid: false,
+        message: 'Mã giảm giá này không áp dụng cho tài khoản của bạn',
       });
     }
   }
 
-  let discount = 0;
+  let discountAmount = 0;
   if (voucher.voucher_type === 'fixed') {
-    discount = voucher.voucher_value;
+    discountAmount = voucher.voucher_value;
   } else if (voucher.voucher_type === 'percent') {
-    discount = (orderTotal * voucher.voucher_value) / 100;
-    if (voucher.max_price > 0 && discount > voucher.max_price) {
-      discount = voucher.max_price;
+    discountAmount = (subtotal * voucher.voucher_value) / 100;
+    if (voucher.max_price > 0 && discountAmount > voucher.max_price) {
+      discountAmount = voucher.max_price;
     }
   }
 
   res.json({
     valid: true,
+    discountAmount, // ← frontend dùng cái này để trừ vào tổng
     voucher: {
-      _id: voucher._id,
       code: voucher.voucher_code,
       type: voucher.voucher_type,
       value: voucher.voucher_value,
-      discount,
-      max_price: voucher.max_price
+      max_price: voucher.max_price || 0,
     },
-    message: 'Áp dụng mã giảm giá thành công!'
+    message: `Áp dụng mã ${voucher.voucher_code} thành công! Giảm ${formatPrice(discountAmount)}`,
   });
 });
+
+const formatPrice = (price) =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
