@@ -26,6 +26,8 @@ const orderItemSchema = new mongoose.Schema({
   image: String,
 });
 
+// models/Order.js
+
 const orderSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -33,9 +35,28 @@ const orderSchema = new mongoose.Schema({
     required: true,
   },
   items: [orderItemSchema],
-  totalAmount: {
+  subtotal: {           // ← Thêm: tạm tính (chưa ship)
     type: Number,
     required: true,
+  },
+  shippingFee: {        // ← Phí ship
+    type: Number,
+    default: 30000,
+  },
+  discountAmount: {     // ← Số tiền giảm từ voucher
+    type: Number,
+    default: 0,
+  },
+  totalAmount: {        // ← subtotal + shipping - discount
+    type: Number,
+    required: true,
+  },
+  voucher: {            // ← Lưu thông tin voucher đã dùng
+    code: { type: String },
+    voucherId: { type: mongoose.Schema.Types.ObjectId, ref: "Voucher" },
+    type: { type: String, enum: ["fixed", "percent"] },
+    value: { type: Number },
+    max_price: { type: Number, default: 0 },
   },
   shippingAddress: {
     fullName: { type: String, required: true },
@@ -64,6 +85,5 @@ const orderSchema = new mongoose.Schema({
   toJSON: { virtuals: true },
   toObject: { virtuals: true },
 });
-
 const Order = mongoose.model("Order", orderSchema);
 export default Order;
