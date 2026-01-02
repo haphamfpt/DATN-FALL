@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
+import OrderTracking from "./Component/OrderTracking";
 
 const formatPrice = (price) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
@@ -146,7 +147,7 @@ const OrderDetail = () => {
         <div className="row g-4">
           <div className="col-12">
             <div className="bg-white rounded-3 shadow-sm p-4">
-              <div className="row text-center text-md-start">
+              <div className="row text-center text-md-start mb-4">
                 <div className="col-md-4 mb-3 mb-md-0">
                   <p className="text-muted mb-1 small">Trạng thái đơn hàng</p>
                   <span className={`badge fs-6 px-4 py-2 ${statusInfo.color}`}>
@@ -173,12 +174,12 @@ const OrderDetail = () => {
                 </div>
               </div>
 
-              {
-                (order.orderStatus === "pending" || order.orderStatus === "confirmed") &&
+              <OrderTracking status={order.orderStatus} />
+
+              {(order.orderStatus === "pending" || order.orderStatus === "confirmed") &&
                 order.orderStatus !== "cancelled" &&
                 order.orderStatus !== "shipped" &&
-                order.orderStatus !== "delivered" &&
-                (
+                order.orderStatus !== "delivered" && (
                   <div className="mt-4 text-end">
                     <button
                       onClick={handleCancelOrder}
@@ -189,6 +190,7 @@ const OrderDetail = () => {
                     </button>
                   </div>
                 )}
+
             </div>
           </div>
 
