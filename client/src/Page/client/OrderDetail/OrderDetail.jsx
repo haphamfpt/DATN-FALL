@@ -173,17 +173,22 @@ const OrderDetail = () => {
                 </div>
               </div>
 
-              {order.orderStatus === "pending" && order.paymentMethod === "cod" && (
-                <div className="mt-4 text-end">
-                  <button
-                    onClick={handleCancelOrder}
-                    disabled={cancelling}
-                    className="btn btn-outline-danger px-4"
-                  >
-                    {cancelling ? "Đang xử lý..." : "Hủy đơn hàng"}
-                  </button>
-                </div>
-              )}
+              {
+                (order.orderStatus === "pending" || order.orderStatus === "confirmed") &&
+                order.orderStatus !== "cancelled" &&
+                order.orderStatus !== "shipped" &&
+                order.orderStatus !== "delivered" &&
+                (
+                  <div className="mt-4 text-end">
+                    <button
+                      onClick={handleCancelOrder}
+                      disabled={cancelling}
+                      className="btn btn-outline-danger px-4"
+                    >
+                      {cancelling ? "Đang xử lý..." : "Hủy đơn hàng"}
+                    </button>
+                  </div>
+                )}
             </div>
           </div>
 

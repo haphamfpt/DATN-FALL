@@ -33,23 +33,23 @@ const orderSchema = new mongoose.Schema({
     required: true,
   },
   items: [orderItemSchema],
-  subtotal: {          
+  subtotal: {
     type: Number,
     required: true,
   },
-  shippingFee: {        
+  shippingFee: {
     type: Number,
     default: 30000,
   },
-  discountAmount: {    
+  discountAmount: {
     type: Number,
     default: 0,
   },
-  totalAmount: {        
+  totalAmount: {
     type: Number,
     required: true,
   },
-  voucher: {            
+  voucher: {
     code: { type: String },
     voucherId: { type: mongoose.Schema.Types.ObjectId, ref: "Voucher" },
     type: { type: String, enum: ["fixed", "percent"] },
@@ -74,7 +74,7 @@ const orderSchema = new mongoose.Schema({
   },
   orderStatus: {
     type: String,
-    enum: ["pending", "confirmed", "shipped", "delivered", "cancelled"],
+    enum: ["pending", "confirmed", "shipped", "delivered", "cancelled", "refund_pending", "refunded"],
     default: "pending",
   },
   vnp_TxnRef: String,
