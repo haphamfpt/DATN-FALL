@@ -35,23 +35,23 @@ const orderSchema = new mongoose.Schema({
     required: true,
   },
   items: [orderItemSchema],
-  subtotal: {           // ← Thêm: tạm tính (chưa ship)
+  subtotal: {          
     type: Number,
     required: true,
   },
-  shippingFee: {        // ← Phí ship
+  shippingFee: {        
     type: Number,
     default: 30000,
   },
-  discountAmount: {     // ← Số tiền giảm từ voucher
+  discountAmount: {    
     type: Number,
     default: 0,
   },
-  totalAmount: {        // ← subtotal + shipping - discount
+  totalAmount: {        
     type: Number,
     required: true,
   },
-  voucher: {            // ← Lưu thông tin voucher đã dùng
+  voucher: {            
     code: { type: String },
     voucherId: { type: mongoose.Schema.Types.ObjectId, ref: "Voucher" },
     type: { type: String, enum: ["fixed", "percent"] },

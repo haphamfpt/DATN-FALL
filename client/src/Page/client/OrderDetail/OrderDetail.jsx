@@ -8,7 +8,7 @@ const formatPrice = (price) =>
 const getStatusBadge = (status) => {
   switch (status) {
     case "pending":
-      return { text: "Chờ xác nhận", color: "bg-warning" };
+      return { text: "Chờ xác nhận", color: "bg-warning text-dark" };
     case "confirmed":
       return { text: "Đã xác nhận", color: "bg-primary" };
     case "shipped":
@@ -27,7 +27,7 @@ const getPaymentBadge = (status) => {
     case "paid":
       return { text: "Đã thanh toán", color: "bg-success" };
     case "pending":
-      return { text: "Chưa thanh toán", color: "bg-warning" };
+      return { text: "Chưa thanh toán", color: "bg-warning text-dark" };
     case "failed":
       return { text: "Thanh toán thất bại", color: "bg-danger" };
     default:
@@ -78,7 +78,7 @@ const OrderDetail = () => {
   }, [id, navigate]);
 
   const handleCancelOrder = async () => {
-    if (!window.confirm("Bạn có chắc muốn hủy đơn hàng này?")) return;
+    if (!window.confirm("Bạn có chắc muốn hủy đơn hàng này không?")) return;
 
     const token = localStorage.getItem("token");
     setCancelling(true);
@@ -90,17 +90,16 @@ const OrderDetail = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ reason: "Khách hàng hủy đơn" }),
       });
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.message);
+      if (!res.ok) throw new Error(data.message || "Hủy đơn thất bại");
 
-      toast.success("Đã hủy đơn hàng thành công!");
+      toast.success("Hủy đơn hàng thành công!");
       setOrder({ ...order, orderStatus: "cancelled" });
     } catch (err) {
-      toast.error(err.message || "Không thể hủy đơn hàng");
+      toast.error(err.message);
     } finally {
       setCancelling(false);
     }
@@ -138,121 +137,174 @@ const OrderDetail = () => {
 
       <div className="container py-5" style={{ maxWidth: "1000px" }}>
         <div className="d-flex align-items-center mb-4">
-          <Link to="/profile" className="btn btn-link text-dark">
-            <i className="bi bi-arrow-left me-2"></i>Quay lại
+          <Link to="/profile" className="btn btn-link text-dark text-decoration-none">
+            ← Quay lại
           </Link>
-          <h2 className="fw-bold ms-3 mb-0">Chi tiết đơn hàng #{order._id.slice(-8)}</h2>
+          <h2 className="fw-bold ms-3 mb-0">Đơn hàng #{order._id.slice(-8).toUpperCase()}</h2>
         </div>
 
         <div className="row g-4">
-          {/* Thông tin trạng thái */}
           <div className="col-12">
             <div className="bg-white rounded-3 shadow-sm p-4">
               <div className="row text-center text-md-start">
                 <div className="col-md-4 mb-3 mb-md-0">
-                  <p className="text-muted mb-1">Trạng thái đơn hàng</p>
-                  <span className={`badge fs-6 px-3 py-2 ${statusInfo.color}`}>
+                  <p className="text-muted mb-1 small">Trạng thái đơn hàng</p>
+                  <span className={`badge fs-6 px-4 py-2 ${statusInfo.color}`}>
                     {statusInfo.text}
                   </span>
                 </div>
                 <div className="col-md-4 mb-3 mb-md-0">
-                  <p className="text-muted mb-1">Thanh toán</p>
-                  <span className={`badge fs-6 px-3 py-2 ${paymentInfo.color}`}>
+                  <p className="text-muted mb-1 small">Thanh toán</p>
+                  <span className={`badge fs-6 px-4 py-2 ${paymentInfo.color}`}>
                     {paymentInfo.text}
                   </span>
                 </div>
                 <div className="col-md-4">
-                  <p className="text-muted mb-1">Ngày đặt hàng</p>
+                  <p className="text-muted mb-1 small">Ngày đặt hàng</p>
                   <p className="fw-bold">
-                    {new Date(order.createdAt).toLocaleDateString("vi-VN")}
+                    {new Date(order.createdAt).toLocaleString("vi-VN", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </p>
                 </div>
               </div>
 
-              {order.orderStatus === "pending" && (
+              {order.orderStatus === "pending" && order.paymentMethod === "cod" && (
                 <div className="mt-4 text-end">
                   <button
                     onClick={handleCancelOrder}
                     disabled={cancelling}
-                    className="btn btn-outline-danger"
+                    className="btn btn-outline-danger px-4"
                   >
-                    {cancelling ? "Đang hủy..." : "Hủy đơn hàng"}
+                    {cancelling ? "Đang xử lý..." : "Hủy đơn hàng"}
                   </button>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Thông tin giao hàng */}
           <div className="col-lg-6">
             <div className="bg-white rounded-3 shadow-sm p-4">
-              <h5 className="fw-bold mb-3">Thông tin nhận hàng</h5>
+              <h5 className="fw-bold mb-4">Thông tin nhận hàng</h5>
               <div className="text-muted">
-                <p className="mb-2">
-                  <strong>Người nhận:</strong> {order.shippingAddress.fullName}
-                </p>
-                <p className="mb-2">
-                  <strong>Số điện thoại:</strong> {order.shippingAddress.phone}
-                </p>
-                <p className="mb-2">
-                  <strong>Địa chỉ:</strong> {order.shippingAddress.address}
-                </p>
+                <p className="mb-2"><strong>Người nhận:</strong> {order.shippingAddress.fullName}</p>
+                <p className="mb-2"><strong>Số điện thoại:</strong> {order.shippingAddress.phone}</p>
+                <p className="mb-2"><strong>Địa chỉ:</strong> {order.shippingAddress.address}</p>
                 {order.shippingAddress.note && (
-                  <p className="mb-0">
-                    <strong>Ghi chú:</strong> {order.shippingAddress.note}
-                  </p>
+                  <p className="mb-0"><strong>Ghi chú:</strong> {order.shippingAddress.note}</p>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Tóm tắt thanh toán */}
           <div className="col-lg-6">
             <div className="bg-white rounded-3 shadow-sm p-4">
-              <h5 className="fw-bold mb-3">Tóm tắt thanh toán</h5>
-              <div className="d-flex justify-content-between mb-2">
+              <h5 className="fw-bold mb-4">Tóm tắt thanh toán</h5>
+
+              <div className="d-flex justify-content-between mb-2 text-muted">
                 <span>Tạm tính ({order.items.length} sản phẩm)</span>
-                <span>{formatPrice(order.totalAmount - 30000)}</span>
+                <span>{formatPrice(order.subtotal)}</span>
               </div>
-              <div className="d-flex justify-content-between mb-2">
+
+              <div className="d-flex justify-content-between mb-2 text-muted">
                 <span>Phí vận chuyển</span>
-                <span>{order.totalAmount >= 800000 ? "Miễn phí" : formatPrice(30000)}</span>
+                <span>{order.shippingFee === 0 ? "Miễn phí" : formatPrice(order.shippingFee)}</span>
               </div>
-              <hr />
-              <div className="d-flex justify-content-between">
+
+              {order.discountAmount > 0 && order.voucher && (
+                <div className="d-flex justify-content-between mb-2 text-success fw-bold">
+                  <span>Giảm giá (mã {order.voucher.code})</span>
+                  <span>- {formatPrice(order.discountAmount)}</span>
+                </div>
+              )}
+
+              <hr className="my-3" />
+
+              <div className="d-flex justify-content-between align-items-center">
                 <span className="fw-bold fs-5">Tổng cộng</span>
                 <span className="text-danger fw-bold fs-4">{formatPrice(order.totalAmount)}</span>
+              </div>
+
+              <div className="mt-3 small text-muted">
+                Phương thức: <strong>{order.paymentMethod === "cod" ? "Thanh toán khi nhận hàng (COD)" : "Thanh toán Online (VNPay)"}</strong>
               </div>
             </div>
           </div>
 
-          {/* Danh sách sản phẩm */}
           <div className="col-12">
             <div className="bg-white rounded-3 shadow-sm p-4">
               <h5 className="fw-bold mb-4">Sản phẩm trong đơn hàng</h5>
 
               {order.items.map((item) => (
-                <div key={item._id} className="d-flex gap-4 py-4 border-bottom last:border-0">
+                <div
+                  key={item._id}
+                  className="d-flex gap-4 py-4 border-bottom last:border-bottom-0"
+                >
                   <img
                     src={item.image || "/placeholder.jpg"}
                     alt={item.name}
-                    className="rounded"
+                    className="rounded shadow-sm"
                     style={{ width: "100px", height: "100px", objectFit: "cover" }}
                   />
+
                   <div className="flex-grow-1">
-                    <h6 className="fw-bold">{item.name}</h6>
-                    <small className="text-muted">
-                      Màu: <strong>{item.color || "N/A"}</strong> | Size: <strong>{item.size || "N/A"}</strong>
-                    </small>
-                    <div className="d-flex justify-content-between align-items-end mt-3">
-                      <span className="text-danger fw-bold">{formatPrice(item.price)}</span>
-                      <span className="text-muted">× {item.quantity}</span>
-                      <strong>{formatPrice(item.price * item.quantity)}</strong>
+                    <h6 className="fw-bold mb-2">{item.name}</h6>
+
+                    <div className="small text-muted mb-3">
+                      <span className="me-4">
+                        Màu: <strong>{item.color || "Không có"}</strong>
+                      </span>
+                      <span>
+                        Size: <strong>{item.size || "Không có"}</strong>
+                      </span>
+                    </div>
+
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <span className="text-danger fw-bold fs-5">{formatPrice(item.price)}</span>
+                        <span className="text-muted ms-2">× {item.quantity}</span>
+                      </div>
+                      <strong className="fs-5">{formatPrice(item.price * item.quantity)}</strong>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        <div className="container py-5" style={{ maxWidth: "1000px" }}>
+          <div className="bg-light rounded-3 shadow-sm p-4">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5 className="fw-bold text-danger mb-0">Dữ liệu API (Debug Mode)</h5>
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => {
+                  const el = document.getElementById("debug-json");
+                  el.style.display = el.style.display === "none" ? "block" : "none";
+                }}
+              >
+                Ẩn/Hiện
+              </button>
+            </div>
+            <pre
+              id="debug-json"
+              className="bg-dark text-white rounded p-3 overflow-auto"
+              style={{
+                maxHeight: "500px",
+                fontSize: "0.85rem",
+                display: "block",
+              }}
+            >
+              {JSON.stringify(order, null, 2)}
+            </pre>
+            <small className="text-muted">
+              Phần này chỉ nên giữ trong môi trường development. Xóa hoặc ẩn đi trước khi deploy production.
+            </small>
           </div>
         </div>
       </div>
