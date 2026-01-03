@@ -74,7 +74,7 @@ const orderSchema = new mongoose.Schema({
   },
   orderStatus: {
     type: String,
-    enum: ["pending", "confirmed", "shipped", "delivered", "cancelled", "refund_pending", "refunded"],
+    enum: ["pending", "confirmed", "shipped", "delivered","complete", "cancelled", "refund_pending", "refunded"],
     default: "pending",
   },
   vnp_TxnRef: String,
