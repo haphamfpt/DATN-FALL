@@ -18,7 +18,7 @@ import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import auth from "./routes/auth.js";
 import adminOrderRoutes from "./routes/adminOrderRoutes.js";
-
+import UserAdminRoutes from "./routes/UserAdminRoutes.js";
 import { notFound, errorHandler } from "./middlewares/errorMiddleware.js";
 
 dotenv.config();
@@ -60,6 +60,7 @@ app.use("/api/contacts", contactRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/auth", auth);
+app.use("/api/admin",UserAdminRoutes)
 app.use("/api/admin/orders", adminOrderRoutes);
 
 app.use(notFound);

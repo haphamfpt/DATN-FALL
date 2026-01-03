@@ -34,6 +34,7 @@ import ContactManagement from "./Page/admin/Contact/ContactManagement.jsx";
 import VariantAttributesManagement from "./Page/admin/Variant/VariantAttributesManagement.jsx";
 import ProductManagement from "./Page/admin/Product/ProductManagement.jsx";
 import OrderManagement from "./Page/admin/Order/OrderManagement.jsx";
+import UserManagement from "./Page/admin/User/UserManagement.jsx";
 
 // 404
 import NotFound from "./Page/NotFound.jsx";
@@ -76,7 +77,7 @@ function App() {
             <Route path="variants" element={<VariantAttributesManagement />} />
             <Route path="products" element={<ProductManagement />} />
             <Route path="order" element={<OrderManagement />} />
-
+            <Route path="customers" element={<UserManagement/>}></Route>
             <Route path="*" element={<NotFound />} />
           </Route>
         </Route>
