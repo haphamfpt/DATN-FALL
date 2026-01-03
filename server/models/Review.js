@@ -15,18 +15,19 @@ const reviewSchema = new mongoose.Schema(
     rating: {
       type: Number,
       required: true,
-      min: 1,
-      max: 5,
+      min: [1, "Đánh giá phải từ 1 sao"],
+      max: [5, "Đánh giá tối đa 5 sao"],
     },
     comment: {
       type: String,
       trim: true,
       default: "",
+      maxlength: [1000, "Bình luận không được quá 1000 ký tự"],
     },
     images: [
       {
-        url: { type: String },
-        alt: { type: String, default: "Review image" },
+        url: { type: String, required: true },
+        alt: { type: String, default: "Ảnh đánh giá" },
       },
     ],
     helpful: [
@@ -34,15 +35,18 @@ const reviewSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
       },
-    ], 
+    ],
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
-reviewSchema.index({ product: 1 });
-reviewSchema.index({ user: 1, product: 1 }, { unique: true }); 
+reviewSchema.index({ user: 1, product: 1 }, { unique: true });
+
+reviewSchema.index({ product: 1, createdAt: -1 });
 
 const Review = mongoose.model("Review", reviewSchema);
 
