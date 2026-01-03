@@ -1,9 +1,7 @@
-// controllers/reviewController.js
 import mongoose from "mongoose";
 import Review from "../models/Review.js";
 import Product from "../models/Product.js";
 
-// Tạo đánh giá
 export const createReview = async (req, res) => {
   try {
     const { rating, comment, images } = req.body;
@@ -43,7 +41,6 @@ export const createReview = async (req, res) => {
   }
 };
 
-// Lấy đánh giá theo sản phẩm (có phân trang)
 export const getReviewsByProduct = async (req, res) => {
   try {
     const productId = req.params.productId;
@@ -81,7 +78,6 @@ export const getReviewsByProduct = async (req, res) => {
   }
 };
 
-// Xóa đánh giá
 export const deleteReview = async (req, res) => {
   try {
     const reviewId = req.params.id;
@@ -107,7 +103,6 @@ export const deleteReview = async (req, res) => {
   }
 };
 
-// Đánh dấu hữu ích / bỏ hữu ích
 export const toggleHelpful = async (req, res) => {
   try {
     const review = await Review.findById(req.params.id);
@@ -137,7 +132,6 @@ export const toggleHelpful = async (req, res) => {
   }
 };
 
-// Cập nhật rating trung bình cho sản phẩm
 const updateProductRating = async (productId) => {
   try {
     const stats = await Review.aggregate([
