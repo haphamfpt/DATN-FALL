@@ -114,12 +114,24 @@ export default function OrderSummary({
     setPlacingOrder(true);
 
     try {
+
+      const fullAddress = [
+        formData.address,
+        formData.wardName,
+        formData.districtName,
+        formData.provinceName,
+      ].filter(Boolean).join(", ");
+
       const orderData = {
         shippingAddress: {
           fullName: formData.fullName,
           phone: formData.phone,
-          address: formData.address,
-          note: formData.note || "",
+          address: [
+            formData.address,
+            formData.wardName,
+            formData.districtName,
+            formData.provinceName,
+          ].filter(Boolean).join(", "),
         },
         paymentMethod,
       };

@@ -49,13 +49,31 @@ export default function DeliveryInfoForm({ formData, onChange }) {
   }, [selectedDistrict]);
 
   const handleProvinceChange = (e) => {
-    setSelectedProvince(e.target.value);
-    onChange({ target: { name: "provinceCode", value: e.target.value } });
+    const code = e.target.value;
+    const province = provinces.find(p => p.code === parseInt(code));
+
+    setSelectedProvince(code);
+
+    onChange({
+      target: {
+        name: "provinceName",
+        value: province?.name || ""
+      }
+    });
   };
 
   const handleDistrictChange = (e) => {
-    setSelectedDistrict(e.target.value);
-    onChange({ target: { name: "districtCode", value: e.target.value } });
+    const code = e.target.value;
+    const district = districts.find(d => d.code === parseInt(code));
+
+    setSelectedDistrict(code);
+
+    onChange({
+      target: {
+        name: "districtName",
+        value: district?.name || ""
+      }
+    });
   };
 
   return (
@@ -152,6 +170,15 @@ export default function DeliveryInfoForm({ formData, onChange }) {
               id="ward"
               disabled={!selectedDistrict}
               required
+              onChange={(e) => {
+                const ward = wards.find(w => w.code === parseInt(e.target.value));
+                onChange({
+                  target: {
+                    name: "wardName",
+                    value: ward?.name || ""
+                  }
+                });
+              }}
             >
               <option value="">Chọn phường/xã</option>
               {wards.map((ward) => (

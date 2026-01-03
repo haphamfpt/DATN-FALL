@@ -15,14 +15,18 @@ const CheckoutPage = () => {
     phone: "",
     address: "",
     note: "",
-    provinceCode: "",
-    districtCode: "",
-    wardCode: "",
+    provinceName: "",
+    districtName: "",
+    wardName: "",
   });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
+
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -123,8 +127,8 @@ const CheckoutPage = () => {
               shipping={shipping}
               total={total}
               totalItems={totalItems}
-              formData={formData} 
-              cart={cart} 
+              formData={formData}
+              cart={cart}
             />
           </div>
         </div>
