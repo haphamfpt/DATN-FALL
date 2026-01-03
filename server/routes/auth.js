@@ -73,7 +73,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Email hoặc mật khẩu không đúng" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await user.comparePassword(password); 
     if (!isMatch) {
       return res.status(401).json({ message: "Email hoặc mật khẩu không đúng" });
     }
@@ -81,12 +81,13 @@ router.post("/login", async (req, res) => {
     const token = generateToken(user._id, user.role);
 
     res.json({
+      success: true,
       message: "Đăng nhập thành công",
       token,
       user: {
         id: user._id,
         email: user.email,
-        name: user.name,
+        name: user.name || "",
         avatar: user.avatar,
         role: user.role,
       },

@@ -4,7 +4,6 @@ import {
   Card,
   Form,
   Button,
-  InputGroup,
   Alert,
   Spinner,
 } from "react-bootstrap";
@@ -12,6 +11,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Eye, EyeOff, User, Mail, Lock } from "react-feather";
 import "../../styles/auth.css";
+import api from "../../utils/axiosInstance"; 
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -24,12 +24,13 @@ const AuthPage = () => {
     confirmPassword: "",
   });
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Đồng bộ tab Login/Register theo URL
   useEffect(() => {
     if (location.pathname.includes("/register")) {
       setIsLogin(false);
@@ -39,26 +40,29 @@ const AuthPage = () => {
   }, [location.pathname]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.name]: e.target.value.trim() });
     setError("");
+    setSuccess("");
   };
 
   const validateForm = () => {
-    if (!formData.email.includes("@") || !formData.email.includes(".")) {
-      setError("Email không hợp lệ");
+    if (!formData.email || !formData.email.includes("@") || !formData.email.includes(".")) {
+      setError("Vui lòng nhập email hợp lệ");
       return false;
     }
     if (formData.password.length < 6) {
-      setError("Mật khẩu phải ít nhất 6 ký tự");
+      setError("Mật khẩu phải có ít nhất 6 ký tự");
       return false;
     }
-    if (!isLogin && formData.password !== formData.confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp!");
-      return false;
-    }
-    if (!isLogin && formData.name.trim().length < 2) {
-      setError("Họ tên phải ít nhất 2 ký tự");
-      return false;
+    if (!isLogin) {
+      if (!formData.name || formData.name.length < 2) {
+        setError("Họ và tên phải có ít nhất 2 ký tự");
+        return false;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        setError("Mật khẩu xác nhận không khớp");
+        return false;
+      }
     }
     return true;
   };
@@ -67,48 +71,57 @@ const AuthPage = () => {
     e.preventDefault();
     if (!validateForm()) return;
 
+    setLoading(true);
     setError("");
     setSuccess("");
-    setLoading(true);
 
     try {
       if (!isLogin) {
-        const res = await axios.post("/api/auth/register", {
-          name: formData.name.trim(),
+        // ĐĂNG KÝ
+        await api.post("/auth/register", {
+          name: formData.name,
           email: formData.email.toLowerCase(),
           password: formData.password,
         });
 
-        setSuccess("Đăng ký thành công! Hãy tiến hành đăng nhập!");
+        setSuccess("Đăng ký thành công! Đang chuyển sang đăng nhập...");
         setTimeout(() => {
           setIsLogin(true);
-          setFormData({
-            ...formData,
-            name: "",
-            password: "",
-            confirmPassword: "",
-          });
+          setFormData({ ...formData, name: "", password: "", confirmPassword: "" });
           navigate("/login", { replace: true });
         }, 2000);
       } else {
-        const res = await axios.post("/api/auth/login", {
+        // ĐĂNG NHẬP
+        const res = await api.post("/auth/login", {
           email: formData.email.toLowerCase(),
           password: formData.password,
         });
 
-        localStorage.setItem("token", res.data.token);
-        localStorage.setItem("user", JSON.stringify(res.data.user));
+        const { token, user } = res.data;
 
-        setSuccess("Đăng nhập thành công! Đang chuyển về trang chủ...");
+        // Lưu token và user vào localStorage
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user));
+
+        // Cấu hình axios instance để tự động gắn token cho các request sau
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+        setSuccess("Đăng nhập thành công! Đang chuyển hướng...");
+
+        // CHUYỂN HƯỚNG THEO ROLE
         setTimeout(() => {
-          navigate("/");
+          if (user.role === "admin") {
+            navigate("/admin", { replace: true });
+          } else {
+            navigate("/", { replace: true });
+          }
         }, 1000);
       }
     } catch (err) {
       const msg =
         err.response?.data?.message ||
         err.response?.data?.error ||
-        "Đã có lỗi xảy ra, vui lòng thử lại!";
+        "Đã có lỗi xảy ra. Vui lòng thử lại!";
       setError(msg);
     } finally {
       setLoading(false);
@@ -118,28 +131,31 @@ const AuthPage = () => {
   return (
     <div className="auth-wrapper">
       <Container className="h-100 d-flex align-items-center justify-content-center">
-        <Card className="auth-card border-0">
+        <Card className="auth-card border-0 shadow-lg">
           <Card.Body className="p-5">
-            <div className="auth-header">
+            <div className="auth-header text-center mb-4">
               <Link to="/" className="text-decoration-none">
-                <h1 className="logo-text">AVELINE</h1>
+                <h1 className="logo-text fw-bold text-dark">AVELINE</h1>
               </Link>
+              <p className="text-muted mt-2">
+                {isLogin ? "Chào mừng trở lại!" : "Tạo tài khoản mới"}
+              </p>
             </div>
 
             {error && (
-              <Alert variant="danger" className="mb-4">
-                {error}
+              <Alert variant="danger" className="mb-4 py-3">
+                <small>{error}</small>
               </Alert>
             )}
             {success && (
-              <Alert variant="success" className="mb-4">
-                {success}
+              <Alert variant="success" className="mb-4 py-3">
+                <small>{success}</small>
               </Alert>
             )}
 
             <Form onSubmit={handleSubmit}>
               {!isLogin && (
-                <div className="auth-input-group">
+                <div className="auth-input-group mb-3 position-relative">
                   <User className="input-icon" size={22} />
                   <Form.Control
                     type="text"
@@ -148,12 +164,12 @@ const AuthPage = () => {
                     onChange={handleChange}
                     required
                     placeholder="Họ và tên"
-                    className="auth-input"
+                    className="auth-input ps-5"
                   />
                 </div>
               )}
 
-              <div className="auth-input-group">
+              <div className="auth-input-group mb-3 position-relative">
                 <Mail className="input-icon" size={22} />
                 <Form.Control
                   type="email"
@@ -162,11 +178,11 @@ const AuthPage = () => {
                   onChange={handleChange}
                   required
                   placeholder="Email"
-                  className="auth-input"
+                  className="auth-input ps-5"
                 />
               </div>
 
-              <div className="auth-input-group">
+              <div className="auth-input-group mb-3 position-relative">
                 <Lock className="input-icon" size={22} />
                 <Form.Control
                   type={showPassword ? "text" : "password"}
@@ -175,19 +191,22 @@ const AuthPage = () => {
                   onChange={handleChange}
                   required
                   placeholder="Mật khẩu"
-                  className="auth-input"
+                  className="auth-input ps-5 pe-5"
                 />
                 <Button
                   variant="link"
-                  className="eye-btn p-0"
-                  onClick={() => setShowPassword(!showPassword)}
+                  className="eye-btn position-absolute end-0 top-50 translate-middle-y"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowPassword(!showPassword);
+                  }}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </Button>
               </div>
 
               {!isLogin && (
-                <div className="auth-input-group">
+                <div className="auth-input-group mb-4 position-relative">
                   <Lock className="input-icon" size={22} />
                   <Form.Control
                     type={showConfirmPassword ? "text" : "password"}
@@ -196,18 +215,17 @@ const AuthPage = () => {
                     onChange={handleChange}
                     required
                     placeholder="Nhập lại mật khẩu"
-                    className="auth-input"
+                    className="auth-input ps-5 pe-5"
                   />
                   <Button
                     variant="link"
-                    className="eye-btn p-0"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="eye-btn position-absolute end-0 top-50 translate-middle-y"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowConfirmPassword(!showConfirmPassword);
+                    }}
                   >
-                    {showConfirmPassword ? (
-                      <EyeOff size={20} />
-                    ) : (
-                      <Eye size={20} />
-                    )}
+                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </Button>
                 </div>
               )}
@@ -215,10 +233,14 @@ const AuthPage = () => {
               <Button
                 type="submit"
                 disabled={loading}
-                className="btn-submit w-100 mt-3"
+                className="btn-submit w-100 mt-4 py-3 fw-bold text-uppercase"
+                variant="dark"
               >
                 {loading ? (
-                  <>Đang xử lý...</>
+                  <>
+                    <Spinner animation="border" size="sm" className="me-2" />
+                    Đang xử lý...
+                  </>
                 ) : isLogin ? (
                   "Đăng nhập"
                 ) : (
@@ -227,17 +249,23 @@ const AuthPage = () => {
               </Button>
             </Form>
 
-            <div className="switch-container">
-              <span className="switch-text">
+            <div className="switch-container text-center mt-4">
+              <span className="text-muted">
                 {isLogin ? "Chưa có tài khoản? " : "Đã có tài khoản? "}
               </span>
               <button
                 type="button"
-                className="switch-link bg-transparent border-0"
+                className="switch-link fw-bold text-primary bg-transparent border-0"
                 onClick={() => {
                   setIsLogin(!isLogin);
                   setError("");
                   setSuccess("");
+                  setFormData({
+                    ...formData,
+                    name: "",
+                    password: "",
+                    confirmPassword: "",
+                  });
                   navigate(isLogin ? "/register" : "/login", { replace: true });
                 }}
               >

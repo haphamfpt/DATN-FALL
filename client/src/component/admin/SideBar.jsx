@@ -84,10 +84,6 @@ const Sidebar = () => {
       </ul>
 
       <hr className="text-muted" />
-      <button className="btn btn-outline-danger d-flex align-items-center gap-3 w-100 rounded-pill">
-        <BiLogOut size={20} />
-        <span className="fw-medium">Đăng xuất</span>
-      </button>
     </div>
   );
 };

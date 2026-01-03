@@ -17,6 +17,7 @@ import contactRoutes from "./routes/contactRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import auth from "./routes/auth.js";
+import adminOrderRoutes from "./routes/adminOrderRoutes.js";
 
 import { notFound, errorHandler } from "./middlewares/errorMiddleware.js";
 
@@ -59,6 +60,7 @@ app.use("/api/contacts", contactRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/auth", auth);
+app.use("/api/admin/orders", adminOrderRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
@@ -67,7 +69,5 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log("VNP_TMN_CODE:", process.env.VNP_TMN_CODE);
-  console.log("VNP_HASH_SECRET:", process.env.VNP_HASH_SECRET ? "ĐÃ LOAD" : "UNDEFINED - LỖI ĐÂY");
 });
 
