@@ -35,7 +35,7 @@ import VariantAttributesManagement from "./Page/admin/Variant/VariantAttributesM
 import ProductManagement from "./Page/admin/Product/ProductManagement.jsx";
 import OrderManagement from "./Page/admin/Order/OrderManagement.jsx";
 import UserManagement from "./Page/admin/User/UserManagement.jsx";
-
+import AdminDashboard from "./Page/admin/dasboard/AdminDashboard.jsx";
 // 404
 import NotFound from "./Page/NotFound.jsx";
 
@@ -69,6 +69,7 @@ function App() {
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<LayoutAdmin />}>
             <Route index element={<AdminWelcome />} />
+            <Route path="dashboard" element={<AdminDashboard />}></Route>
             <Route path="categories" element={<CategoryManagement />} />
             <Route path="banners" element={<BannerManagement />} />
             <Route path="vouchers" element={<VoucherManagement />} />
@@ -77,7 +78,7 @@ function App() {
             <Route path="variants" element={<VariantAttributesManagement />} />
             <Route path="products" element={<ProductManagement />} />
             <Route path="order" element={<OrderManagement />} />
-            <Route path="customers" element={<UserManagement/>}></Route>
+            <Route path="customers" element={<UserManagement />}></Route>
             <Route path="*" element={<NotFound />} />
           </Route>
         </Route>

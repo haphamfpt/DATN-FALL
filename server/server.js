@@ -20,7 +20,7 @@ import auth from "./routes/auth.js";
 import adminOrderRoutes from "./routes/adminOrderRoutes.js";
 import UserAdminRoutes from "./routes/UserAdminRoutes.js";
 import { notFound, errorHandler } from "./middlewares/errorMiddleware.js";
-
+import dashboardRoute from "./routes/dasboardRoute.js"
 dotenv.config();
 connectDB();
 
@@ -62,7 +62,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/auth", auth);
 app.use("/api/admin",UserAdminRoutes)
 app.use("/api/admin/orders", adminOrderRoutes);
-
+app.use("/api/admin/stats", dashboardRoute);
 app.use(notFound);
 app.use(errorHandler);
 
