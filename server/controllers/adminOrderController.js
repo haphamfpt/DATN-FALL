@@ -4,7 +4,7 @@ export const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
       .sort({ createdAt: -1 })
-      .populate("user", "name email phone") 
+      .populate("user", "name email phone")
       .populate({
         path: "items.product",
         select: "name images",
@@ -29,20 +29,54 @@ export const updateOrderStatus = async (req, res) => {
   try {
     const { orderStatus } = req.body;
 
-    const validStatuses = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"];
-    if (!validStatuses.includes(orderStatus)) {
-      return res.status(400).json({ success: false, message: "Trạng thái không hợp lệ" });
+    const allowedAdminStatuses = [
+      "pending",
+      "confirmed",
+      "shipped",
+      "delivered",
+    ];
+
+    if (!allowedAdminStatuses.includes(orderStatus)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Trạng thái không hợp lệ hoặc không được phép cập nhật bởi admin",
+      });
     }
 
     const order = await Order.findById(req.params.id);
     if (!order) {
-      return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy đơn hàng" });
+    }
+
+    const statusFlow = [
+      "pending",
+      "confirmed",
+      "shipped",
+      "delivered",
+    ];
+
+    const currentIdx = statusFlow.indexOf(order.orderStatus);
+    const newIdx = statusFlow.indexOf(orderStatus);
+
+    if (
+      currentIdx === -1 ||
+      newIdx === -1 || 
+      newIdx !== currentIdx + 1 
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Không thể cập nhật trạng thái này",
+      });
     }
 
     order.orderStatus = orderStatus;
     await order.save();
 
-    res.json(order);
+    res.json({ success: true, data: order });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Lỗi server" });

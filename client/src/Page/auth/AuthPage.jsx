@@ -30,7 +30,6 @@ const AuthPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Đồng bộ tab Login/Register theo URL
   useEffect(() => {
     if (location.pathname.includes("/register")) {
       setIsLogin(false);
@@ -77,7 +76,6 @@ const AuthPage = () => {
 
     try {
       if (!isLogin) {
-        // ĐĂNG KÝ
         await api.post("/auth/register", {
           name: formData.name,
           email: formData.email.toLowerCase(),
@@ -91,7 +89,6 @@ const AuthPage = () => {
           navigate("/login", { replace: true });
         }, 2000);
       } else {
-        // ĐĂNG NHẬP
         const res = await api.post("/auth/login", {
           email: formData.email.toLowerCase(),
           password: formData.password,
@@ -99,16 +96,13 @@ const AuthPage = () => {
 
         const { token, user } = res.data;
 
-        // Lưu token và user vào localStorage
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user));
 
-        // Cấu hình axios instance để tự động gắn token cho các request sau
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
         setSuccess("Đăng nhập thành công! Đang chuyển hướng...");
 
-        // CHUYỂN HƯỚNG THEO ROLE
         setTimeout(() => {
           if (user.role === "admin") {
             navigate("/admin", { replace: true });

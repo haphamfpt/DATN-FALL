@@ -18,8 +18,10 @@ const OrderManagement = () => {
       const res = await api.get("/admin/orders");
       setOrders(res.data || []);
     } catch (err) {
-      console.error("Lỗi tải đơn hàng admin:", err.response?.data);
-      toast.error(err.response?.data?.message || "Không thể tải danh sách đơn hàng!");
+      console.error("Lỗi tải đơn hàng admin:", err);
+      toast.error(
+        err.response?.data?.message || "Không thể tải danh sách đơn hàng!"
+      );
     } finally {
       setLoading(false);
     }
@@ -36,7 +38,7 @@ const OrderManagement = () => {
 
   const openStatusModal = (order) => {
     setSelectedOrder(order);
-    setNewStatus(order.orderStatus);
+    setNewStatus("");
     setShowStatusModal(true);
   };
 
@@ -47,36 +49,34 @@ const OrderManagement = () => {
     setNewStatus("");
   };
 
-  const statusFlow = [
-    "pending",
-    "confirmed",
-    "shipped",
-    "delivered",
-    "complete",
+  const adminStatusFlow = [
+    { value: "pending", label: "Chờ xác nhận" },
+    { value: "confirmed", label: "Đã xác nhận" },
+    { value: "shipped", label: "Đang giao" },
+    { value: "delivered", label: "Đã giao hàng" },
   ];
 
-  const specialStatuses = ["cancelled", "refund_pending", "refunded"];
-
   const getNextValidStatuses = (currentStatus) => {
-    if (specialStatuses.includes(currentStatus)) return []; 
-
-    const currentIndex = statusFlow.indexOf(currentStatus);
-    if (currentIndex === -1) return specialStatuses; 
-
-    const nextInFlow = statusFlow.slice(currentIndex + 1); 
-    return [...nextInFlow, ...specialStatuses]; 
+    const currentIndex = adminStatusFlow.findIndex(
+      (s) => s.value === currentStatus
+    );
+    if (currentIndex === -1 || currentIndex >= adminStatusFlow.length - 1) {
+      return [];
+    }
+    return adminStatusFlow.slice(currentIndex + 1);
   };
 
   const updateOrderStatus = async () => {
-    const validStatuses = getNextValidStatuses(selectedOrder.orderStatus);
-
-    if (!newStatus || !validStatuses.includes(newStatus)) {
-      toast.error("Trạng thái không hợp lệ hoặc không thể chuyển về trạng thái cũ!");
+    if (!newStatus) {
+      toast.error("Vui lòng chọn trạng thái mới!");
       return;
     }
 
-    if (newStatus === selectedOrder.orderStatus) {
-      toast.error("Trạng thái mới phải khác trạng thái hiện tại!");
+    const nextStatuses = getNextValidStatuses(selectedOrder.orderStatus);
+    const isValid = nextStatuses.some((s) => s.value === newStatus);
+
+    if (!isValid) {
+      toast.error("Không thể chọn trạng thái này! Vui lòng chọn đúng thứ tự.");
       return;
     }
 
@@ -85,11 +85,45 @@ const OrderManagement = () => {
         orderStatus: newStatus,
       });
 
-      setOrders(orders.map((o) => (o._id === selectedOrder._id ? res.data : o)));
-      toast.success("Cập nhật trạng thái đơn hàng thành công!");
+      const updatedOrder = res.data.data || res.data;
+
+      // Kiểm tra nếu đơn hàng đã bị hủy (do hệ thống hoặc logic backend)
+      if (updatedOrder.orderStatus === "cancelled") {
+        toast.error(
+          "Đơn hàng đã bị hủy! (Có thể do khách hàng yêu cầu hoặc hệ thống tự động xử lý)",
+          {
+            duration: 7000,
+            style: {
+              background: "#dc3545",
+              color: "#fff",
+              fontWeight: "bold",
+            },
+          }
+        );
+
+        // Reload toàn bộ danh sách để đồng bộ
+        await fetchOrders();
+      } else {
+        // Cập nhật cục bộ nếu trạng thái bình thường
+        setOrders((prev) =>
+          prev.map((o) => (o._id === selectedOrder._id ? updatedOrder : o))
+        );
+        toast.success("Cập nhật trạng thái đơn hàng thành công!");
+      }
+
       closeModals();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Cập nhật trạng thái thất bại!");
+      const errorMsg =
+        err.response?.data?.message || "Cập nhật trạng thái thất bại!";
+      toast.error(errorMsg);
+
+      // Trường hợp backend trả về thông tin đơn bị hủy trong response lỗi
+      if (err.response?.data?.order?.orderStatus === "cancelled") {
+        toast.error("Đơn hàng đã bị hủy trong quá trình xử lý!", {
+          duration: 7000,
+        });
+        await fetchOrders();
+      }
     }
   };
 
@@ -105,7 +139,7 @@ const OrderManagement = () => {
       delivered: "bg-secondary",
       complete: "bg-success",
       cancelled: "bg-danger",
-      refund_pending: "bg-orange text-white",
+      refund_pending: "bg-warning text-dark",
       refunded: "bg-dark",
     };
     return `badge ${badges[status] || "bg-secondary"}`;
@@ -146,13 +180,16 @@ const OrderManagement = () => {
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />
+
       <div className="container py-4">
         <h3 className="mb-4 fw-bold">Quản lý đơn hàng</h3>
 
         <div className="card shadow-sm border-0">
           <div className="card-body p-0">
             {loading ? (
-              <div className="text-center py-5 text-secondary">Đang tải...</div>
+              <div className="text-center py-5 text-secondary">
+                Đang tải dữ liệu...
+              </div>
             ) : orders.length === 0 ? (
               <div className="text-center py-5 text-secondary">
                 Chưa có đơn hàng nào
@@ -181,15 +218,20 @@ const OrderManagement = () => {
                         <td>
                           <div>{order.shippingAddress?.fullName || "N/A"}</div>
                           <small className="text-secondary">
-                            {order.shippingAddress?.phone}
+                            {order.shippingAddress?.phone ||
+                              "Không có số điện thoại"}
                           </small>
                         </td>
-                        <td>{order.items.length} sản phẩm</td>
+                        <td>{order.items?.length || 0} sản phẩm</td>
                         <td className="fw-bold text-danger">
-                          {formatCurrency(order.totalAmount)}
+                          {formatCurrency(order.totalAmount || 0)}
                         </td>
                         <td className="text-center">
-                          <span className={getPaymentStatusBadge(order.paymentStatus)}>
+                          <span
+                            className={getPaymentStatusBadge(
+                              order.paymentStatus
+                            )}
+                          >
                             {getPaymentText(order.paymentStatus)}
                           </span>
                         </td>
@@ -199,7 +241,12 @@ const OrderManagement = () => {
                           </span>
                         </td>
                         <td className="small">
-                          {format(new Date(order.createdAt), "dd/MM/yyyy HH:mm")}
+                          {order.createdAt
+                            ? format(
+                                new Date(order.createdAt),
+                                "dd/MM/yyyy HH:mm"
+                              )
+                            : "N/A"}
                         </td>
                         <td className="text-center">
                           <button
@@ -212,6 +259,12 @@ const OrderManagement = () => {
                           <button
                             className="btn btn-sm btn-outline-primary"
                             onClick={() => openStatusModal(order)}
+                            disabled={[
+                              "complete",
+                              "cancelled",
+                              "refunded",
+                              "refund_pending",
+                            ].includes(order.orderStatus)}
                             title="Cập nhật trạng thái"
                           >
                             <BoxSeam />
@@ -227,6 +280,7 @@ const OrderManagement = () => {
         </div>
       </div>
 
+      {/* ====================== MODAL CHI TIẾT ĐƠN HÀNG ====================== */}
       {showDetailModal && selectedOrder && (
         <div
           className="modal fade show d-block"
@@ -265,7 +319,11 @@ const OrderManagement = () => {
                                   src={item.image || "/placeholder.jpg"}
                                   alt={item.name}
                                   className="rounded"
-                                  style={{ width: "60px", height: "60px", objectFit: "cover" }}
+                                  style={{
+                                    width: "60px",
+                                    height: "60px",
+                                    objectFit: "cover",
+                                  }}
                                 />
                               </td>
                               <td>
@@ -300,35 +358,59 @@ const OrderManagement = () => {
                       </div>
                       {selectedOrder.discountAmount > 0 && (
                         <div className="d-flex justify-content-between mb-2 text-success">
-                          <span>Giảm giá {selectedOrder.voucher?.code && `(mã ${selectedOrder.voucher.code})`}</span>
-                          <span>-{formatCurrency(selectedOrder.discountAmount)}</span>
+                          <span>
+                            Giảm giá{" "}
+                            {selectedOrder.voucher?.code &&
+                              `(mã ${selectedOrder.voucher.code})`}
+                          </span>
+                          <span>
+                            -{formatCurrency(selectedOrder.discountAmount)}
+                          </span>
                         </div>
                       )}
                       <hr />
                       <div className="d-flex justify-content-between fw-bold fs-5">
                         <span>Tổng cộng</span>
-                        <span className="text-danger">{formatCurrency(selectedOrder.totalAmount)}</span>
+                        <span className="text-danger">
+                          {formatCurrency(selectedOrder.totalAmount)}
+                        </span>
                       </div>
                     </div>
 
                     <h6 className="fw-bold mb-3">Địa chỉ giao hàng</h6>
                     <div className="small text-muted">
-                      <div><strong>{selectedOrder.shippingAddress.fullName}</strong></div>
+                      <div>
+                        <strong>
+                          {selectedOrder.shippingAddress.fullName}
+                        </strong>
+                      </div>
                       <div>{selectedOrder.shippingAddress.phone}</div>
                       <div>{selectedOrder.shippingAddress.address}</div>
                       {selectedOrder.shippingAddress.note && (
-                        <div><strong>Ghi chú:</strong> {selectedOrder.shippingAddress.note}</div>
+                        <div>
+                          <strong>Ghi chú:</strong>{" "}
+                          {selectedOrder.shippingAddress.note}
+                        </div>
                       )}
                     </div>
 
                     <h6 className="fw-bold mt-4 mb-3">Trạng thái</h6>
                     <div>
                       <div className="mb-2">
-                        <span className={`badge ${getPaymentStatusBadge(selectedOrder.paymentStatus)} me-2`}>
-                          Thanh toán: {getPaymentText(selectedOrder.paymentStatus)}
+                        <span
+                          className={`badge ${getPaymentStatusBadge(
+                            selectedOrder.paymentStatus
+                          )} me-2`}
+                        >
+                          Thanh toán:{" "}
+                          {getPaymentText(selectedOrder.paymentStatus)}
                         </span>
                       </div>
-                      <span className={`badge ${getStatusBadge(selectedOrder.orderStatus)}`}>
+                      <span
+                        className={`badge ${getStatusBadge(
+                          selectedOrder.orderStatus
+                        )}`}
+                      >
                         Đơn hàng: {getStatusText(selectedOrder.orderStatus)}
                       </span>
                     </div>
@@ -356,34 +438,58 @@ const OrderManagement = () => {
             <div className="modal-content border-0 shadow">
               <div className="modal-header">
                 <h5 className="modal-title fw-bold">
-                  Cập nhật trạng thái đơn hàng #{selectedOrder._id.slice(-8).toUpperCase()}
+                  Cập nhật trạng thái đơn hàng #
+                  {selectedOrder._id.slice(-8).toUpperCase()}
                 </h5>
                 <button className="btn-close" onClick={closeModals}></button>
               </div>
+
               <div className="modal-body">
-                <p className="text-muted small">
-                  Trạng thái hiện tại: <strong>{getStatusText(selectedOrder.orderStatus)}</strong>
+                <p className="text-muted small mb-4">
+                  Trạng thái hiện tại:{" "}
+                  <strong className={getStatusBadge(selectedOrder.orderStatus)}>
+                    {getStatusText(selectedOrder.orderStatus)}
+                  </strong>
                 </p>
-                <label className="form-label fw-semibold">Chọn trạng thái mới</label>
+
+                <label className="form-label fw-semibold">
+                  Chọn trạng thái tiếp theo:
+                </label>
+
                 <select
                   className="form-select"
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
                 >
                   <option value="">-- Chọn trạng thái --</option>
-                  {getNextValidStatuses(selectedOrder.orderStatus).map((status) => (
-                    <option key={status} value={status}>
-                      {getStatusText(status)}
-                    </option>
-                  ))}
+                  {getNextValidStatuses(selectedOrder.orderStatus).map(
+                    (status) => (
+                      <option key={status.value} value={status.value}>
+                        {status.label}
+                      </option>
+                    )
+                  )}
                 </select>
+
+                {getNextValidStatuses(selectedOrder.orderStatus).length ===
+                  0 && (
+                  <div className="alert alert-info mt-3 mb-0 small">
+                    Đơn hàng đã hoàn thành hoặc không thể cập nhật thêm trạng
+                    thái
+                  </div>
+                )}
               </div>
+
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={closeModals}>
                   Hủy
                 </button>
-                <button className="btn btn-dark" onClick={updateOrderStatus}>
-                  Cập nhật trạng thái
+                <button
+                  className="btn btn-dark"
+                  onClick={updateOrderStatus}
+                  disabled={!newStatus}
+                >
+                  Cập nhật
                 </button>
               </div>
             </div>

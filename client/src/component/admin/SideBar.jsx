@@ -12,7 +12,8 @@ import {
   BiGift,
   BiUser,
   BiLogOut,
-  BiPhone
+  BiPhone,
+  BiStar
 } from "react-icons/bi";
 
 const Sidebar = () => {
@@ -32,6 +33,7 @@ const Sidebar = () => {
     { id: "vouchers", label: "Voucher", icon: <BiGift size={20} />, path: "/admin/vouchers" },
     { id: "customers", label: "Khách hàng", icon: <BiUser size={20} />, path: "/admin/customers" },
     { id: "contacts", label: "Liên hệ", icon: <BiPhone size={20} />, path: "/admin/contacts" },
+    { id: "rates", label: "Đánh giá", icon: <BiStar size={20} />, path: "/admin/rates" },
   ];
 
   const handleNavigate = (path) => {
