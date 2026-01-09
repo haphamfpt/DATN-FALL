@@ -3,7 +3,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { useParams, useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { useCart } from "../../../context/CartContext";
-import { Star, StarFill } from "react-bootstrap-icons"; // Icon sao
+import { Star, StarFill } from "react-bootstrap-icons"; 
 
 const ProductDetail = () => {
   const { slug } = useParams();
@@ -20,42 +20,45 @@ const ProductDetail = () => {
   const [adding, setAdding] = useState(false);
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const res = await fetch(`/api/products/detail/${slug}`);
-        const data = await res.json();
+  const fetchProduct = async () => {
+    try {
+      const res = await fetch(`/api/products/detail/${slug}`);
+      const data = await res.json();
 
-        if (!res.ok) throw new Error(data.message || "Không tải được sản phẩm");
+      if (!res.ok) throw new Error(data.message || "Không tải được sản phẩm");
 
-        setProduct(data);
+      setProduct(data);
+      console.log("Product ID đang dùng để fetch reviews:", data._id);
 
-        if (data.colors?.length > 0) setSelectedColor(data.colors[0]);
-        if (data.sizes?.length > 0) setSelectedSize(data.sizes[0]);
-      } catch (err) {
-        toast.error(err.message);
-      }
-    };
+      if (data.colors?.length > 0) setSelectedColor(data.colors[0]);
+      if (data.sizes?.length > 0) setSelectedSize(data.sizes[0]);
 
-    const fetchReviews = async () => {
-      try {
-        setReviewLoading(true);
-        const res = await fetch(`/api/reviews/product/${slug}`); // hoặc /api/reviews/:productId nếu dùng ID
-        const data = await res.json();
+      fetchReviews(data._id);
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
 
-        if (!res.ok) throw new Error(data.message || "Không tải được đánh giá");
+  const fetchReviews = async (productId) => {
+    try {
+      setReviewLoading(true);
 
-        setReviews(data.reviews || []);
-      } catch (err) {
-        console.error(err);
-        // Không bắt lỗi toast để tránh làm phiền người dùng nếu không có đánh giá
-      } finally {
-        setReviewLoading(false);
-      }
-    };
+      const res = await fetch(`/api/reviews/product/${productId}`);
+      const data = await res.json();
 
-    fetchProduct();
-    fetchReviews();
-  }, [slug]);
+      if (!res.ok) throw new Error(data.message || "Không tải được đánh giá");
+
+      setReviews(data.reviews || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  fetchProduct();
+}, [slug]);
+
 
   const getSelectedVariant = () => {
     if (!product?.variants || !selectedColor || !selectedSize) return null;

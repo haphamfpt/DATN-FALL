@@ -51,7 +51,7 @@ const Home = () => {
     return (
       <Container className="text-center py-5">
         <Spinner animation="border" variant="primary" size="lg" />
-        <p className="mt-3 fs-5">Đang tải sản phẩm nổi bật...</p>
+        <p className="mt-3 fs-5">Đang tải sản phẩm...</p>
       </Container>
     );
   }

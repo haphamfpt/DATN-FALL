@@ -5,7 +5,9 @@ import OrderTracking from "./Component/OrderTracking";
 import ProductReviewForm from "./Component/ProductReviewForm";
 
 const formatPrice = (price) =>
-  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
+  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
+    price
+  );
 
 const getStatusBadge = (status) => {
   const map = {
@@ -99,7 +101,10 @@ const OrderDetail = () => {
   };
 
   const handleConfirmReceived = async () => {
-    if (!window.confirm("Bạn đã nhận được hàng và xác nhận hoàn thành đơn hàng?")) return;
+    if (
+      !window.confirm("Bạn đã nhận được hàng và xác nhận hoàn thành đơn hàng?")
+    )
+      return;
 
     const token = localStorage.getItem("token");
     setConfirmingReceived(true);
@@ -128,7 +133,10 @@ const OrderDetail = () => {
   if (loading) {
     return (
       <div className="container py-5 text-center">
-        <div className="spinner-border text-danger" style={{ width: "4rem", height: "4rem" }}>
+        <div
+          className="spinner-border text-danger"
+          style={{ width: "4rem", height: "4rem" }}
+        >
           <span className="visually-hidden">Đang tải...</span>
         </div>
         <p className="mt-3 fw-bold">Đang tải chi tiết đơn hàng...</p>
@@ -161,7 +169,10 @@ const OrderDetail = () => {
 
       <div className="container py-5" style={{ maxWidth: "1000px" }}>
         <div className="d-flex align-items-center mb-4">
-          <Link to="/profile" className="btn btn-link text-dark text-decoration-none">
+          <Link
+            to="/profile"
+            className="btn btn-link text-dark text-decoration-none"
+          >
             ← Quay lại
           </Link>
           <h2 className="fw-bold ms-3 mb-0">
@@ -263,7 +274,11 @@ const OrderDetail = () => {
               </div>
               <div className="d-flex justify-content-between mb-2 text-muted">
                 <span>Phí vận chuyển</span>
-                <span>{order.shippingFee === 0 ? "Miễn phí" : formatPrice(order.shippingFee)}</span>
+                <span>
+                  {order.shippingFee === 0
+                    ? "Miễn phí"
+                    : formatPrice(order.shippingFee)}
+                </span>
               </div>
               {order.discountAmount > 0 && order.voucher && (
                 <div className="d-flex justify-content-between mb-2 text-success fw-bold">
@@ -274,7 +289,9 @@ const OrderDetail = () => {
               <hr className="my-3" />
               <div className="d-flex justify-content-between align-items-center">
                 <span className="fw-bold fs-5">Tổng cộng</span>
-                <span className="text-danger fw-bold fs-4">{formatPrice(order.totalAmount)}</span>
+                <span className="text-danger fw-bold fs-4">
+                  {formatPrice(order.totalAmount)}
+                </span>
               </div>
               <div className="mt-3 small text-muted">
                 Phương thức:{" "}
@@ -308,7 +325,11 @@ const OrderDetail = () => {
                     src={item.image || "/placeholder.jpg"}
                     alt={item.name}
                     className="rounded shadow-sm"
-                    style={{ width: "100px", height: "100px", objectFit: "cover" }}
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      objectFit: "cover",
+                    }}
                   />
 
                   <div className="flex-grow-1">
@@ -325,15 +346,25 @@ const OrderDetail = () => {
 
                     <div className="d-flex justify-content-between align-items-center mb-3">
                       <div>
-                        <span className="text-danger fw-bold fs-5">{formatPrice(item.price)}</span>
-                        <span className="text-muted ms-2">× {item.quantity}</span>
+                        <span className="text-danger fw-bold fs-5">
+                          {formatPrice(item.price)}
+                        </span>
+                        <span className="text-muted ms-2">
+                          × {item.quantity}
+                        </span>
                       </div>
-                      <strong className="fs-5">{formatPrice(item.price * item.quantity)}</strong>
+                      <strong className="fs-5">
+                        {formatPrice(item.price * item.quantity)}
+                      </strong>
                     </div>
 
                     {isCompleted && (
                       <ProductReviewForm
-                        productId={item.product}
+                        productId={
+                          typeof item.product === "object"
+                            ? item.product._id
+                            : item.product
+                        }
                         productName={item.name}
                       />
                     )}

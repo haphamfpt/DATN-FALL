@@ -157,3 +157,27 @@ const updateProductRating = async (productId) => {
     console.error("Update product rating error:", error);
   }
 };
+
+export const hasUserReviewed = async (req, res) => {
+  try {
+    const productId = req.params.productId;
+    const userId = req.user._id;
+
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ success: false, message: "ID sản phẩm không hợp lệ" });
+    }
+
+    const existingReview = await Review.findOne({
+      user: userId,
+      product: productId,
+    });
+
+    res.json({
+      success: true,
+      hasReviewed: !!existingReview, // true nếu đã đánh giá
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};

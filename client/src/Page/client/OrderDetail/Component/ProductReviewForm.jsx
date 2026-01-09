@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { Star, StarFill } from "react-bootstrap-icons";
 
@@ -6,6 +6,42 @@ const ProductReviewForm = ({ productId, productName }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false); 
+  const [loadingCheck, setLoadingCheck] = useState(true); 
+
+  useEffect(() => {
+    const checkIfReviewed = async () => {
+      if (!productId) return;
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setLoadingCheck(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/reviews/has-reviewed/${productId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          setHasReviewed(data.hasReviewed);
+        } else {
+          console.warn("Không thể kiểm tra trạng thái đánh giá:", data.message);
+        }
+      } catch (err) {
+        console.error("Lỗi kiểm tra đã đánh giá:", err);
+      } finally {
+        setLoadingCheck(false);
+      }
+    };
+
+    checkIfReviewed();
+  }, [productId]);
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -38,6 +74,7 @@ const ProductReviewForm = ({ productId, productName }) => {
       toast.success(`Cảm ơn bạn đã đánh giá "${productName}"!`);
       setRating(0);
       setComment("");
+      setHasReviewed(true); 
     } catch (err) {
       toast.error(err.message || "Có lỗi xảy ra khi gửi đánh giá");
     } finally {
@@ -45,13 +82,25 @@ const ProductReviewForm = ({ productId, productName }) => {
     }
   };
 
+  if (loadingCheck) {
+    return <div className="mt-4 text-muted small">Đang kiểm tra trạng thái đánh giá...</div>;
+  }
+
+  if (hasReviewed) {
+    return (
+      <div className="mt-4 p-3 bg-light rounded border text-center text-muted">
+        <p className="mb-0">Bạn đã đánh giá sản phẩm này rồi!</p>
+        <small>Cảm ơn bạn đã chia sẻ ý kiến.</small>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-4 p-4 bg-light rounded border">
       <h6 className="fw-bold mb-3 text-primary">
         Đánh giá sản phẩm: <span className="text-dark">{productName}</span>
       </h6>
 
-      {/* Sao đánh giá */}
       <div className="mb-3">
         <label className="form-label fw-semibold small">Chọn số sao *</label>
         <div className="d-flex align-items-center">
@@ -60,7 +109,7 @@ const ProductReviewForm = ({ productId, productName }) => {
               key={star}
               className="cursor-pointer me-2"
               onClick={() => setRating(star)}
-              style={{ fontSize: "28px" }}
+              style={{ fontSize: "28px", cursor: "pointer" }}
             >
               {rating >= star ? (
                 <StarFill className="text-warning" />
@@ -75,7 +124,6 @@ const ProductReviewForm = ({ productId, productName }) => {
         </div>
       </div>
 
-      {/* Bình luận */}
       <div className="mb-3">
         <label className="form-label fw-semibold small">Nhận xét của bạn (tùy chọn)</label>
         <textarea
