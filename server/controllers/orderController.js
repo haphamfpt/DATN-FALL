@@ -328,3 +328,35 @@ export const cancelOrder = async (req, res) => {
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
+
+export const completeOrder = async (req, res) => {
+  try {
+    const order = await Order.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
+    }
+
+    if (order.orderStatus !== "delivered") {
+      return res.status(400).json({
+        success: false,
+        message: "Chỉ có thể xác nhận nhận hàng khi đơn ở trạng thái 'Đã giao hàng'",
+      });
+    }
+
+    order.orderStatus = "complete";
+    await order.save();
+
+    res.json({
+      success: true,
+      message: "Đã xác nhận nhận hàng thành công",
+      data: order,
+    });
+  } catch (error) {
+    console.error("Lỗi xác nhận hoàn thành:", error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};

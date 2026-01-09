@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import OrderTracking from "./Component/OrderTracking";
-import ProductReviewForm from "./Component/ProductReviewForm"; 
+import ProductReviewForm from "./Component/ProductReviewForm";
 
 const formatPrice = (price) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
@@ -36,6 +36,7 @@ const OrderDetail = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [confirmingReceived, setConfirmingReceived] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -77,7 +78,7 @@ const OrderDetail = () => {
     setCancelling(true);
 
     try {
-      const res = await fetch(`/api/orders/${id}`, {
+      const res = await fetch(`/api/orders/${id}/cancel`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -94,6 +95,33 @@ const OrderDetail = () => {
       toast.error(err.message);
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const handleConfirmReceived = async () => {
+    if (!window.confirm("Bạn đã nhận được hàng và xác nhận hoàn thành đơn hàng?")) return;
+
+    const token = localStorage.getItem("token");
+    setConfirmingReceived(true);
+
+    try {
+      const res = await fetch(`/api/orders/${id}/complete`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Xác nhận thất bại");
+
+      toast.success("Đơn hàng đã được xác nhận hoàn thành!");
+      setOrder({ ...order, orderStatus: "complete" });
+    } catch (err) {
+      toast.error(err.message || "Không thể xác nhận nhận hàng");
+    } finally {
+      setConfirmingReceived(false);
     }
   };
 
@@ -124,9 +152,8 @@ const OrderDetail = () => {
   const paymentInfo = getPaymentBadge(order.paymentStatus);
   const isCompleted = order.orderStatus === "complete";
 
-  const canCancel =
-    (order.orderStatus === "pending" || order.orderStatus === "confirmed") &&
-    !["cancelled", "shipped", "delivered", "complete"].includes(order.orderStatus);
+  const canCancel = ["pending", "confirmed"].includes(order.orderStatus);
+  const canConfirmReceived = order.orderStatus === "delivered";
 
   return (
     <>
@@ -174,17 +201,34 @@ const OrderDetail = () => {
 
               <OrderTracking status={order.orderStatus} />
 
-              {canCancel && (
-                <div className="mt-4 text-end">
+              <div className="mt-4 text-end">
+                {canCancel && (
                   <button
                     onClick={handleCancelOrder}
                     disabled={cancelling}
-                    className="btn btn-outline-danger px-4"
+                    className="btn btn-outline-danger px-4 me-2"
                   >
                     {cancelling ? "Đang xử lý..." : "Hủy đơn hàng"}
                   </button>
-                </div>
-              )}
+                )}
+
+                {canConfirmReceived && (
+                  <button
+                    onClick={handleConfirmReceived}
+                    disabled={confirmingReceived}
+                    className="btn btn-success px-4"
+                  >
+                    {confirmingReceived ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      "Tôi đã nhận hàng"
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

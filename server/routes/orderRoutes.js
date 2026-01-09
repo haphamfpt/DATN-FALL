@@ -4,7 +4,8 @@ import {
   getUserOrders,
   getOrderById,
   vnpayReturn,
-  cancelOrder
+  cancelOrder,
+  completeOrder
 } from "../controllers/orderController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 
@@ -16,6 +17,7 @@ router.use(protect);
 router.post("/", createOrder);
 router.get("/", getUserOrders);
 router.get("/:id", getOrderById);
-router.put("/:id", cancelOrder)
+router.put("/:id", cancelOrder);
+router.put("/:id/complete", completeOrder);
 
 export default router;
