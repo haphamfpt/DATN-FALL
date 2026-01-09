@@ -1,9 +1,12 @@
+import React from "react";
+
 const OrderTracking = ({ status }) => {
   const steps = [
     { key: "pending", label: "Chờ xác nhận", icon: "📦" },
     { key: "confirmed", label: "Đã xác nhận", icon: "✓" },
     { key: "shipped", label: "Đang giao", icon: "🚚" },
     { key: "delivered", label: "Đã giao", icon: "🏠" },
+    { key: "complete", label: "Hoàn thành", icon: "🎉" },
   ];
 
   if (status === "cancelled") {
@@ -40,8 +43,11 @@ const OrderTracking = ({ status }) => {
           >
             <div
               className={`rounded-circle mx-auto d-flex align-items-center justify-content-center fw-bold fs-4
-                ${index <= completedIndex ? "bg-danger text-white" : "bg-light text-muted border"}
-              `}
+                ${
+                  index <= completedIndex
+                    ? "bg-success text-white"
+                    : "bg-light text-muted border"
+                }`}
               style={{
                 width: "60px",
                 height: "60px",
@@ -52,7 +58,7 @@ const OrderTracking = ({ status }) => {
             </div>
             <p
               className={`mt-3 mb-0 fw-medium ${
-                index <= completedIndex ? "text-danger" : "text-muted"
+                index <= completedIndex ? "text-success" : "text-muted"
               }`}
             >
               {step.label}
@@ -66,14 +72,16 @@ const OrderTracking = ({ status }) => {
             height: "4px",
             background: "#dee2e6",
             zIndex: 1,
-            left: "15%",
-            right: "15%",
+            left: "10%",
+            right: "10%",
           }}
         >
           <div
-            className="h-100 bg-danger"
+            className="h-100 bg-success"
             style={{
-              width: `${completedIndex >= 0 ? (completedIndex / (steps.length - 1)) * 100 : 0}%`,
+              width: `${
+                completedIndex >= 0 ? (completedIndex / (steps.length - 1)) * 100 : 0
+              }%`,
               transition: "width 0.6s ease",
             }}
           />
@@ -83,7 +91,7 @@ const OrderTracking = ({ status }) => {
       {completedIndex >= 0 && (
         <div className="text-center mt-4">
           <p className="text-muted mb-1">Trạng thái hiện tại</p>
-          <h5 className="text-danger fw-bold">{steps[completedIndex].label}</h5>
+          <h5 className="text-success fw-bold">{steps[completedIndex].label}</h5>
         </div>
       )}
     </div>

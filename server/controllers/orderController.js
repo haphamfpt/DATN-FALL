@@ -38,7 +38,9 @@ export const createOrder = async (req, res) => {
     });
 
     if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ success: false, message: "Giỏ hàng trống" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Giỏ hàng trống" });
     }
 
     let subtotal = 0;
@@ -95,11 +97,16 @@ export const createOrder = async (req, res) => {
       if (subtotal < voucher.rank_price) {
         return res.status(400).json({
           success: false,
-          message: `Đơn hàng cần đạt tối thiểu ${voucher.rank_price.toLocaleString("vi-VN")}đ để sử dụng mã này`,
+          message: `Đơn hàng cần đạt tối thiểu ${voucher.rank_price.toLocaleString(
+            "vi-VN"
+          )}đ để sử dụng mã này`,
         });
       }
 
-      if (voucher.for_user_ids.length > 0 && !voucher.for_user_ids.includes(userId)) {
+      if (
+        voucher.for_user_ids.length > 0 &&
+        !voucher.for_user_ids.includes(userId)
+      ) {
         return res.status(403).json({
           success: false,
           message: "Mã giảm giá này không áp dụng cho tài khoản của bạn",
@@ -142,7 +149,9 @@ export const createOrder = async (req, res) => {
     };
 
     if (paymentMethod === "online") {
-      orderData.vnp_TxnRef = `AVL${Date.now()}${Math.floor(Math.random() * 1000)}`;
+      orderData.vnp_TxnRef = `AVL${Date.now()}${Math.floor(
+        Math.random() * 1000
+      )}`;
     }
 
     const order = await Order.create(orderData);
@@ -213,7 +222,9 @@ export const vnpayReturn = async (req, res) => {
 
       if (!order || paidAmount !== order.totalAmount) {
         return res.redirect(
-          `${process.env.CLIENT_URL || "http://localhost:5173"}/order-success?status=invalid`
+          `${
+            process.env.CLIENT_URL || "http://localhost:5173"
+          }/order-success?status=invalid`
         );
       }
 
@@ -228,7 +239,9 @@ export const vnpayReturn = async (req, res) => {
       }
 
       return res.redirect(
-        `${process.env.CLIENT_URL || "http://localhost:5173"}/order-success?orderId=${order._id}`
+        `${
+          process.env.CLIENT_URL || "http://localhost:5173"
+        }/order-success?orderId=${order._id}`
       );
     }
 
@@ -238,7 +251,9 @@ export const vnpayReturn = async (req, res) => {
     );
 
     res.redirect(
-      `${process.env.CLIENT_URL || "http://localhost:5173"}/order-success?status=failed`
+      `${
+        process.env.CLIENT_URL || "http://localhost:5173"
+      }/order-success?status=failed`
     );
   } catch (error) {
     console.error("VNPay return error:", error);
@@ -248,7 +263,6 @@ export const vnpayReturn = async (req, res) => {
     });
   }
 };
-
 
 export const getUserOrders = async (req, res) => {
   try {
@@ -265,14 +279,52 @@ export const getUserOrders = async (req, res) => {
 
 export const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findOne({ _id: req.params.id, user: req.user._id })
+    const order = await Order.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    })
       .populate("items.product", "name images")
       .populate("items.variant", "color size");
 
-    if (!order) return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy đơn hàng" });
 
     res.json({ success: true, order });
   } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+export const cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy đơn hàng" });
+    }
+
+    const allowedToCancel = ["pending", "confirmed"];
+    if (!allowedToCancel.includes(order.orderStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể hủy đơn hàng`,
+      });
+    }
+
+    order.orderStatus = "cancelled";
+    await order.save();
+
+    res.json({
+      success: true,
+      message: "Hủy đơn hàng thành công",
+      data: order,
+    });
+  } catch (error) {
+    console.error("Lỗi hủy đơn hàng:", error);
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };

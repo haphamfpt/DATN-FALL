@@ -77,7 +77,7 @@ const OrderDetail = () => {
     setCancelling(true);
 
     try {
-      const res = await fetch(`/api/orders/${id}/cancel`, {
+      const res = await fetch(`/api/orders/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
