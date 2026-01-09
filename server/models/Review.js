@@ -24,6 +24,10 @@ const reviewSchema = new mongoose.Schema(
       default: "",
       maxlength: [1000, "Bình luận không được quá 1000 ký tự"],
     },
+    is_hidden: {
+      type: Boolean,
+      default: false,
+    },
     images: [
       {
         url: { type: String, required: true },

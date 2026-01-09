@@ -22,6 +22,7 @@ import UserAdminRoutes from "./routes/UserAdminRoutes.js";
 import { notFound, errorHandler } from "./middlewares/errorMiddleware.js";
 import dashboardRoute from "./routes/dasboardRoute.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
+import adminReviewRoutes from "./routes/reviews.js";
 dotenv.config();
 connectDB();
 
@@ -65,6 +66,7 @@ app.use("/api/admin",UserAdminRoutes)
 app.use("/api/admin/orders", adminOrderRoutes);
 app.use("/api/admin/stats", dashboardRoute);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/admin/reviews", adminReviewRoutes);
 app.use(notFound);
 app.use(errorHandler);
 

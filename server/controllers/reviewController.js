@@ -52,14 +52,20 @@ export const getReviewsByProduct = async (req, res) => {
       return res.status(400).json({ message: "ID sản phẩm không hợp lệ" });
     }
 
+    const filter = {
+      product: productId,
+      is_hidden: false, 
+    };
+
     const [reviews, total] = await Promise.all([
-      Review.find({ product: productId })
-        .populate("user", "name avatar")
+      Review.find(filter)
+        .populate("user", "name avatar") 
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      Review.countDocuments({ product: productId }),
+
+      Review.countDocuments(filter), 
     ]);
 
     res.json({
