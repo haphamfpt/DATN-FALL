@@ -46,39 +46,36 @@ export const updateOrderStatus = async (req, res) => {
 
     const order = await Order.findById(req.params.id);
     if (!order) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy đơn hàng" });
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đơn hàng",
+      });
     }
 
-    const statusFlow = [
-      "pending",
-      "confirmed",
-      "shipped",
-      "delivered",
-    ];
+    const statusFlow = ["pending", "confirmed", "shipped", "delivered"];
 
     const currentIdx = statusFlow.indexOf(order.orderStatus);
     const newIdx = statusFlow.indexOf(orderStatus);
 
-    if (
-      currentIdx === -1 ||
-      newIdx === -1 || 
-      newIdx !== currentIdx + 1 
-    ) {
+    if (currentIdx === -1 || newIdx === -1 || newIdx !== currentIdx + 1) {
       return res.status(400).json({
         success: false,
         message:
-          "Không thể cập nhật trạng thái này",
+          "Không thể cập nhật trạng thái này. Chỉ được chuyển sang trạng thái tiếp theo trong quy trình.",
       });
     }
 
     order.orderStatus = orderStatus;
+
+    if (orderStatus === "delivered" && order.paymentStatus !== "paid") {
+      order.paymentStatus = "paid";
+    }
+
     await order.save();
 
     res.json({ success: true, data: order });
   } catch (error) {
-    console.error(error);
+    console.error("Lỗi cập nhật trạng thái đơn hàng:", error);
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
