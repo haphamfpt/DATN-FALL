@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Banner from './Component/Banner/Banner';
 import ProductList from "./Component/Product/ProductList";
 import BlogList from "./Component/Blog/BlogList";
+import VoucherHome from "./Component/Voucher/Voucher";
 import { Container, Spinner, Alert } from "react-bootstrap";
 
 const Home = () => {
@@ -65,6 +66,7 @@ const Home = () => {
       <Banner />
       <ProductList products={featuredProducts} title="SẢN PHẨM MỚI NHẤT" />
       <BlogList />
+      <VoucherHome/>
     </>
   );
 };
