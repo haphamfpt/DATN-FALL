@@ -1,4 +1,3 @@
-// controllers/dashboardController.js
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import User from "../models/User.js";
@@ -12,40 +11,60 @@ export const getAdminStats = async (req, res) => {
     const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
     const thisYearStart = new Date(today.getFullYear(), 0, 1);
 
-    // Tổng doanh thu (đơn đã giao + thanh toán thành công)
+    const completedStatuses = ["complete"]; 
+
     const totalRevenueAgg = await Order.aggregate([
-      { $match: { orderStatus: "delivered", paymentStatus: "paid" } },
+      { $match: { orderStatus: { $in: completedStatuses }, paymentStatus: "paid" } },
       { $group: { _id: null, total: { $sum: "$totalAmount" } } },
     ]);
 
     const revenueTodayAgg = await Order.aggregate([
-      { $match: { orderStatus: "delivered", paymentStatus: "paid", createdAt: { $gte: today } } },
+      {
+        $match: {
+          orderStatus: { $in: completedStatuses },
+          paymentStatus: "paid",
+          createdAt: { $gte: today },
+        },
+      },
       { $group: { _id: null, total: { $sum: "$totalAmount" } } },
     ]);
 
     const revenueThisMonthAgg = await Order.aggregate([
-      { $match: { orderStatus: "delivered", paymentStatus: "paid", createdAt: { $gte: thisMonthStart } } },
+      {
+        $match: {
+          orderStatus: { $in: completedStatuses },
+          paymentStatus: "paid",
+          createdAt: { $gte: thisMonthStart },
+        },
+      },
       { $group: { _id: null, total: { $sum: "$totalAmount" } } },
     ]);
 
-    // Thống kê trạng thái đơn hàng
     const orderStatusStats = await Order.aggregate([
       { $group: { _id: "$orderStatus", count: { $sum: 1 } } },
     ]);
 
     const statusMap = {
-      pending: 0, confirmed: 0, shipped: 0, delivered: 0,
-      cancelled: 0, refund_pending: 0, refunded: 0,
+      pending: 0,
+      confirmed: 0,
+      shipped: 0,
+      delivered: 0,
+      complete: 0,          
+      cancelled: 0,
+      refund_pending: 0,
+      refunded: 0,
     };
-    orderStatusStats.forEach(s => { statusMap[s._id] = s.count; });
+    orderStatusStats.forEach((s) => {
+      statusMap[s._id] = s.count || 0;
+    });
 
-    // Người dùng
     const totalUsers = await User.countDocuments();
-    const newUsersThisMonth = await User.countDocuments({ createdAt: { $gte: thisMonthStart } });
+    const newUsersThisMonth = await User.countDocuments({
+      createdAt: { $gte: thisMonthStart },
+    });
 
-    // Top 10 sản phẩm bán chạy
     const topProducts = await Order.aggregate([
-      { $match: { orderStatus: "delivered" } },
+      { $match: { orderStatus: { $in: completedStatuses } } },
       { $unwind: "$items" },
       {
         $group: {
@@ -60,9 +79,8 @@ export const getAdminStats = async (req, res) => {
       { $limit: 10 },
     ]);
 
-    // Top danh mục bán chạy
     const topCategories = await Order.aggregate([
-      { $match: { orderStatus: "delivered" } },
+      { $match: { orderStatus: { $in: completedStatuses } } },
       { $unwind: "$items" },
       {
         $lookup: {
@@ -75,7 +93,7 @@ export const getAdminStats = async (req, res) => {
       { $unwind: "$product" },
       {
         $lookup: {
-          from: "product_category", // tên collection chính xác
+          from: "product_category",
           localField: "product.category",
           foreignField: "_id",
           as: "category",
@@ -85,7 +103,9 @@ export const getAdminStats = async (req, res) => {
       {
         $group: {
           _id: "$category._id",
-          categoryName: { $first: "$category.product_category_name" || "Không có danh mục" },
+          categoryName: {
+            $first: "$category.product_category_name" || "Không có danh mục",
+          },
           revenue: { $sum: { $multiply: ["$items.quantity", "$items.price"] } },
         },
       },
@@ -93,9 +113,8 @@ export const getAdminStats = async (req, res) => {
       { $limit: 8 },
     ]);
 
-    // Voucher dùng nhiều nhất
     const topVouchers = await Order.aggregate([
-      { $match: { "voucher.code": { $exists: true, $ne: null } } },
+      { $match: { "voucher.code": { $ne: null } } },
       {
         $group: {
           _id: "$voucher.code",
@@ -107,11 +126,10 @@ export const getAdminStats = async (req, res) => {
       { $limit: 5 },
     ]);
 
-    // Doanh thu theo tháng trong năm
     const monthlyRevenueAgg = await Order.aggregate([
       {
         $match: {
-          orderStatus: "delivered",
+          orderStatus: { $in: completedStatuses },
           paymentStatus: "paid",
           createdAt: { $gte: thisYearStart },
         },
@@ -126,8 +144,8 @@ export const getAdminStats = async (req, res) => {
     ]);
 
     const monthlyRevenue = Array(12).fill(0);
-    monthlyRevenueAgg.forEach(m => {
-      monthlyRevenue[m._id - 1] = m.revenue;
+    monthlyRevenueAgg.forEach((m) => {
+      monthlyRevenue[m._id - 1] = m.revenue || 0;
     });
 
     res.status(200).json({
@@ -136,7 +154,7 @@ export const getAdminStats = async (req, res) => {
         revenueToday: revenueTodayAgg[0]?.total || 0,
         revenueThisMonth: revenueThisMonthAgg[0]?.total || 0,
         totalOrders: await Order.countDocuments(),
-        deliveredOrders: statusMap.delivered,
+        deliveredOrders: statusMap.complete || 0,  
         totalUsers,
         newUsersThisMonth,
       },
@@ -148,6 +166,8 @@ export const getAdminStats = async (req, res) => {
     });
   } catch (error) {
     console.error("Admin stats error:", error);
-    res.status(500).json({ message: "Lỗi server khi lấy thống kê", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Lỗi server khi lấy thống kê", error: error.message });
   }
 };
