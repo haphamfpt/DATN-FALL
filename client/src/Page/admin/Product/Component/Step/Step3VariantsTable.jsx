@@ -2,7 +2,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import api from "../../../../../utils/axiosInstance";
 
-const Step3VariantsTable = ({ product, onBack, onSuccess }) => {
+const Step3VariantsTable = ({ product, onBack, onSuccess, isAddingVariantOnly = false }) => {
   const [variants, setVariants] = useState(() => {
     if (!product?.variants || product.variants.length === 0) return [];
     return product.variants.map((v) => ({
@@ -50,6 +50,26 @@ const Step3VariantsTable = ({ product, onBack, onSuccess }) => {
           `Nhập tồn kho hợp lệ cho: ${v.colorName} - ${v.sizeName}`
         );
       }
+    }
+
+    if (isAddingVariantOnly) {
+      const toCreate = enabledVariants.map((v) => ({
+        product: product._id,
+        color: v.colorId,
+        size: v.sizeId,
+        sale_price: Number(v.sale_price),
+        import_price: Number(v.import_price || 0),
+        stock: Number(v.stock),
+      }));
+
+      try {
+        await Promise.all(toCreate.map((data) => api.post("/variants/admin", data)));
+        toast.success(`Đã thêm ${toCreate.length} biến thể mới thành công!`);
+        onSuccess(enabledVariants);
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Lỗi khi thêm biến thể!");
+      }
+      return;
     }
 
     const payload = {
@@ -230,7 +250,7 @@ const Step3VariantsTable = ({ product, onBack, onSuccess }) => {
           Quay lại
         </button>
         <button className="btn btn-dark btn-lg px-5" onClick={handleSubmit}>
-          {product._id ? "Cập nhật sản phẩm" : "Hoàn tất tạo sản phẩm"}
+          {isAddingVariantOnly ? "Thêm các biến thể đã chọn" : product._id ? "Cập nhật sản phẩm" : "Hoàn tất tạo sản phẩm"}
         </button>
       </div>
     </div>

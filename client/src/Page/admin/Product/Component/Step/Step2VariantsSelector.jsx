@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "react-hot-toast";
 
 const Step2VariantsSelector = ({
@@ -8,9 +8,26 @@ const Step2VariantsSelector = ({
   selectedSizes: propSelectedSizes = [],
   currentVariants = [],
   onNext,
+  onBack,
 }) => {
   const [selectedColors, setSelectedColors] = useState(propSelectedColors);
   const [selectedSizes, setSelectedSizes] = useState(propSelectedSizes);
+
+  const existingCombinations = useMemo(() => {
+    const set = new Set();
+    currentVariants.forEach((v) => {
+      if (v.color?._id && v.size?._id) {
+        set.add(`${v.color._id}-${v.size._id}`);
+      } else if (v.colorId && v.sizeId) {
+        set.add(`${v.colorId}-${v.sizeId}`);
+      }
+    });
+    return set;
+  }, [currentVariants]);
+
+  const isCombinationExisting = (colorId, sizeId) => {
+    return existingCombinations.has(`${colorId}-${sizeId}`);
+  };
 
   const generateVariants = () => {
     if (selectedColors.length === 0 || selectedSizes.length === 0) {
@@ -18,12 +35,19 @@ const Step2VariantsSelector = ({
     }
 
     const variants = [];
+    let hasNew = false;
+
     selectedColors.forEach((colorId) => {
       const color = colors.find((c) => c._id === colorId);
       selectedSizes.forEach((sizeId) => {
+        if (isCombinationExisting(colorId, sizeId)) {
+          return;
+        }
+
+        hasNew = true;
         const size = sizes.find((s) => s._id === sizeId);
         const existing = currentVariants.find(
-          (v) => v.colorId === colorId && v.sizeId === sizeId
+          (v) => (v.color?._id === colorId || v.colorId === colorId) && (v.size?._id === sizeId || v.sizeId === sizeId)
         );
 
         variants.push({
@@ -41,6 +65,10 @@ const Step2VariantsSelector = ({
       });
     });
 
+    if (!hasNew) {
+      return toast.error("Tất cả kết hợp đã tồn tại. Không có biến thể mới!");
+    }
+
     onNext(variants);
   };
 
@@ -56,44 +84,52 @@ const Step2VariantsSelector = ({
             className="border rounded-3 bg-white p-3"
             style={{ maxHeight: "320px", overflowY: "auto" }}
           >
-            {colors.map((color) => (
-              <div
-                key={color._id}
-                className="form-check form-check-inline me-4 mb-3"
-              >
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id={`color-${color._id}`}
-                  checked={selectedColors.includes(color._id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedColors([...selectedColors, color._id]);
-                    } else {
-                      setSelectedColors(
-                        selectedColors.filter((id) => id !== color._id)
-                      );
-                    }
-                  }}
-                />
-                <label
-                  className="form-check-label d-flex align-items-center gap-2"
-                  htmlFor={`color-${color._id}`}
+            {colors.map((color) => {
+              const isDisabled = selectedSizes.every((sizeId) =>
+                isCombinationExisting(color._id, sizeId)
+              ) && selectedSizes.length > 0;
+
+              return (
+                <div
+                  key={color._id}
+                  className="form-check form-check-inline me-4 mb-3"
                 >
-                  <div
-                    style={{
-                      width: 26,
-                      height: 26,
-                      backgroundColor: color.attribute_color_code,
-                      borderRadius: 6,
-                      border: "2px solid #fff",
-                      boxShadow: "0 0 6px rgba(0,0,0,0.25)",
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id={`color-${color._id}`}
+                    checked={selectedColors.includes(color._id)}
+                    disabled={isDisabled}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedColors([...selectedColors, color._id]);
+                      } else {
+                        setSelectedColors(
+                          selectedColors.filter((id) => id !== color._id)
+                        );
+                      }
                     }}
                   />
-                  <span>{color.attribute_color_name}</span>
-                </label>
-              </div>
-            ))}
+                  <label
+                    className="form-check-label d-flex align-items-center gap-2"
+                    htmlFor={`color-${color._id}`}
+                    title={isDisabled ? "Tất cả kích thước đã được sử dụng với màu này" : ""}
+                  >
+                    <div
+                      style={{
+                        width: 26,
+                        height: 26,
+                        backgroundColor: color.attribute_color_code,
+                        borderRadius: 6,
+                        border: "2px solid #fff",
+                        boxShadow: "0 0 6px rgba(0,0,0,0.25)",
+                      }}
+                    />
+                    <span>{color.attribute_color_name}</span>
+                  </label>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -101,35 +137,43 @@ const Step2VariantsSelector = ({
           <label className="form-label fw-semibold">Chọn kích thước</label>
           <div className="border rounded-3 bg-white p-3">
             <div className="row g-2">
-              {sizes.map((size) => (
-                <div key={size._id} className="col-4 col-md-3">
-                  <div className="form-check">
-                    <input
-                      className="btn-check"
-                      type="checkbox"
-                      id={`size-${size._id}`}
-                      checked={selectedSizes.includes(size._id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedSizes([...selectedSizes, size._id]);
-                        } else {
-                          setSelectedSizes(
-                            selectedSizes.filter((id) => id !== size._id)
-                          );
-                        }
-                      }}
-                    />
-                    <label
-                      className={`btn btn-outline-dark w-100 py-2 ${
-                        selectedSizes.includes(size._id) ? "active" : ""
-                      }`}
-                      htmlFor={`size-${size._id}`}
-                    >
-                      {size.attribute_size_name}
-                    </label>
+              {sizes.map((size) => {
+                const isDisabled = selectedColors.every((colorId) =>
+                  isCombinationExisting(colorId, size._id)
+                ) && selectedColors.length > 0;
+
+                return (
+                  <div key={size._id} className="col-4 col-md-3">
+                    <div className="form-check">
+                      <input
+                        className="btn-check"
+                        type="checkbox"
+                        id={`size-${size._id}`}
+                        checked={selectedSizes.includes(size._id)}
+                        disabled={isDisabled}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedSizes([...selectedSizes, size._id]);
+                          } else {
+                            setSelectedSizes(
+                              selectedSizes.filter((id) => id !== size._id)
+                            );
+                          }
+                        }}
+                      />
+                      <label
+                        className={`btn btn-outline-dark w-100 py-2 ${
+                          selectedSizes.includes(size._id) ? "active" : ""
+                        }`}
+                        htmlFor={`size-${size._id}`}
+                        title={isDisabled ? "Tất cả màu đã được sử dụng với kích thước này" : ""}
+                      >
+                        {size.attribute_size_name}
+                      </label>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

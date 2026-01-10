@@ -117,6 +117,7 @@ const ProductModal = ({
                 }}
                 onBack={() => setStep(2)}
                 onSuccess={onSuccess}
+                isAddingVariantOnly={false}
               />
             )}
           </div>

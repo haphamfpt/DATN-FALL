@@ -42,7 +42,7 @@ const ProductManagement = () => {
 
   const openAddModal = () => {
     setShowAddModal(true);
-    setEditingProduct(null); 
+    setEditingProduct(null);
   };
 
   const openEditModal = (product) => {
@@ -68,9 +68,11 @@ const ProductManagement = () => {
         <ProductList
           products={products}
           loading={loading}
-          onAdd={openAddModal}          
-          onEdit={openEditModal}         
+          onAdd={openAddModal}
+          onEdit={openEditModal}
           onDelete={fetchData}
+          colors={colors}
+          sizes={sizes}
         />
 
         {showAddModal && (

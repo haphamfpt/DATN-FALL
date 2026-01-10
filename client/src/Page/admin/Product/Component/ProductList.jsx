@@ -1,5 +1,5 @@
 import React from "react";
-import { useState } from "react";
+import  { useState } from "react";
 import {
   PencilSquare,
   Trash,
@@ -10,24 +10,35 @@ import {
 import { toast } from "react-hot-toast";
 import api from "../../../../utils/axiosInstance";
 import ProductVariantsTable from "./ProductVariantsTable";
+import Step2VariantsSelector from "./Step/Step2VariantsSelector"; 
+import Step3VariantsTable from "./Step/Step3VariantsTable"; 
 
-
-const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
+const ProductList = ({
+  products = [],
+  loading,
+  onAdd,
+  onEdit,
+  onDelete,
+  colors,
+  sizes,
+}) => {
   const [expandedRow, setExpandedRow] = useState(null);
 
-  // State cho chỉnh sửa giá bán
   const [editingPrice, setEditingPrice] = useState({});
   const [priceInput, setPriceInput] = useState({});
 
-  // State cho chỉnh sửa tồn kho (stock)
   const [editingStock, setEditingStock] = useState({});
   const [stockInput, setStockInput] = useState({});
+
+  const [showAddVariantFlow, setShowAddVariantFlow] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState(null);
+  const [step, setStep] = useState(2); 
+  const [selectedNewVariants, setSelectedNewVariants] = useState([]);
 
   const toggleExpand = (productId) => {
     setExpandedRow(expandedRow === productId ? null : productId);
   };
 
-  // Handler cho giá bán
   const handleStartEditPrice = (variantId, value) => {
     setEditingPrice((prev) => ({ ...prev, [variantId]: true }));
     setPriceInput((prev) => ({ ...prev, [variantId]: value }));
@@ -35,13 +46,12 @@ const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
 
   const handleUpdatePriceSuccess = (variantId) => {
     setEditingPrice((prev) => ({ ...prev, [variantId]: false }));
-    // Reset input sau khi thành công (tùy chọn)
     setPriceInput((prev) => {
       const newInput = { ...prev };
       delete newInput[variantId];
       return newInput;
     });
-    onDelete(); // refresh toàn bộ danh sách
+    onDelete();
   };
 
   const handleCancelEditPrice = (variantId) => {
@@ -53,7 +63,6 @@ const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
     });
   };
 
-  // Handler cho tồn kho (stock)
   const handleStartEditStock = (variantId, value) => {
     setEditingStock((prev) => ({ ...prev, [variantId]: true }));
     setStockInput((prev) => ({ ...prev, [variantId]: value }));
@@ -61,13 +70,12 @@ const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
 
   const handleUpdateStockSuccess = (variantId) => {
     setEditingStock((prev) => ({ ...prev, [variantId]: false }));
-    // Reset input sau khi thành công
     setStockInput((prev) => {
       const newInput = { ...prev };
       delete newInput[variantId];
       return newInput;
     });
-    onDelete(); // refresh toàn bộ danh sách
+    onDelete();
   };
 
   const handleCancelEditStock = (variantId) => {
@@ -83,7 +91,7 @@ const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
     try {
       await api.delete(`/variants/admin/${variantId}`);
       toast.success("Đã xóa biến thể");
-      onDelete(); // refresh
+      onDelete();
     } catch {
       toast.error("Xóa thất bại");
     }
@@ -97,6 +105,74 @@ const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
       onDelete();
     } catch {
       toast.error("Xóa thất bại!");
+    }
+  };
+
+  const openAddVariant = (product) => {
+    setCurrentProduct(product);
+    setShowAddVariantFlow(true);
+    setStep(2);
+    setSelectedNewVariants([]);
+  };
+
+  const handleVariantsGenerated = (generatedVariants) => {
+    const existingKeys = new Set(
+      (currentProduct?.variants || []).map(
+        (v) => `${v.color?._id || v.color}-${v.size?._id || v.size}`
+      )
+    );
+
+    const trulyNew = generatedVariants.filter((v) => {
+      const key = `${v.colorId}-${v.sizeId}`;
+      return !existingKeys.has(key);
+    });
+
+    if (trulyNew.length === 0) {
+      toast.error("Tất cả kết hợp màu + size bạn chọn đã tồn tại rồi!");
+      return;
+    }
+
+    setSelectedNewVariants(
+      trulyNew.map((v) => ({
+        ...v,
+        enabled: true,
+        sale_price: v.sale_price || "",
+        import_price: v.import_price || "",
+        stock: v.stock || "",
+      }))
+    );
+
+    setStep(3); 
+  };
+
+  const handleSaveNewVariants = async (enabledVariants) => {
+    if (!currentProduct?._id) return;
+
+    const toSave = enabledVariants.map((v) => ({
+      product: currentProduct._id,
+      color: v.colorId,
+      size: v.sizeId,
+      sale_price: Number(v.sale_price) || 0,
+      import_price: Number(v.import_price) || 0,
+      stock: Number(v.stock) || 0,
+    }));
+
+    if (toSave.length === 0) {
+      toast.error("Không có biến thể nào được bật để lưu!");
+      return;
+    }
+
+    try {
+      await Promise.all(
+        toSave.map((data) => api.post("/variants/admin", data))
+      );
+      toast.success(`Đã thêm ${toSave.length} biến thể mới thành công!`);
+      setShowAddVariantFlow(false);
+      onDelete(); 
+    } catch (err) {
+      toast.error(
+        "Lưu biến thể thất bại: " + (err.response?.data?.message || "")
+      );
     }
   };
 
@@ -143,12 +219,18 @@ const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
                                 src={p.images[0].url}
                                 alt={p.name}
                                 className="rounded"
-                                style={{ width: 50, height: 50, objectFit: "cover" }}
+                                style={{
+                                  width: 50,
+                                  height: 50,
+                                  objectFit: "cover",
+                                }}
                               />
                             )}
                             <div>
                               <div className="fw-bold">{p.name}</div>
-                              <small className="text-muted">{p.brand || "—"}</small>
+                              <small className="text-muted">
+                                {p.brand || "—"}
+                              </small>
                             </div>
                           </div>
                         </td>
@@ -159,11 +241,17 @@ const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
                             onClick={() => toggleExpand(p._id)}
                           >
                             {p.total_variants || 0}{" "}
-                            {expandedRow === p._id ? <ChevronUp /> : <ChevronDown />}
+                            {expandedRow === p._id ? (
+                              <ChevronUp />
+                            ) : (
+                              <ChevronDown />
+                            )}
                           </button>
                         </td>
                         <td className="text-center text-danger fw-bold">
-                          {p.min_price > 0 ? `${p.min_price.toLocaleString()}đ` : "—"}
+                          {p.min_price > 0
+                            ? `${p.min_price.toLocaleString()}đ`
+                            : "—"}
                         </td>
                         <td className="text-center">
                           <button
@@ -187,21 +275,18 @@ const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
                             <ProductVariantsTable
                               productId={p._id}
                               variants={p.variants || []}
-                              // Giá bán
                               editingPrice={editingPrice}
                               priceInput={priceInput}
                               onStartEditPrice={handleStartEditPrice}
                               onUpdatePrice={handleUpdatePriceSuccess}
                               onCancelEditPrice={handleCancelEditPrice}
-                              // Tồn kho
                               editingStock={editingStock}
                               stockInput={stockInput}
                               onStartEditStock={handleStartEditStock}
                               onUpdateStock={handleUpdateStockSuccess}
                               onCancelEditStock={handleCancelEditStock}
-                              // Các hàm khác
                               onDeleteVariant={handleDeleteVariant}
-                              onAddVariant={() => onEdit(p)}
+                              onAddVariant={() => openAddVariant(p)} 
                             />
                           </td>
                         </tr>
@@ -214,6 +299,58 @@ const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
           )}
         </div>
       </div>
+
+      {showAddVariantFlow && currentProduct && (
+        <div
+          className="modal fade show"
+          style={{ display: "block" }}
+          tabIndex={-1}
+        >
+          <div className="modal-dialog modal-xl modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  Thêm biến thể mới - {currentProduct.name}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowAddVariantFlow(false)}
+                />
+              </div>
+
+              <div className="modal-body p-0">
+                {step === 2 && (
+                  <Step2VariantsSelector
+                    colors={colors}
+                    sizes={sizes}
+                    currentVariants={currentProduct.variants || []}
+                    onNext={handleVariantsGenerated}
+                  />
+                )}
+
+                {step === 3 && (
+                  <Step3VariantsTable
+                    product={{ _id: currentProduct._id, variants: selectedNewVariants }}
+                    onBack={() => setStep(2)}
+                    onSuccess={handleSaveNewVariants}
+                    isAddingVariantOnly={true}
+                  />
+                )}
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowAddVariantFlow(false)}
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
