@@ -1,5 +1,4 @@
-import React from "react";
-import  { useState } from "react";
+import React, { useState } from "react";
 import {
   PencilSquare,
   Trash,
@@ -10,8 +9,8 @@ import {
 import { toast } from "react-hot-toast";
 import api from "../../../../utils/axiosInstance";
 import ProductVariantsTable from "./ProductVariantsTable";
-import Step2VariantsSelector from "./Step/Step2VariantsSelector"; 
-import Step3VariantsTable from "./Step/Step3VariantsTable"; 
+import Step2VariantsSelector from "./Step/Step2VariantsSelector";
+import Step3VariantsTable from "./Step/Step3VariantsTable";
 
 const ProductList = ({
   products = [],
@@ -32,7 +31,7 @@ const ProductList = ({
 
   const [showAddVariantFlow, setShowAddVariantFlow] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(null);
-  const [step, setStep] = useState(2); 
+  const [step, setStep] = useState(2);
   const [selectedNewVariants, setSelectedNewVariants] = useState([]);
 
   const toggleExpand = (productId) => {
@@ -142,38 +141,12 @@ const ProductList = ({
       }))
     );
 
-    setStep(3); 
+    setStep(3);
   };
 
-  const handleSaveNewVariants = async (enabledVariants) => {
-    if (!currentProduct?._id) return;
-
-    const toSave = enabledVariants.map((v) => ({
-      product: currentProduct._id,
-      color: v.colorId,
-      size: v.sizeId,
-      sale_price: Number(v.sale_price) || 0,
-      import_price: Number(v.import_price) || 0,
-      stock: Number(v.stock) || 0,
-    }));
-
-    if (toSave.length === 0) {
-      toast.error("Không có biến thể nào được bật để lưu!");
-      return;
-    }
-
-    try {
-      await Promise.all(
-        toSave.map((data) => api.post("/variants/admin", data))
-      );
-      toast.success(`Đã thêm ${toSave.length} biến thể mới thành công!`);
-      setShowAddVariantFlow(false);
-      onDelete(); 
-    } catch (err) {
-      toast.error(
-        "Lưu biến thể thất bại: " + (err.response?.data?.message || "")
-      );
-    }
+  const handleSaveNewVariants = (enabledVariants) => {
+    setShowAddVariantFlow(false);
+    onDelete();
   };
 
   if (loading) return <div className="text-center py-5">Đang tải...</div>;
@@ -286,7 +259,7 @@ const ProductList = ({
                               onUpdateStock={handleUpdateStockSuccess}
                               onCancelEditStock={handleCancelEditStock}
                               onDeleteVariant={handleDeleteVariant}
-                              onAddVariant={() => openAddVariant(p)} 
+                              onAddVariant={() => openAddVariant(p)}
                             />
                           </td>
                         </tr>
@@ -331,7 +304,10 @@ const ProductList = ({
 
                 {step === 3 && (
                   <Step3VariantsTable
-                    product={{ _id: currentProduct._id, variants: selectedNewVariants }}
+                    product={{
+                      _id: currentProduct._id,
+                      variants: selectedNewVariants,
+                    }}
                     onBack={() => setStep(2)}
                     onSuccess={handleSaveNewVariants}
                     isAddingVariantOnly={true}
