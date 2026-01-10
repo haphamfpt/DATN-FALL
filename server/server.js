@@ -24,6 +24,7 @@ import dashboardRoute from "./routes/dasboardRoute.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import adminReviewRoutes from "./routes/reviews.js";
 import refundAdminRoutes from "./routes/refund.js";
+import variantRoutes from "./routes/variantRoutes.js";
 dotenv.config();
 connectDB();
 
@@ -69,6 +70,7 @@ app.use("/api/admin/stats", dashboardRoute);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/admin/reviews", adminReviewRoutes);
 app.use("/api/admin/refunds", refundAdminRoutes);
+app.use("/api/variants", variantRoutes);  
 app.use(notFound);
 app.use(errorHandler);
 

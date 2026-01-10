@@ -8,9 +8,10 @@ import {
   createProductWithVariants,
   updateProductWithVariants,
   deleteProduct,
-  getProductDetail, 
+  getProductDetail,
+  updateProductBasicInfo,
 } from "../controllers/productController.js";
-
+import asyncHandler from "express-async-handler";
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/products/");
@@ -39,7 +40,7 @@ const upload = multer({
 
 const router = express.Router();
 
-router.get("/", getProducts); 
+router.get("/", getProducts);
 
 router
   .route("/admin")
@@ -53,5 +54,6 @@ router
   .delete(deleteProduct);
 
 router.get("/detail/:slug", getProductDetail);
+router.put("/admin/:id/basic", updateProductBasicInfo);
 
 export default router;

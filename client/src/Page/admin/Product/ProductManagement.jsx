@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { toast, Toaster } from "react-hot-toast";
 import api from "../../../utils/axiosInstance";
-import ProductList from "./Component/ProductList"
+import ProductList from "./Component/ProductList";
 import ProductModal from "./Component/ProductModal";
+import EditBasicInfoModal from "./Component/EditBasicInfoModal";
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -10,7 +11,9 @@ const ProductManagement = () => {
   const [colors, setColors] = useState([]);
   const [sizes, setSizes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditBasicModal, setShowEditBasicModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
 
   const fetchData = async () => {
@@ -33,37 +36,66 @@ const ProductManagement = () => {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const openModal = (product = null) => {
-    setEditingProduct(product);
-    setShowModal(true);
+  const openAddModal = () => {
+    setShowAddModal(true);
+    setEditingProduct(null); 
   };
 
-  const closeModal = () => {
-    setShowModal(false);
+  const openEditModal = (product) => {
+    setEditingProduct(product);
+    setShowEditBasicModal(true);
+  };
+
+  const closeAddModal = () => {
+    setShowAddModal(false);
+    setEditingProduct(null);
+  };
+
+  const closeEditModal = () => {
+    setShowEditBasicModal(false);
     setEditingProduct(null);
   };
 
   return (
     <>
       <Toaster position="top-center" />
+
       <div className="container py-4">
         <ProductList
           products={products}
           loading={loading}
-          onAdd={() => openModal()}
-          onEdit={openModal}
+          onAdd={openAddModal}          
+          onEdit={openEditModal}         
           onDelete={fetchData}
         />
-        {showModal && (
+
+        {showAddModal && (
           <ProductModal
-            product={editingProduct}
+            product={null}
             categories={categories}
             colors={colors}
             sizes={sizes}
-            onClose={closeModal}
-            onSuccess={() => { fetchData(); closeModal(); }}
+            onClose={closeAddModal}
+            onSuccess={() => {
+              fetchData();
+              closeAddModal();
+            }}
+          />
+        )}
+
+        {showEditBasicModal && editingProduct && (
+          <EditBasicInfoModal
+            product={editingProduct}
+            categories={categories}
+            onClose={closeEditModal}
+            onSuccess={() => {
+              fetchData();
+              closeEditModal();
+            }}
           />
         )}
       </div>

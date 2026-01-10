@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from "react";
 import {
   PencilSquare,
@@ -10,15 +11,23 @@ import { toast } from "react-hot-toast";
 import api from "../../../../utils/axiosInstance";
 import ProductVariantsTable from "./ProductVariantsTable";
 
+
 const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
   const [expandedRow, setExpandedRow] = useState(null);
+
+  // State cho chỉnh sửa giá bán
   const [editingPrice, setEditingPrice] = useState({});
   const [priceInput, setPriceInput] = useState({});
+
+  // State cho chỉnh sửa tồn kho (stock)
+  const [editingStock, setEditingStock] = useState({});
+  const [stockInput, setStockInput] = useState({});
 
   const toggleExpand = (productId) => {
     setExpandedRow(expandedRow === productId ? null : productId);
   };
 
+  // Handler cho giá bán
   const handleStartEditPrice = (variantId, value) => {
     setEditingPrice((prev) => ({ ...prev, [variantId]: true }));
     setPriceInput((prev) => ({ ...prev, [variantId]: value }));
@@ -26,18 +35,55 @@ const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
 
   const handleUpdatePriceSuccess = (variantId) => {
     setEditingPrice((prev) => ({ ...prev, [variantId]: false }));
-    onDelete(); 
+    // Reset input sau khi thành công (tùy chọn)
+    setPriceInput((prev) => {
+      const newInput = { ...prev };
+      delete newInput[variantId];
+      return newInput;
+    });
+    onDelete(); // refresh toàn bộ danh sách
   };
 
   const handleCancelEditPrice = (variantId) => {
     setEditingPrice((prev) => ({ ...prev, [variantId]: false }));
+    setPriceInput((prev) => {
+      const newInput = { ...prev };
+      delete newInput[variantId];
+      return newInput;
+    });
+  };
+
+  // Handler cho tồn kho (stock)
+  const handleStartEditStock = (variantId, value) => {
+    setEditingStock((prev) => ({ ...prev, [variantId]: true }));
+    setStockInput((prev) => ({ ...prev, [variantId]: value }));
+  };
+
+  const handleUpdateStockSuccess = (variantId) => {
+    setEditingStock((prev) => ({ ...prev, [variantId]: false }));
+    // Reset input sau khi thành công
+    setStockInput((prev) => {
+      const newInput = { ...prev };
+      delete newInput[variantId];
+      return newInput;
+    });
+    onDelete(); // refresh toàn bộ danh sách
+  };
+
+  const handleCancelEditStock = (variantId) => {
+    setEditingStock((prev) => ({ ...prev, [variantId]: false }));
+    setStockInput((prev) => {
+      const newInput = { ...prev };
+      delete newInput[variantId];
+      return newInput;
+    });
   };
 
   const handleDeleteVariant = async (productId, variantId) => {
     try {
       await api.delete(`/variants/admin/${variantId}`);
       toast.success("Đã xóa biến thể");
-      onDelete();
+      onDelete(); // refresh
     } catch {
       toast.error("Xóa thất bại");
     }
@@ -85,15 +131,14 @@ const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
                 </thead>
                 <tbody>
                   {products.map((p, i) => (
-                    <>
+                    <React.Fragment key={p._id}>
                       <tr
-                        key={p._id}
                         className={expandedRow === p._id ? "table-active" : ""}
                       >
                         <td className="ps-4 fw-bold">{i + 1}</td>
                         <td>
                           <div className="d-flex align-items-center gap-3">
-                            {p.images[0] && (
+                            {p.images?.[0] && (
                               <img
                                 src={p.images[0].url}
                                 alt={p.name}
@@ -103,7 +148,7 @@ const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
                             )}
                             <div>
                               <div className="fw-bold">{p.name}</div>
-                              <small className="text-muted">{p.brand}</small>
+                              <small className="text-muted">{p.brand || "—"}</small>
                             </div>
                           </div>
                         </td>
@@ -138,22 +183,30 @@ const ProductList = ({ products = [], loading, onAdd, onEdit, onDelete }) => {
 
                       {expandedRow === p._id && (
                         <tr>
-                          <td colSpan="7" className="p-0 bg-light">
+                          <td colSpan="6" className="p-0 bg-light">
                             <ProductVariantsTable
                               productId={p._id}
-                              variants={p.variants}
+                              variants={p.variants || []}
+                              // Giá bán
                               editingPrice={editingPrice}
                               priceInput={priceInput}
                               onStartEditPrice={handleStartEditPrice}
                               onUpdatePrice={handleUpdatePriceSuccess}
                               onCancelEditPrice={handleCancelEditPrice}
+                              // Tồn kho
+                              editingStock={editingStock}
+                              stockInput={stockInput}
+                              onStartEditStock={handleStartEditStock}
+                              onUpdateStock={handleUpdateStockSuccess}
+                              onCancelEditStock={handleCancelEditStock}
+                              // Các hàm khác
                               onDeleteVariant={handleDeleteVariant}
-                              onAddVariant={() => onEdit(p)} 
+                              onAddVariant={() => onEdit(p)}
                             />
                           </td>
                         </tr>
                       )}
-                    </>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

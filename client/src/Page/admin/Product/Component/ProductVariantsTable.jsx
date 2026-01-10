@@ -11,25 +11,49 @@ const ProductVariantsTable = ({
   onStartEditPrice,
   onUpdatePrice,
   onCancelEditPrice,
+  editingStock,
+  stockInput,
+  onStartEditStock,
+  onUpdateStock,
+  onCancelEditStock,
   onDeleteVariant,
-  onAddVariant, 
+  onAddVariant,
 }) => {
-  const handleUpdatePrice = async (variantId) => {
-    const newPrice = priceInput[variantId];
-    const price = Number(newPrice);
-    if (isNaN(price) || price < 0) {
-      toast.error("Giá không hợp lệ");
+  const handleUpdateVariant = async (variantId) => {
+    const updatePayload = {};
+
+    if (editingPrice[variantId]) {
+      const newPrice = Number(priceInput[variantId]);
+      if (isNaN(newPrice) || newPrice < 0) {
+        toast.error("Giá bán không hợp lệ");
+        return;
+      }
+      updatePayload.sale_price = newPrice;
+    }
+
+    if (editingStock[variantId]) {
+      const newStock = Number(stockInput[variantId]);
+      if (isNaN(newStock) || newStock < 0) {
+        toast.error("Tồn kho không hợp lệ");
+        return;
+      }
+      updatePayload.stock = newStock;
+    }
+
+    if (Object.keys(updatePayload).length === 0) {
+      toast("Không có thay đổi nào để cập nhật", { icon: "ℹ️" });
       return;
     }
 
     try {
-      await api.put(`/variants/admin/${variantId}/price`, {
-        sale_price: price,
-      });
-      toast.success("Cập nhật giá thành công!");
-      onUpdatePrice(variantId);
-    } catch {
-      toast.error("Cập nhật giá thất bại");
+      await api.put(`/variants/admin/${variantId}`, updatePayload);
+
+      toast.success("Cập nhật thành công!");
+
+      if (updatePayload.sale_price !== undefined) onUpdatePrice(variantId);
+      if (updatePayload.stock !== undefined) onUpdateStock(variantId);
+    } catch (err) {
+      toast.error("Cập nhật thất bại: " + (err.response?.data?.message || ""));
     }
   };
 
@@ -73,98 +97,122 @@ const ProductVariantsTable = ({
             </tr>
           </thead>
           <tbody>
-            {variants.map((v) => (
-              <tr key={v._id}>
-                <td className="text-center">
-                  {v.color ? (
-                    <div className="d-flex align-items-center justify-content-center gap-2">
-                      <div
-                        className="border rounded-circle"
-                        style={{
-                          width: 24,
-                          height: 24,
-                          backgroundColor: v.color.code || "#ccc",
-                          border: "2px solid #eee",
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                        }}
-                        title={v.color.name}
-                      />
-                      <span className="fw-medium">{v.color.name}</span>
-                    </div>
-                  ) : (
-                    <span className="text-muted">—</span>
-                  )}
-                </td>
+            {variants.map((v) => {
+              const isEditing = editingPrice[v._id] || editingStock[v._id];
 
-                <td className="text-center fw-bold">
-                  {v.size?.name || "—"}
-                </td>
+              return (
+                <tr key={v._id}>
+                  <td className="text-center">
+                    {v.color ? (
+                      <div className="d-flex align-items-center justify-content-center gap-2">
+                        <div
+                          className="border rounded-circle"
+                          style={{
+                            width: 24,
+                            height: 24,
+                            backgroundColor: v.color.code || "#ccc",
+                            border: "2px solid #eee",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                          }}
+                          title={v.color.name}
+                        />
+                        <span className="fw-medium">{v.color.name}</span>
+                      </div>
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </td>
 
-                <td className="text-center text-secondary">
-                  {v.import_price > 0
-                    ? `${v.import_price.toLocaleString()}đ`
-                    : "—"}
-                </td>
+                  <td className="text-center fw-bold">{v.size?.name || "—"}</td>
 
-                <td className="text-center">
-                  {editingPrice[v._id] ? (
-                    <div className="d-flex gap-1 justify-content-center align-items-center">
+                  <td className="text-center text-secondary">
+                    {v.import_price > 0
+                      ? `${v.import_price.toLocaleString()}đ`
+                      : "—"}
+                  </td>
+
+                  <td className="text-center">
+                    {editingPrice[v._id] ? (
                       <input
                         type="number"
-                        className="form-control form-control-sm"
-                        style={{ width: 110 }}
-                        value={priceInput[v._id] || ""}
+                        className="form-control form-control-sm text-center"
+                        style={{ width: 110, display: "inline-block" }}
+                        value={priceInput[v._id] ?? ""}
                         onChange={(e) =>
                           onStartEditPrice(v._id, e.target.value)
                         }
                         onKeyDown={(e) =>
-                          e.key === "Enter" && handleUpdatePrice(v._id)
+                          e.key === "Enter" && handleUpdateVariant(v._id)
                         }
                         autoFocus
                       />
-                      <button
-                        className="btn btn-sm btn-success"
-                        onClick={() => handleUpdatePrice(v._id)}
+                    ) : (
+                      <span
+                        className="text-danger fw-bold cursor-pointer fs-5"
+                        onClick={() => onStartEditPrice(v._id, v.sale_price)}
                       >
-                        <Save />
-                      </button>
-                      <button
-                        className="btn btn-sm btn-secondary"
-                        onClick={() => onCancelEditPrice(v._id)}
+                        {v.sale_price?.toLocaleString() || "0"}đ
+                      </span>
+                    )}
+                  </td>
+
+                  <td className="text-center">
+                    {editingStock[v._id] ? (
+                      <input
+                        type="number"
+                        className="form-control form-control-sm text-center"
+                        style={{ width: 90, display: "inline-block" }}
+                        value={stockInput[v._id] ?? ""}
+                        onChange={(e) =>
+                          onStartEditStock(v._id, e.target.value)
+                        }
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && handleUpdateVariant(v._id)
+                        }
+                      />
+                    ) : (
+                      <span
+                        className={`fw-bold cursor-pointer ${
+                          v.stock > 0 ? "text-success" : "text-danger"
+                        }`}
+                        onClick={() => onStartEditStock(v._id, v.stock || 0)}
                       >
-                        <X />
+                        {v.stock || 0}
+                      </span>
+                    )}
+                  </td>
+
+                  <td className="text-center">
+                    {isEditing ? (
+                      <>
+                        <button
+                          className="btn btn-sm btn-success me-1"
+                          onClick={() => handleUpdateVariant(v._id)}
+                        >
+                          <Save />
+                        </button>
+                        <button
+                          className="btn btn-sm btn-secondary"
+                          onClick={() => {
+                            onCancelEditPrice(v._id);
+                            onCancelEditStock(v._id);
+                          }}
+                        >
+                          <X />
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => handleDelete(v._id)}
+                      >
+                        <Trash />
                       </button>
-                    </div>
-                  ) : (
-                    <span
-                      className="text-danger fw-bold cursor-pointer fs-5"
-                      onClick={() => onStartEditPrice(v._id, v.sale_price)}
-                    >
-                      {v.sale_price.toLocaleString()}đ
-                    </span>
-                  )}
-                </td>
-
-                <td className="text-center">
-                  <span
-                    className={
-                      v.stock > 0 ? "text-success fw-bold" : "text-danger"
-                    }
-                  >
-                    {v.stock || 0}
-                  </span>
-                </td>
-
-                <td className="text-center">
-                  <button
-                    className="btn btn-sm btn-outline-danger"
-                    onClick={() => handleDelete(v._id)}
-                  >
-                    <Trash />
-                  </button>
-                </td>
-              </tr>
-            ))}
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

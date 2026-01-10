@@ -117,7 +117,8 @@ const getProducts = asyncHandler(async (req, res) => {
 
   let allowedProductIds = [];
 
-  if (Object.keys(variantQuery).length > 1 || price_lte) { // có filter variant
+  if (Object.keys(variantQuery).length > 1 || price_lte) {
+    // có filter variant
     allowedProductIds = await Variant.distinct("product", variantQuery);
   }
 
@@ -134,37 +135,44 @@ const getProducts = asyncHandler(async (req, res) => {
     .limit(limit)
     .lean();
 
-  const productIds = products.map(p => p._id);
+  const productIds = products.map((p) => p._id);
 
-  const variants = await Variant.find({ product: { $in: productIds }, is_show: true })
+  const variants = await Variant.find({
+    product: { $in: productIds },
+    is_show: true,
+  })
     .populate("color", "attribute_color_name attribute_color_code")
     .populate("size", "attribute_size_name")
     .lean();
 
   const variantsByProduct = {};
-  variants.forEach(v => {
+  variants.forEach((v) => {
     const pid = v.product.toString();
     if (!variantsByProduct[pid]) variantsByProduct[pid] = [];
     variantsByProduct[pid].push({
       _id: v._id,
-      color: v.color ? {
-        _id: v.color._id,
-        attribute_color_name: v.color.attribute_color_name,
-        attribute_color_code: v.color.attribute_color_code,
-      } : null,
-      size: v.size ? {
-        _id: v.size._id,
-        attribute_size_name: v.size.attribute_size_name,
-      } : null,
+      color: v.color
+        ? {
+            _id: v.color._id,
+            attribute_color_name: v.color.attribute_color_name,
+            attribute_color_code: v.color.attribute_color_code,
+          }
+        : null,
+      size: v.size
+        ? {
+            _id: v.size._id,
+            attribute_size_name: v.size.attribute_size_name,
+          }
+        : null,
       sale_price: v.sale_price,
       import_price: v.import_price,
       stock: v.stock,
     });
   });
 
-  const enhancedProducts = products.map(p => {
+  const enhancedProducts = products.map((p) => {
     const vars = variantsByProduct[p._id.toString()] || [];
-    const prices = vars.map(v => v.sale_price).filter(p => p > 0);
+    const prices = vars.map((v) => v.sale_price).filter((p) => p > 0);
     const minPrice = prices.length ? Math.min(...prices) : 0;
 
     return {
@@ -505,6 +513,68 @@ const getProductDetail = asyncHandler(async (req, res) => {
   });
 });
 
+const updateProductBasicInfo = asyncHandler(async (req, res) => {
+  const productId = req.params.id;
+
+  const product = await Product.findById(productId);
+  if (!product) {
+    res.status(404);
+    throw new Error("Không tìm thấy sản phẩm");
+  }
+
+  const {
+    name,
+    brand = "",
+    category,
+    description,
+    short_description = "",
+    tags = [],
+  } = req.body;
+
+  if (!name?.trim()) {
+    res.status(400);
+    throw new Error("Tên sản phẩm là bắt buộc");
+  }
+  if (!category) {
+    res.status(400);
+    throw new Error("Danh mục là bắt buộc");
+  }
+  if (!description?.trim()) {
+    res.status(400);
+    throw new Error("Mô tả chi tiết là bắt buộc");
+  }
+
+  let newSlug = product.slug;
+  if (name.trim() !== product.name) {
+    newSlug = name
+      .trim()
+      .toLowerCase()
+      .replace(/đ/g, "d")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-");
+  }
+
+  const updated = await Product.findByIdAndUpdate(
+    productId,
+    {
+      name: name.trim(),
+      slug: newSlug,
+      brand: brand.trim(),
+      category,
+      description: description.trim(),
+      short_description: short_description.trim(),
+      tags: tags.map((t) => t.trim()).filter(Boolean),
+    },
+    { new: true, runValidators: true }
+  ).populate("category", "product_category_name");
+
+  res.json({
+    message: "Cập nhật thông tin cơ bản thành công",
+    product: updated,
+  });
+});
+
 export {
   getAdminProducts,
   getProducts,
@@ -513,4 +583,5 @@ export {
   updateProductWithVariants,
   deleteProduct,
   getProductDetail,
+  updateProductBasicInfo
 };
