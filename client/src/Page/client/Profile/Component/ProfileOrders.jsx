@@ -3,31 +3,40 @@ import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const formatPrice = (price) =>
-  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
+  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price || 0);
 
-// Đồng bộ hàm lấy badge trạng thái đơn hàng
 const getStatusBadge = (status) => {
   const map = {
     pending: { text: "Chờ xác nhận", color: "bg-warning text-dark" },
-    confirmed: { text: "Đã xác nhận", color: "bg-primary" },
-    shipped: { text: "Đang giao", color: "bg-info" },
-    delivered: { text: "Đã giao", color: "bg-success" },
-    complete: { text: "Hoàn thành", color: "bg-success" },
-    cancelled: { text: "Đã hủy", color: "bg-danger" },
+    confirmed: { text: "Đã xác nhận", color: "bg-primary text-white" },
+    shipped: { text: "Đang giao", color: "bg-info text-white" },
+    delivered: { text: "Đã giao", color: "bg-success text-white" },
+    complete: { text: "Hoàn thành", color: "bg-success text-white" },
+    cancelled: { text: "Đã hủy", color: "bg-danger text-white" },
     refund_pending: { text: "Đang hoàn tiền", color: "bg-warning text-dark" },
-    refunded: { text: "Đã hoàn tiền", color: "bg-secondary" },
+    refunded: { text: "Đã hoàn tiền", color: "bg-secondary text-white" },
   };
-  return map[status] || { text: status || "Không xác định", color: "bg-secondary" };
+  return map[status] || { text: status || "Không xác định", color: "bg-secondary text-white" };
 };
 
-// Đồng bộ hàm lấy badge trạng thái thanh toán
-const getPaymentBadge = (status) => {
+const getPaymentBadge = (paymentStatus, orderStatus) => {
+  if (orderStatus === "cancelled" || orderStatus === "refund_pending" || orderStatus === "refunded") {
+    if (orderStatus === "refund_pending") {
+      return { text: "Đang hoàn tiền", color: "bg-warning text-dark" };
+    }
+    if (orderStatus === "refunded") {
+      return { text: "Đã hoàn tiền", color: "bg-success text-white" };
+    }
+    return { text: "Hoàn tiền", color: "bg-warning text-dark" };
+  }
+
   const map = {
-    paid: { text: "Đã thanh toán", color: "bg-success" },
+    paid: { text: "Đã thanh toán", color: "bg-success text-white" },
     pending: { text: "Chưa thanh toán", color: "bg-warning text-dark" },
-    failed: { text: "Thanh toán thất bại", color: "bg-danger" },
+    failed: { text: "Thanh toán thất bại", color: "bg-danger text-white" },
   };
-  return map[status] || { text: status || "Không xác định", color: "bg-secondary" };
+
+  return map[paymentStatus] || { text: paymentStatus || "Không xác định", color: "bg-secondary text-white" };
 };
 
 const ProfileOrders = () => {
@@ -54,7 +63,7 @@ const ProfileOrders = () => {
         }
 
         const data = await res.json();
-        setOrders(data.orders || data || []); // linh hoạt với cấu trúc trả về
+        setOrders(data.orders || data || []);
       } catch (err) {
         toast.error(err.message || "Lỗi khi tải đơn hàng");
       } finally {
@@ -108,7 +117,7 @@ const ProfileOrders = () => {
           <tbody>
             {orders.map((order) => {
               const statusInfo = getStatusBadge(order.orderStatus);
-              const paymentInfo = getPaymentBadge(order.paymentStatus);
+              const paymentInfo = getPaymentBadge(order.paymentStatus, order.orderStatus);
 
               return (
                 <tr key={order._id}>
