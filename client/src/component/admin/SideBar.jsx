@@ -13,7 +13,8 @@ import {
   BiUser,
   BiLogOut,
   BiPhone,
-  BiStar
+  BiStar,
+  BiMoneyWithdraw 
 } from "react-icons/bi";
 
 const Sidebar = () => {
@@ -25,6 +26,7 @@ const Sidebar = () => {
   const menuItems = [
     { id: "dashboard", label: "Thống kê", icon: <BiHomeAlt size={20} />, path: "/admin/dashboard" },
     { id: "order", label: "Đơn hàng", icon: <BiShoppingBag size={20} />, path: "/admin/order" },
+    { id: "refund", label: "Hoàn tiền", icon: <BiMoneyWithdraw size={20} />, path: "/admin/refund" },
     { id: "categories", label: "Danh mục", icon: <BiCategory size={20} />, path: "/admin/categories" },
     { id: "products", label: "Sản phẩm", icon: <BiPackage size={20} />, path: "/admin/products" },
     { id: "variants", label: "Biến thể", icon: <BiCube size={20} />, path: "/admin/variants" },

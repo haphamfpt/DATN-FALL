@@ -37,6 +37,7 @@ import OrderManagement from "./Page/admin/Order/OrderManagement.jsx";
 import UserManagement from "./Page/admin/User/UserManagement.jsx";
 import AdminDashboard from "./Page/admin/dasboard/AdminDashboard.jsx";
 import Ratemanagement from "./Page/admin/Rate/RateManagement.jsx";
+import RefundManagement from "./Page/admin/Refund/RefundManagement.jsx";
 // 404
 import NotFound from "./Page/NotFound.jsx";
 
@@ -81,6 +82,7 @@ function App() {
             <Route path="order" element={<OrderManagement />} />
             <Route path="customers" element={<UserManagement />}></Route>
             <Route path="rates" element={<Ratemanagement/>}></Route>
+            <Route path="refund" element={<RefundManagement/>}></Route>
             <Route path="*" element={<NotFound />} />
           </Route>
         </Route>

@@ -2,6 +2,7 @@ import Order from "../models/Order.js";
 import Cart from "../models/Cart.js";
 import Variant from "../models/Variant.js";
 import Voucher from "../models/Voucher.js";
+import Refund from "../models/Refund.js";
 import { VNPay, ignoreLogger, ProductCode, VnpLocale, dateFormat } from "vnpay";
 
 const vnpay = new VNPay({
@@ -286,14 +287,28 @@ export const getOrderById = async (req, res) => {
       .populate("items.product", "name images")
       .populate("items.variant", "color size");
 
-    if (!order)
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy đơn hàng" });
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đơn hàng",
+      });
+    }
 
-    res.json({ success: true, order });
+    const refund = await Refund.findOne({
+      order: order._id,
+    });
+
+    res.json({
+      success: true,
+      order,
+      refund, 
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    console.error("Get order detail error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+    });
   }
 };
 
@@ -302,30 +317,53 @@ export const cancelOrder = async (req, res) => {
     const order = await Order.findById(req.params.id);
 
     if (!order) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy đơn hàng" });
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đơn hàng",
+      });
     }
 
     const allowedToCancel = ["pending", "confirmed"];
     if (!allowedToCancel.includes(order.orderStatus)) {
       return res.status(400).json({
         success: false,
-        message: `Không thể hủy đơn hàng`,
+        message: "Không thể hủy đơn hàng ở trạng thái này",
       });
     }
 
     order.orderStatus = "cancelled";
     await order.save();
 
-    res.json({
+    if (order.paymentMethod === "online" && order.paymentStatus === "paid") {
+      const existedRefund = await Refund.findOne({ order: order._id });
+
+      if (!existedRefund) {
+        await Refund.create({
+          order: order._id,
+          user: order.user,
+          payment_method: "vnpay",
+          transaction_id: order.vnp_TxnRef,
+          refund_amount: order.totalAmount,
+          refund_reason: "Khách hàng hủy đơn hàng",
+          refund_status: "pending",
+        });
+      }
+    }
+
+    return res.json({
       success: true,
-      message: "Hủy đơn hàng thành công",
+      message:
+        order.paymentMethod === "online" && order.paymentStatus === "paid"
+          ? "Hủy đơn thành công, yêu cầu hoàn tiền đang được xử lý"
+          : "Hủy đơn hàng thành công",
       data: order,
     });
   } catch (error) {
     console.error("Lỗi hủy đơn hàng:", error);
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+    });
   }
 };
 
@@ -337,13 +375,16 @@ export const completeOrder = async (req, res) => {
     });
 
     if (!order) {
-      return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy đơn hàng" });
     }
 
     if (order.orderStatus !== "delivered") {
       return res.status(400).json({
         success: false,
-        message: "Chỉ có thể xác nhận nhận hàng khi đơn ở trạng thái 'Đã giao hàng'",
+        message:
+          "Chỉ có thể xác nhận nhận hàng khi đơn ở trạng thái 'Đã giao hàng'",
       });
     }
 
