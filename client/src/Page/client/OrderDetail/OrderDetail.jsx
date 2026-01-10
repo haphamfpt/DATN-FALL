@@ -17,10 +17,6 @@ const getStatusBadge = (status) => {
     delivered: { text: "Đã giao hàng", color: "bg-success text-white" },
     complete: { text: "Hoàn thành", color: "bg-success text-white" },
     cancelled: { text: "Đã hủy", color: "bg-danger text-white" },
-    refund_pending: {
-      text: "Đang xử lý hoàn tiền",
-      color: "bg-warning text-dark",
-    },
     refunded: { text: "Đã hoàn tiền", color: "bg-secondary text-white" },
   };
   return (
@@ -35,6 +31,7 @@ const getPaymentBadge = (status) => {
   const map = {
     paid: { text: "Đã thanh toán", color: "bg-success text-white" },
     pending: { text: "Chưa thanh toán", color: "bg-warning text-dark" },
+    refunded: { text: "Đã hoàn tiền", color: "bg-info text-white" },
     failed: { text: "Thanh toán thất bại", color: "bg-danger text-white" },
   };
   return (
@@ -54,6 +51,7 @@ const OrderDetail = () => {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [confirmingReceived, setConfirmingReceived] = useState(false);
+  const [processingRefund, setProcessingRefund] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -71,9 +69,7 @@ const OrderDetail = () => {
 
         if (!res.ok) {
           const errorData = await res.json();
-          throw new Error(
-            errorData.message || "Không thể tải thông tin đơn hàng"
-          );
+          throw new Error(errorData.message || "Không thể tải thông tin đơn hàng");
         }
 
         const data = await res.json();
@@ -96,10 +92,7 @@ const OrderDetail = () => {
 
     if (refund?.refund_status === "pending") return "refund_pending";
     if (refund?.refund_status === "success") return "refunded";
-    if (
-      refund?.refund_status === "failed" ||
-      refund?.refund_status === "rejected"
-    ) {
+    if (refund?.refund_status === "failed" || refund?.refund_status === "rejected") {
       return "cancelled";
     }
 
@@ -108,19 +101,17 @@ const OrderDetail = () => {
 
   const getEffectivePaymentInfo = () => {
     if (refund) {
-      const refundStatus = refund.refund_status;
-
-      if (refundStatus === "pending" || refundStatus === "confirm") {
-        return { text: "Đang hoàn tiền", color: "bg-warning text-dark" };
+      const rs = refund.refund_status;
+      if (rs === "pending" || rs === "confirm") {
+        return { text: "Đang xử lý hoàn tiền", color: "bg-warning text-dark" };
       }
-      if (refundStatus === "success") {
+      if (rs === "success") {
         return { text: "Đã hoàn tiền", color: "bg-success text-white" };
       }
-      if (refundStatus === "failed" || refundStatus === "rejected") {
+      if (rs === "failed" || rs === "rejected") {
         return { text: "Hoàn tiền thất bại", color: "bg-danger text-white" };
       }
     }
-
     return getPaymentBadge(order?.paymentStatus);
   };
 
@@ -130,14 +121,13 @@ const OrderDetail = () => {
 
   const canCancel =
     ["pending", "confirmed"].includes(order?.orderStatus) &&
-    !["pending", "success", "confirm"].includes(refund?.refund_status);
+    !["pending", "confirm", "success"].includes(refund?.refund_status);
 
-  const canCancelOnline =
-    canCancel && order?.paymentMethod === "online" && refund === null;
+  const canCancelOnline = canCancel && order?.paymentMethod === "online" && !refund;
 
-  const canConfirmReceived = order?.orderStatus === "delivered";
+  const canConfirmReceived = order?.orderStatus === "delivered" && !refund;
 
-  const isOrderCompleted = order?.orderStatus === "complete";
+  const canProcessRefund = refund?.refund_status === "confirm";
 
   const handleCancelOrder = async () => {
     if (!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) return;
@@ -159,6 +149,7 @@ const OrderDetail = () => {
 
       toast.success("Hủy đơn hàng thành công!");
       setOrder((prev) => ({ ...prev, orderStatus: "cancelled" }));
+      if (data.refund) setRefund(data.refund);
     } catch (err) {
       toast.error(err.message || "Có lỗi xảy ra khi hủy đơn");
     } finally {
@@ -167,12 +158,7 @@ const OrderDetail = () => {
   };
 
   const handleConfirmReceived = async () => {
-    if (
-      !window.confirm(
-        "Xác nhận bạn đã nhận được hàng và muốn hoàn thành đơn hàng?"
-      )
-    )
-      return;
+    if (!window.confirm("Xác nhận bạn đã nhận được hàng và muốn hoàn thành đơn hàng?")) return;
 
     setConfirmingReceived(true);
     const token = localStorage.getItem("token");
@@ -198,18 +184,40 @@ const OrderDetail = () => {
     }
   };
 
+  const handleProcessRefund = async () => {
+    if (!window.confirm("Bạn chắc chắn muốn tiến hành hoàn tiền ngay bây giờ?")) return;
+
+    setProcessingRefund(true);
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(`/api/orders/${id}/process-refund`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Không thể tiến hành hoàn tiền");
+
+      toast.success("Yêu cầu hoàn tiền đã được gửi thành công!");
+      setRefund(data.refund || { ...refund, refund_status: "success" });
+    } catch (err) {
+      toast.error(err.message || "Có lỗi xảy ra khi xử lý hoàn tiền");
+    } finally {
+      setProcessingRefund(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container py-5 text-center">
-        <div
-          className="spinner-border text-primary"
-          style={{ width: "3.5rem", height: "3.5rem" }}
-        >
+        <div className="spinner-border text-primary" style={{ width: "3.5rem", height: "3.5rem" }}>
           <span className="visually-hidden">Loading...</span>
         </div>
-        <p className="mt-3 fw-bold text-muted">
-          Đang tải thông tin đơn hàng...
-        </p>
+        <p className="mt-3 fw-bold text-muted">Đang tải thông tin đơn hàng...</p>
       </div>
     );
   }
@@ -232,10 +240,7 @@ const OrderDetail = () => {
 
       <div className="container py-5" style={{ maxWidth: "1100px" }}>
         <div className="d-flex align-items-center mb-4">
-          <Link
-            to="/profile"
-            className="btn btn-link text-dark text-decoration-none ps-0"
-          >
+          <Link to="/profile" className="btn btn-link text-dark text-decoration-none ps-0">
             ← Quay lại đơn hàng
           </Link>
           <h2 className="fw-bold ms-3 mb-0">
@@ -275,6 +280,7 @@ const OrderDetail = () => {
               <OrderTracking status={order.orderStatus} />
 
               <div className="mt-4 text-end">
+                {/* Hủy đơn COD */}
                 {canCancel && order.paymentMethod === "cod" && (
                   <button
                     onClick={handleCancelOrder}
@@ -285,6 +291,7 @@ const OrderDetail = () => {
                   </button>
                 )}
 
+                {/* Hủy + yêu cầu hoàn tiền online */}
                 {canCancelOnline && (
                   <button
                     onClick={handleCancelOrder}
@@ -295,47 +302,63 @@ const OrderDetail = () => {
                   </button>
                 )}
 
+                {/* Tiến hành hoàn tiền khi đã confirm */}
+                {canProcessRefund && (
+                  <button
+                    onClick={handleProcessRefund}
+                    disabled={processingRefund}
+                    className="btn btn-primary px-4 me-2"
+                  >
+                    {processingRefund ? "Đang xử lý..." : "Tiến hành hoàn tiền"}
+                  </button>
+                )}
+
+                {/* Các trạng thái hoàn tiền khác */}
                 {refund?.refund_status === "pending" && (
                   <button className="btn btn-warning px-4 me-2" disabled>
-                    ⏳ Đang xử lý hoàn tiền
+                    ⏳ Đang chờ xác nhận
                   </button>
                 )}
 
                 {refund?.refund_status === "success" && (
-                  <button className="btn btn-secondary px-4 me-2" disabled>
+                  <button className="btn btn-success px-4 me-2" disabled>
                     ✓ Đã hoàn tiền
                   </button>
                 )}
 
+                {(refund?.refund_status === "failed" || refund?.refund_status === "rejected") && (
+                  <button className="btn btn-danger px-4 me-2" disabled>
+                    ✗ Hoàn tiền thất bại
+                  </button>
+                )}
+
+                {/* Xác nhận nhận hàng */}
                 {canConfirmReceived && (
                   <button
                     onClick={handleConfirmReceived}
                     disabled={confirmingReceived}
                     className="btn btn-success px-4"
                   >
-                    {confirmingReceived
-                      ? "Đang xử lý..."
-                      : "Tôi đã nhận được hàng"}
+                    {confirmingReceived ? "Đang xử lý..." : "Tôi đã nhận được hàng"}
                   </button>
                 )}
               </div>
             </div>
           </div>
 
+          {/* Phần còn lại giữ nguyên (Thông tin nhận hàng, Tóm tắt thanh toán, Sản phẩm) */}
           <div className="col-lg-6">
             <div className="card border-0 shadow-sm rounded-4 p-4 h-100">
               <h5 className="fw-bold mb-4">Thông tin nhận hàng</h5>
               <div className="text-muted small">
                 <p className="mb-2">
-                  <strong>Người nhận:</strong>{" "}
-                  {order.shippingAddress?.fullName || "—"}
+                  <strong>Người nhận:</strong> {order.shippingAddress?.fullName || "—"}
                 </p>
                 <p className="mb-2">
                   <strong>SĐT:</strong> {order.shippingAddress?.phone || "—"}
                 </p>
                 <p className="mb-2">
-                  <strong>Địa chỉ:</strong>{" "}
-                  {order.shippingAddress?.address || "—"}
+                  <strong>Địa chỉ:</strong> {order.shippingAddress?.address || "—"}
                 </p>
                 {order.shippingAddress?.note && (
                   <p className="mb-0">
@@ -356,9 +379,7 @@ const OrderDetail = () => {
               <div className="d-flex justify-content-between mb-2 text-muted small">
                 <span>Phí vận chuyển</span>
                 <span>
-                  {order.shippingFee > 0
-                    ? formatPrice(order.shippingFee)
-                    : "Miễn phí"}
+                  {order.shippingFee > 0 ? formatPrice(order.shippingFee) : "Miễn phí"}
                 </span>
               </div>
               {order.discountAmount > 0 && order.voucher && (
@@ -389,7 +410,7 @@ const OrderDetail = () => {
             <div className="card border-0 shadow-sm rounded-4 p-4">
               <h5 className="fw-bold mb-4">
                 Sản phẩm trong đơn hàng
-                {isOrderCompleted && (
+                {order.orderStatus === "complete" && (
                   <span className="text-success ms-3 small fw-normal">
                     (Bạn có thể đánh giá sản phẩm)
                   </span>
@@ -407,9 +428,7 @@ const OrderDetail = () => {
                     alt={item.name}
                     className="rounded shadow-sm object-fit-cover"
                     style={{ width: "100px", height: "100px" }}
-                    onError={(e) =>
-                      (e.target.src = "/images/placeholder-product.jpg")
-                    }
+                    onError={(e) => (e.target.src = "/images/placeholder-product.jpg")}
                   />
 
                   <div className="flex-grow-1">
@@ -433,21 +452,17 @@ const OrderDetail = () => {
                         <span className="text-danger fw-bold fs-5">
                           {formatPrice(item.price)}
                         </span>
-                        <span className="text-muted ms-2">
-                          × {item.quantity}
-                        </span>
+                        <span className="text-muted ms-2">× {item.quantity}</span>
                       </div>
                       <strong className="fs-5">
                         {formatPrice(item.price * item.quantity)}
                       </strong>
                     </div>
 
-                    {isOrderCompleted && (
+                    {order.orderStatus === "complete" && (
                       <ProductReviewForm
                         productId={
-                          typeof item.product === "object"
-                            ? item.product._id
-                            : item.product
+                          typeof item.product === "object" ? item.product._id : item.product
                         }
                         productName={item.name}
                       />

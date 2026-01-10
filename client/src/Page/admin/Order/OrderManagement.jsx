@@ -87,7 +87,6 @@ const OrderManagement = () => {
 
       const updatedOrder = res.data.data || res.data;
 
-      // Kiểm tra nếu đơn hàng đã bị hủy (do hệ thống hoặc logic backend)
       if (updatedOrder.orderStatus === "cancelled") {
         toast.error(
           "Đơn hàng đã bị hủy! (Có thể do khách hàng yêu cầu hoặc hệ thống tự động xử lý)",
@@ -101,10 +100,8 @@ const OrderManagement = () => {
           }
         );
 
-        // Reload toàn bộ danh sách để đồng bộ
         await fetchOrders();
       } else {
-        // Cập nhật cục bộ nếu trạng thái bình thường
         setOrders((prev) =>
           prev.map((o) => (o._id === selectedOrder._id ? updatedOrder : o))
         );
@@ -117,7 +114,6 @@ const OrderManagement = () => {
         err.response?.data?.message || "Cập nhật trạng thái thất bại!";
       toast.error(errorMsg);
 
-      // Trường hợp backend trả về thông tin đơn bị hủy trong response lỗi
       if (err.response?.data?.order?.orderStatus === "cancelled") {
         toast.error("Đơn hàng đã bị hủy trong quá trình xử lý!", {
           duration: 7000,
@@ -182,8 +178,6 @@ const OrderManagement = () => {
       <Toaster position="top-center" reverseOrder={false} />
 
       <div className="container py-4">
-        <h3 className="mb-4 fw-bold">Quản lý đơn hàng</h3>
-
         <div className="card shadow-sm border-0">
           <div className="card-body p-0">
             {loading ? (
@@ -280,7 +274,6 @@ const OrderManagement = () => {
         </div>
       </div>
 
-      {/* ====================== MODAL CHI TIẾT ĐƠN HÀNG ====================== */}
       {showDetailModal && selectedOrder && (
         <div
           className="modal fade show d-block"
