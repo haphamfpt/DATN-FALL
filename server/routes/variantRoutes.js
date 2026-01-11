@@ -83,6 +83,14 @@ router.post(
       stock = 0,
     } = req.body;
 
+    const existing = await Variant.findOne({ product, color, size });
+    if (existing) {
+      res.status(409);
+      throw new Error(
+        `Biến thể với màu ${color} và size ${size} đã tồn tại cho sản phẩm này`
+      );
+    }
+
     if (!product || !color || !size || sale_price === undefined) {
       res.status(400);
       throw new Error(

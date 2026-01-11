@@ -33,21 +33,22 @@ const Step3VariantsTable = ({ product, onBack, onSuccess, isAddingVariantOnly = 
     const enabledVariants = variants.filter((v) => v.enabled);
 
     if (enabledVariants.length === 0) {
-      return toast.error("Vui lòng chọn ít nhất 1 biến thể!");
+      return toast.error("Vui lòng bật ít nhất 1 biến thể!");
     }
 
     for (const v of enabledVariants) {
       const price = Number(v.sale_price);
       const stock = Number(v.stock);
 
-      if (!v.sale_price || price <= 0) {
+      if (!v.sale_price || isNaN(price) || price <= 0) {
         return toast.error(
-          `Nhập giá bán hợp lệ cho: ${v.colorName} - ${v.sizeName}`
+          `Giá bán phải lớn hơn 0 cho: ${v.colorName} - ${v.sizeName}`
         );
       }
-      if (v.stock === "" || stock < 0) {
+
+      if (v.stock === "" || isNaN(stock) || stock < 0) {
         return toast.error(
-          `Nhập tồn kho hợp lệ cho: ${v.colorName} - ${v.sizeName}`
+          `Tồn kho phải là số không âm cho: ${v.colorName} - ${v.sizeName}`
         );
       }
     }
@@ -63,12 +64,76 @@ const Step3VariantsTable = ({ product, onBack, onSuccess, isAddingVariantOnly = 
       }));
 
       try {
-        await Promise.all(toCreate.map((data) => api.post("/variants/admin", data)));
-        toast.success(`Đã thêm ${toCreate.length} biến thể mới thành công!`);
-        onSuccess(enabledVariants);
-      } catch (err) {
-        toast.error(err.response?.data?.message || "Lỗi khi thêm biến thể!");
+        const results = await Promise.allSettled(
+          toCreate.map((data) => api.post("/variants/admin", data))
+        );
+
+        const successes = results.filter(r => r.status === "fulfilled");
+        const failures = results.filter(r => r.status === "rejected");
+
+        const duplicates = [];
+        const otherErrors = [];
+
+        failures.forEach((result, index) => {
+          const err = result.reason?.response?.data;
+          const v = enabledVariants[index];
+
+          if (
+            err?.message?.toLowerCase().includes("tồn tại") ||
+            err?.status === 409 ||
+            err?.message?.includes("duplicate")
+          ) {
+            duplicates.push(`• ${v.colorName} - ${v.sizeName}`);
+          } else {
+            otherErrors.push({
+              variant: `${v.colorName} - ${v.sizeName}`,
+              message: err?.message || "Lỗi không xác định",
+            });
+          }
+        });
+
+        if (successes.length > 0) {
+          toast.success(
+            `Đã thêm thành công ${successes.length} biến thể mới!`
+          );
+        }
+
+        if (duplicates.length > 0) {
+          toast(
+            `Một số biến thể đã tồn tại và bị bỏ qua:\n${duplicates.join("\n")}`,
+            {
+              icon: "⚠️",
+              duration: 3000,
+              style: {
+                border: "1px solid #f59e0b",
+                padding: "16px",
+                color: "#92400e",
+                backgroundColor: "#fffbeb",
+              },
+            }
+          );
+        }
+
+        if (otherErrors.length > 0) {
+          const errMsg = otherErrors
+            .map(e => `${e.variant}: ${e.message}`)
+            .join("\n");
+          toast.error(`Có lỗi xảy ra:\n${errMsg}`, { duration: 6000 });
+        }
+
+        if (successes.length > 0) {
+          onSuccess(enabledVariants);
+        } else if (duplicates.length > 0) {
+          toast("Không thêm được biến thể mới nào vì tất cả đều đã tồn tại.", {
+            icon: "ℹ️",
+          });
+        }
+
+      } catch (unexpectedErr) {
+        console.error("Unexpected error:", unexpectedErr);
+        toast.error("Có lỗi nghiêm trọng khi thêm biến thể. Vui lòng thử lại!");
       }
+
       return;
     }
 
@@ -80,9 +145,9 @@ const Step3VariantsTable = ({ product, onBack, onSuccess, isAddingVariantOnly = 
       short_description: product.short_description?.trim() || "",
       tags: product.tags
         ? product.tags
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean)
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
         : [],
       images: product.images || [],
       variants: enabledVariants.map((v) => ({
@@ -94,41 +159,37 @@ const Step3VariantsTable = ({ product, onBack, onSuccess, isAddingVariantOnly = 
       })),
     };
 
-    // Xử lý upload ảnh mới
-    if (product.newImageFiles && product.newImageFiles.length > 0) {
-      const formData = new FormData();
-      formData.append("data", JSON.stringify(payload));
-      product.newImageFiles.forEach((file) => formData.append("images", file));
-
-      try {
-        if (product._id) {
-          await api.put(`/products/admin/${product._id}`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-        } else {
-          await api.post("/products/admin", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-        }
-        toast.success("Thành công!");
-        onSuccess();
-      } catch (err) {
-        toast.error(err.response?.data?.message || "Lỗi khi tải ảnh!");
-      }
-      return;
-    }
-
-    // Gửi JSON thường
     try {
-      if (product._id) {
-        await api.put(`/products/admin/${product._id}`, payload);
+      let response;
+
+      if (product.newImageFiles && product.newImageFiles.length > 0) {
+        const formData = new FormData();
+        formData.append("data", JSON.stringify(payload));
+        product.newImageFiles.forEach((file) => formData.append("images", file));
+
+        response = product._id
+          ? await api.put(`/products/admin/${product._id}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          })
+          : await api.post("/products/admin", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
       } else {
-        await api.post("/products/admin", payload);
+        response = product._id
+          ? await api.put(`/products/admin/${product._id}`, payload)
+          : await api.post("/products/admin", payload);
       }
-      toast.success("Thành công!");
+
+      toast.success(
+        product._id ? "Cập nhật sản phẩm thành công!" : "Tạo sản phẩm thành công!"
+      );
       onSuccess();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Có lỗi xảy ra!");
+      const message =
+        err.response?.data?.message ||
+        (product._id ? "Cập nhật thất bại!" : "Tạo sản phẩm thất bại!");
+      toast.error(message);
+      console.error("Error saving product:", err);
     }
   };
 
